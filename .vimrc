@@ -105,10 +105,18 @@ set t_Co=256
 " Enable syntax highlighting
 syntax enable
 
+" Dannys custom mods
+set cursorline
+set cursorcolumn
+highlight LineNr term=bold cterm=NONE ctermfg=DarkGrey ctermbg=NONE gui=NONE guifg=DarkGrey guibg=NONE
+
+
+" Enable Numbers
 set nu
+set relativenumber
 set background=dark
 "let g:solarized_termcolors=256
-" colorscheme brogrammer
+"colorscheme slate
 
 " Set utf8 as standard encoding and en_US as the standard language
 set encoding=utf8
