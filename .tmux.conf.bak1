@@ -43,11 +43,7 @@ set -g status-right "#[fg=blue]#S #I:#P #[fg=yellow]:: %b %d %Y #[fg=green]:: %l
 
 
 # use PREFIX | to split window horizontally and PREFIX - to split vertically
-<<<<<<< HEAD
 bind \ split-window -h
-=======
-bind | split-window -h
->>>>>>> 5e8e327cce3a91239d7cde5e707f771305437f05
 bind - split-window -v
 
 # Make the current window the first window

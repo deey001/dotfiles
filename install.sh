@@ -19,3 +19,5 @@ else
 fi
 
 echo "Installed"
+
+source ~/.bashrc
