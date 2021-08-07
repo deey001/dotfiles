@@ -15,7 +15,7 @@ if hash vim-addon  2>/dev/null; then
     echo "vim-addon (vim-scripts)  installed"
 else
     echo "vim-addon (vim-scripts) not installed, installing"
-    sudo apt update && sudo apt -y install vim-scripts curl net-tools tmux 
+    apt install sudo && sudo apt update && sudo apt -y install vim-scripts curl net-tools tmux 
 fi
 
 echo "Installed"
