@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Script to install dependencies, fonts, and symlink dotfiles.
+
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 OS="$(uname)"
