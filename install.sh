@@ -1,43 +1,51 @@
 #!/bin/bash
 
-# Find all dot files then if the original file exists, create a backup
-# Once backed up to {file}.dtbak symlink the new dotfile in place
-for file in $(find . -maxdepth 1 -name ".*" -type f  -printf "%f\n" ); do
-    if [ -e ~/$file ]; then
-        mv -f ~/$file{,.dtbak}
-    fi
-    ln -s $PWD/$file ~/$file
-done
+# install.sh - Install dotfiles and dependencies
 
-# Check if vim-addon installed, if not, install it automatically
-if hash vim-addon 2>/dev/null; then
-    echo "vim-addon (vim-scripts) installed"
+# Set repo path
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Install dependencies
+OS="$(uname)"
+if [ "$OS" = "Darwin" ]; then
+  # macOS
+  if ! command -v brew &> /dev/null; then
+    echo "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  fi
+  echo "Installing tmux, git, fzf via Homebrew..."
+  brew install tmux git fzf
+elif [ "$OS" = "Linux" ]; then
+  # Assume Debian-based; adjust for other distros
+  sudo apt update
+  echo "Installing tmux, git, fzf, xclip..."
+  sudo apt install -y tmux git fzf xclip
+  if [ -n "$WAYLAND_DISPLAY" ]; then
+    sudo apt install -y wl-clipboard
+  fi
 else
-    echo "vim-addon (vim-scripts) not installed, installing"
-    apt install sudo && sudo apt update && sudo apt -y install vim-scripts curl net-tools tmux neofetch
+  echo "Unsupported OS: $OS"
+  exit 1
 fi
 
-# SSH key setup
-SSH_KEY_SOURCE="MDC_public.pub"
-SSH_DIR="$HOME/.ssh"
-SSH_KEY_DEST="$SSH_DIR/authorized_keys"
-
-# Ensure the .ssh directory exists
-echo "Setting up SSH key..."
-mkdir -p "$SSH_DIR"
-chmod 700 "$SSH_DIR"
-
-# Check if the SSH key file exists in the current directory
-if [ -f "$SSH_KEY_SOURCE" ]; then
-    echo "Copying SSH key to $SSH_KEY_DEST..."
-    cat "$SSH_KEY_SOURCE" >> "$SSH_KEY_DEST"
-    chmod 600 "$SSH_KEY_DEST"
-    echo "SSH key successfully added."
-else
-    echo "Error: $SSH_KEY_SOURCE not found in the current directory."
-    exit 1
+# Clone TPM if not present
+if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
+  echo "Cloning Tmux Plugin Manager..."
+  git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 fi
 
-echo "Installed"
+# Symlink dotfiles
+echo "Creating symlinks..."
+ln -sf "$DOTFILES_DIR/.bash_aliases" "$HOME/.bash_aliases"
+ln -sf "$DOTFILES_DIR/.bash_exports" "$HOME/.bash_exports"
+ln -sf "$DOTFILES_DIR/.bash_profile" "$HOME/.bash_profile"
+ln -sf "$DOTFILES_DIR/.bash_wrappers" "$HOME/.bash_wrappers"
+ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
+ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 
-source ~/.bashrc
+# Source Bash profile
+source "$HOME/.bash_profile"
+
+# For tmux: Start tmux and install plugins
+echo "Start tmux and press prefix + I to install plugins."
+echo "Setup complete!"
