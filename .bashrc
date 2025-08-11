@@ -116,11 +116,11 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# Modern Prompt for Bash: user@host dir git-branch/status
+# Modern Prompt for Bash: user@host dir git-branch/status (with Nerd Font icons)
 function parse_git_dirty {
   [[ $(git status --porcelain 2> /dev/null) ]] && echo "*"
 }
 function parse_git_branch {
-  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/ (\1$(parse_git_dirty))/"
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/  (\1$(parse_git_dirty))/"
 }
-export PS1="\[\033[32m\]\u@\h \w\[\033[33m\]\$(parse_git_branch)\[\033[00m\] $ "
+export PS1="\[\033[32m\]\u@\h \w\[\033[33m\]\$(parse_git_branch)\[\033[00m\] ❯ "
