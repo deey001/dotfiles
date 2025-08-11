@@ -135,3 +135,7 @@ fi
 
 # Modern Prompt with Starship (replaces old PS1, no skulls)
 eval "$(starship init bash)"
+# ... (keep your existing content)
+
+# Modern Prompt with Starship
+eval "$(starship init bash)"
