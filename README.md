@@ -5,9 +5,8 @@
 - .bash_exports: Exports
 - .bash_profile: Profile
 - .bash_wrappers: Wrappers
-- .bashrc: Bash config with Starship
+- .bashrc: Bash config with modern prompt
 - .tmux.conf: Tmux with Dracula
-- starship.toml: Starship config
 - install.sh: Install deps/font/symlinks
 - uninstall.sh: Remove symlinks
 
