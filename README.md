@@ -1,14 +1,14 @@
 # Dotfiles
 
 ## Files
-- .bash_aliases: Aliases
-- .bash_exports: Exports
-- .bash_profile: Profile
-- .bash_wrappers: Wrappers
-- .bashrc: Bash config with modern prompt
-- .tmux.conf: Tmux with Dracula
-- install.sh: Install deps/font/symlinks
-- uninstall.sh: Remove symlinks
+- .bash_aliases: Custom aliases for common commands.
+- .bash_exports: Exported environment variables (e.g., PATH additions).
+- .bash_profile: Login shell config, sourced on login (e.g., for PATH setup).
+- .bash_wrappers: Custom function wrappers for commands.
+- .bashrc: Main Bash config with prompt, history, aliases, and completion.
+- .tmux.conf: Tmux config with keybinds, mouse, vi mode, and Dracula plugin.
+- install.sh: Installs dependencies, fonts, and symlinks files.
+- uninstall.sh: Removes symlinks.
 
 ## Installation
 1. Clone: git clone https://github.com/deey001/dotfiles.git ~/dotfiles
