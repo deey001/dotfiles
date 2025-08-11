@@ -1,0 +1,43 @@
+# Basic format: Directory + Git + Battery + Time + Character
+format = """
+$directory$git_branch$git_status$battery$time
+$character
+"""
+
+# Directory: Blue, truncated for efficiency
+[directory]
+style = "bold blue"
+format = "[$path]($style) "
+truncation_length = 3
+truncation_symbol = "…/"
+
+# Git Branch: Green, only shows in repos
+[git_branch]
+format = "on [$branch]($style) "
+style = "bold green"
+
+# Git Status: Yellow for changes, efficient auto-detection
+[git_status]
+format = "[$all_status$ahead_behind]($style) "
+style = "bold yellow"
+
+# Battery: Shows only when <100%, with modern symbols (no skulls)
+[battery]
+full_symbol = "🔋 "
+charging_symbol = "⚡️ "
+discharging_symbol = "💨 "
+empty_symbol = "🪫 "
+format = "[$symbol$percentage]($style) "
+style = "bold red"
+
+# Time: Simple, dimmed
+[time]
+disabled = false
+format = "at [$time]($style) "
+style = "dimmed white"
+time_format = "%R"  # 24-hour format
+
+# Character: Arrow for success, X for error
+[character]
+success_symbol = "[➜](bold green)"
+error_symbol = "[✗](bold red)"
