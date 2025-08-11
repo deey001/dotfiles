@@ -1,8 +1,5 @@
-# Format: Dir + Git + Status + Character
-format = """
-$directory$git_branch$git_status
-$character
-"""
+# Single-line format: Dir + Git + Status + Character (modern, compact layout)
+format = "$directory $git_branch $git_status $character "
 
 # Directory: Bold blue, truncated
 [directory]
@@ -29,7 +26,7 @@ staged = '[++\($count\)](green)'
 renamed = "👅"
 deleted = "🗑"
 
-# Character: Arrow for success/error
+# Character: Arrow for success/error (end of prompt)
 [character]
 success_symbol = "[➜](bold green)"
 error_symbol = "[➜](bold red)"
