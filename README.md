@@ -1,28 +1,22 @@
 # Dotfiles
 
-Personal dotfiles for Bash and tmux configurations.
-
 ## Files
-- `.bash_aliases`: Custom Bash aliases.
-- `.bash_exports`: Exported environment variables.
-- `.bash_profile`: Bash login shell config.
-- `.bash_wrappers`: Custom Bash functions/wrappers.
-- `.bashrc`: Main Bash config with Starship prompt.
-- `.tmux.conf`: Enhanced tmux config with Dracula theme and plugins.
-- `starship.toml`: Starship prompt config.
-- `install.sh`: Script to install dependencies and symlink files.
-- `uninstall.sh`: Script to remove symlinks and clean up.
+- .bash_aliases: Aliases
+- .bash_exports: Exports
+- .bash_profile: Profile
+- .bash_wrappers: Wrappers
+- .bashrc: Bash config with Starship
+- .tmux.conf: Tmux with Dracula
+- starship.toml: Starship config
+- install.sh: Install deps/font/symlinks
+- uninstall.sh: Remove symlinks
 
 ## Installation
-1. Clone: `git clone https://github.com/deey001/dotfiles.git ~/dotfiles`
-2. Run: `cd ~/dotfiles && ./install.sh`
-3. For tmux plugins: Start tmux, press Ctrl-a + I.
+1. Clone: git clone https://github.com/deey001/dotfiles.git ~/dotfiles
+2. cd ~/dotfiles && ./install.sh
+3. tmux: prefix + I for plugins
 
 ## Uninstallation
-1. Run: `cd ~/dotfiles && ./uninstall.sh`
-2. Restart shell.
+./uninstall.sh
 
-## Requirements
-- tmux, git, fzf, starship, clipboard tools (handled by install.sh).
-
-Customize as needed!
+Requirements handled by install.sh.
