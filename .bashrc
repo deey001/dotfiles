@@ -123,4 +123,4 @@ function parse_git_dirty {
 function parse_git_branch {
   git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/  (\1$(parse_git_dirty))/"
 }
-export PS1="\[\033[01;32m\]\u@\[\033[01;36m\]\h \[\033[01;34m\]\w\[\033[33m\]\$(parse_git_branch)\[\033[00m\] ❯ "
+export PS1="\[\033[32m\]\u@\h \w\[\033[33m\]\$(parse_git_branch)\[\033[00m\] ❯ "
