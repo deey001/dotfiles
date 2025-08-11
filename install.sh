@@ -7,16 +7,14 @@ if [ "$OS" = "Darwin" ]; then
   if ! command -v brew &> /dev/null; then
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
-  brew install tmux git fzf starship
+  brew install tmux git fzf bash-completion@2
   brew install --cask font-jetbrains-mono-nerd-font
-  brew install bash-completion@2  # For macOS
 elif [ "$OS" = "Linux" ]; then
   sudo apt update
-  sudo apt install -y tmux git fzf xclip fontconfig bash-completion  # Added bash-completion
+  sudo apt install -y tmux git fzf xclip fontconfig bash-completion
   if [ -n "$WAYLAND_DISPLAY" ]; then
     sudo apt install -y wl-clipboard
   fi
-  curl -sS https://starship.rs/install.sh | sh -s -- -y
   mkdir -p ~/.local/share/fonts
   cd ~/.local/share/fonts
   curl -OL https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.tar.xz
@@ -40,8 +38,6 @@ ln -sf "$DOTFILES_DIR/.bash_profile" "$HOME/.bash_profile"
 ln -sf "$DOTFILES_DIR/.bash_wrappers" "$HOME/.bash_wrappers"
 ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
 ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
-mkdir -p "$HOME/.config"
-ln -sf "$DOTFILES_DIR/starship.toml" "$HOME/.config/starship.toml"
 
 source "$HOME/.bash_profile"
 
