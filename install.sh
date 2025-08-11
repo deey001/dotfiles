@@ -9,9 +9,10 @@ if [ "$OS" = "Darwin" ]; then
   fi
   brew install tmux git fzf starship
   brew install --cask font-jetbrains-mono-nerd-font
+  brew install bash-completion@2  # For macOS
 elif [ "$OS" = "Linux" ]; then
   sudo apt update
-  sudo apt install -y tmux git fzf xclip fontconfig
+  sudo apt install -y tmux git fzf xclip fontconfig bash-completion  # Added bash-completion
   if [ -n "$WAYLAND_DISPLAY" ]; then
     sudo apt install -y wl-clipboard
   fi
