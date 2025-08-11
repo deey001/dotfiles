@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# install.sh - Install dotfiles, dependencies, Starship, and Nerd Font
+# install.sh - Install dotfiles, dependencies, vim, Starship, and Nerd Font
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -11,15 +11,15 @@ if [ "$OS" = "Darwin" ]; then
     echo "Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
-  echo "Installing tmux, git, fzf, starship via Homebrew..."
-  brew install tmux git fzf starship
+  echo "Installing tmux, git, fzf, vim, starship via Homebrew..."
+  brew install tmux git fzf vim starship
   # Font on macOS
   brew install --cask font-jetbrains-mono-nerd-font
 elif [ "$OS" = "Linux" ]; then
   # Assume Debian-based; adjust for other distros
   sudo apt update
-  echo "Installing tmux, git, fzf, xclip..."
-  sudo apt install -y tmux git fzf xclip
+  echo "Installing tmux, git, fzf, vim, xclip..."
+  sudo apt install -y tmux git fzf vim xclip
   if [ -n "$WAYLAND_DISPLAY" ]; then
     sudo apt install -y wl-clipboard
   fi
@@ -44,7 +44,7 @@ if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
   git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 fi
 
-# Symlink dotfiles including starship.toml
+# Symlink dotfiles including starship.toml and .vimrc (backup existing .vimrc)
 echo "Creating symlinks..."
 ln -sf "$DOTFILES_DIR/.bash_aliases" "$HOME/.bash_aliases"
 ln -sf "$DOTFILES_DIR/.bash_exports" "$HOME/.bash_exports"
@@ -54,12 +54,10 @@ ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
 ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 mkdir -p "$HOME/.config"
 ln -sf "$DOTFILES_DIR/starship.toml" "$HOME/.config/starship.toml"
-
-# Append Starship init to .bashrc if not present
-if ! grep -q "starship init bash" "$HOME/.bashrc"; then
-  echo '# Initialize Starship prompt' >> "$HOME/.bashrc"
-  echo 'eval "$(starship init bash)"' >> "$HOME/.bashrc"
+if [ -f "$HOME/.vimrc" ]; then
+  mv "$HOME/.vimrc" "$HOME/.vimrc.bak"  # Backup existing .vimrc
 fi
+ln -sf "$DOTFILES_DIR/.vimrc" "$HOME/.vimrc"
 
 # Source Bash profile
 source "$HOME/.bash_profile"
