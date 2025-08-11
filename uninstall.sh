@@ -1,14 +1,24 @@
 #!/bin/bash
 
-# Loop through all the dotfiles, if the file is a symlink then remove it
-# Then if the backup file exists, restore it to it's original location
-for file in $(find . -maxdepth 1 -name ".*" -type f  -printf "%f\n" ); do
-    if [ -h ~/$file ]; then
-        rm -f ~/$file
-    fi
-    if [ -e ~/${file}.dtbak ]; then
-        mv -f ~/$file{.dtbak,}
-    fi
-done
+# uninstall.sh - Remove dotfiles symlinks and clean up
 
-echo "Uninstalled"
+# Remove symlinks
+echo "Removing symlinks..."
+rm -f "$HOME/.bash_aliases"
+rm -f "$HOME/.bash_exports"
+rm -f "$HOME/.bash_profile"
+rm -f "$HOME/.bash_wrappers"
+rm -f "$HOME/.bashrc"
+rm -f "$HOME/.tmux.conf"
+
+# Clean up tmux plugins (optional: uncomment if desired)
+# rm -rf "$HOME/.tmux/plugins"
+
+# Optionally remove dependencies (uncomment with caution)
+# if [ "$(uname)" = "Darwin" ]; then
+#   brew uninstall tmux git fzf
+# elif [ "$(uname)" = "Linux" ]; then
+#   sudo apt remove -y tmux git fzf xclip wl-clipboard
+# fi
+
+echo "Uninstall complete! You may need to restart your shell."
