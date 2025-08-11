@@ -42,7 +42,7 @@ esac
 
 # uncomment for a colored prompt, if the terminal has the capability; turned
 # off by default to not distract the user: the focus in a terminal window
-# should be on the output of the prompt, not on the prompt
+# should be on the output of commands, not on the prompt
 #force_color_prompt=yes
 
 if [ -n "$force_color_prompt" ]; then
@@ -116,11 +116,11 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# Modern Prompt for Bash: time + dir + git branch/status
+# Modern Prompt for Bash: user@host dir git-branch/status
 function parse_git_dirty {
   [[ $(git status --porcelain 2> /dev/null) ]] && echo "*"
 }
 function parse_git_branch {
   git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/ (\1$(parse_git_dirty))/"
 }
-export PS1="\[\033[32m\]\t \w\[\033[33m\]\$(parse_git_branch)\[\033[00m\] $ "
+export PS1="\[\033[32m\]\u@\h \w\[\033[33m\]\$(parse_git_branch)\[\033[00m\] $ "
