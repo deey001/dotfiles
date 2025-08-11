@@ -131,3 +131,7 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
+# ... (your existing content)
+
+# Modern Prompt with Starship (replaces old PS1, no skulls)
+eval "$(starship init bash)"
