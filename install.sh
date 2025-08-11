@@ -53,7 +53,7 @@ ln -sf "$DOTFILES_DIR/.bash_wrappers" "$HOME/.bash_wrappers"
 ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
 ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 mkdir -p "$HOME/.config"
-ln -sf "$DOTFILES_DIR/starship.toml" "$HOME/.config/starship.toml"
+ln -sf "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
 if [ -f "$HOME/.vimrc" ]; then
   mv "$HOME/.vimrc" "$HOME/.vimrc.bak"  # Backup existing .vimrc
 fi
