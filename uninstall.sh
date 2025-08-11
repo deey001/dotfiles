@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Script to remove symlinks created by install.sh.
+
 echo "Removing symlinks..."
 rm -f "$HOME/.bash_aliases"
 rm -f "$HOME/.bash_exports"
