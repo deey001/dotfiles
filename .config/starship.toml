@@ -1,4 +1,6 @@
-# Single-line format: Dir + Git + Status + Character (modern, compact layout)
+add_newline = false  # Disable extra newline for true single-line prompt
+
+# Single-line format: Dir + Git + Status + Character
 format = "$directory $git_branch $git_status $character "
 
 # Directory: Bold blue, truncated
