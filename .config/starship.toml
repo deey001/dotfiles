@@ -1,4 +1,20 @@
-add_newline = false  # Set to false for single-line prompt
+add_newline = false  # Removes blank line between prompts
+
+# Custom format to force single-line: All modules + character on one line
+format = "$username$hostname$directory$git_branch$git_status$character "
+
+# Username: Bold green
+[username]
+style_success = "bold green"
+style_root = "bold red"
+format = "[$user]($style) "
+show_always = true  # Always show username
+
+# Hostname: Bold cyan
+[hostname]
+ssh_only = false
+format = "in [$hostname]($style) "
+style = "bold cyan"
 
 # Directory: Bold blue, truncated
 [directory]
@@ -25,11 +41,11 @@ staged = '[++\($count\)](green)'
 renamed = "👅"
 deleted = "🗑"
 
-# Python module (shows version with snake icon; disable with [python] disabled = true if unwanted)
-[python]
-symbol = "🐍 "
-
-# Character: Arrow for success/error
+# Character: Arrow for success/error (end of prompt)
 [character]
 success_symbol = "[❯](bold green)"
 error_symbol = "[❯](bold red)"
+
+# Disable Python module (uncomment if you want to keep it)
+[python]
+disabled = true
