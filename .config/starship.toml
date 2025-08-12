@@ -48,4 +48,4 @@ error_symbol = "[❯](bold red)"
 
 # Disable Python module (uncomment if you want to keep it)
 [python]
-disabled = true
+disabled = false
