@@ -1,11 +1,11 @@
-add_newline = false  # Removes blank line between prompts
+add_newline = false  # Forces single-line prompt
 
 # Custom format to force single-line: All modules + character on one line
 format = "$username$hostname$directory$git_branch$git_status$character "
 
-# Username: Bold green
+# Username: Bold green for normal, red for root (fixed from style_success to style_user/style_root)
 [username]
-style_success = "bold green"
+style_user = "bold green"
 style_root = "bold red"
 format = "[$user]($style) "
 show_always = true  # Always show username
@@ -27,7 +27,7 @@ truncation_symbol = "…/"
 symbol = "🌿 "
 style = "bold green"
 
-# Git Status: Icons for changes (requires Nerd Font)
+# Git Status: Icons for changes
 [git_status]
 conflicted = "🏳"
 ahead = "🏎💨"
@@ -41,11 +41,9 @@ staged = '[++\($count\)](green)'
 renamed = "👅"
 deleted = "🗑"
 
-# Character: Arrow for success/error (end of prompt)
+# Character: Arrow for success/error
 [character]
 success_symbol = "[❯](bold green)"
 error_symbol = "[❯](bold red)"
-
-# Disable Python module (uncomment if you want to keep it)
 [python]
 disabled = false
