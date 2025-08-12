@@ -273,7 +273,7 @@ let g:terraform_align = 1
 set omnifunc=syntaxcomplete#Complete
 " Map Ctrl+Space to trigger autocomplete (works in Insert mode).
 inoremap <C-Space> <C-x><C-o>
-" Enable auto-completion popup menu with Tab.
+" Enable auto-completion popup menu with Tab (menu with one match, preview).
 set completeopt=menu,menuone,preview
 " Add dictionary completion (e.g., for custom words).
 set complete+=k

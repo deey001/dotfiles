@@ -17,8 +17,8 @@ if [ "$OS" = "Darwin" ]; then
 elif [ "$OS" = "Linux" ]; then
   # Assume Debian-based; adjust for other distros
   sudo apt update
-  echo "Installing tmux, git, fzf, vim, xclip, bash-completion..."
-  sudo apt install -y tmux git fzf vim xclip bash-completion
+  echo "Installing tmux, git, fzf, vim, xclip, bash-completion, zoxide..."
+  sudo apt install -y tmux git fzf vim xclip bash-completion zoxide
   if [ -n "$WAYLAND_DISPLAY" ]; then
     sudo apt install -y wl-clipboard
   fi
@@ -43,7 +43,7 @@ if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
   git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 fi
 
-# Symlink dotfiles including starship.toml and .vimrc (backup existing .vimrc)
+# Symlink dotfiles including .config/starship.toml and .vimrc (backup existing .vimrc)
 echo "Creating symlinks..."
 ln -sf "$DOTFILES_DIR/.bash_aliases" "$HOME/.bash_aliases"
 ln -sf "$DOTFILES_DIR/.bash_exports" "$HOME/.bash_exports"
@@ -52,7 +52,7 @@ ln -sf "$DOTFILES_DIR/.bash_wrappers" "$HOME/.bash_wrappers"
 ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
 ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 mkdir -p "$HOME/.config"
-ln -sf "$DOTFILES_DIR/starship.toml" "$HOME/.config/starship.toml"
+ln -sf "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"  # Updated path
 if [ -f "$HOME/.vimrc" ]; then
   mv "$HOME/.vimrc" "$HOME/.vimrc.bak"  # Backup existing .vimrc
 fi

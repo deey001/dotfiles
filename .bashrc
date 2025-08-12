@@ -124,6 +124,16 @@ fi
 # cd into a directory chosen via fzf from a recursive search.
 alias ff='cd $(find . -type d | fzf)'
 
+# Check if the shell is interactive before proceeding
+# Prevents errors in non-interactive contexts (e.g., tmux).
+[[ $- != *i* ]] && return
+
+# Initialize zoxide only if installed
+# zoxide enhances cd with a smart directory jumper; initialize if present.
+if command -v zoxide >/dev/null 2>&1; then
+    eval "$(zoxide init bash --cmd cd)"
+fi
+
 # Modern Prompt for Bash: user@host dir git-branch/status (with Nerd Font icons)
 # Define functions for Git branch and dirty status, then set PS1 to show user@host, dir, Git info with colors and icons.
 function parse_git_dirty {
