@@ -3,7 +3,7 @@ add_newline = false  # Forces single-line prompt
 # Custom format to force single-line: All modules + character on one line
 format = "$username$hostname$directory$git_branch$git_status$character "
 
-# Username: Bold green for normal, red for root (fixed from style_success to style_user/style_root)
+# Username: Bold green for normal, red for root
 [username]
 style_user = "bold green"
 style_root = "bold red"
@@ -45,5 +45,3 @@ deleted = "🗑"
 [character]
 success_symbol = "[❯](bold green)"
 error_symbol = "[❯](bold red)"
-[python]
-disabled = false

@@ -13,13 +13,12 @@ if [ "$OS" = "Darwin" ]; then
   fi
   echo "Installing tmux, git, fzf, vim, starship via Homebrew..."
   brew install tmux git fzf vim starship
-  # Font on macOS
   brew install --cask font-jetbrains-mono-nerd-font
 elif [ "$OS" = "Linux" ]; then
   # Assume Debian-based; adjust for other distros
   sudo apt update
-  echo "Installing tmux, git, fzf, vim, xclip..."
-  sudo apt install -y tmux git fzf vim xclip
+  echo "Installing tmux, git, fzf, vim, xclip, bash-completion..."
+  sudo apt install -y tmux git fzf vim xclip bash-completion
   if [ -n "$WAYLAND_DISPLAY" ]; then
     sudo apt install -y wl-clipboard
   fi
@@ -53,11 +52,17 @@ ln -sf "$DOTFILES_DIR/.bash_wrappers" "$HOME/.bash_wrappers"
 ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
 ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 mkdir -p "$HOME/.config"
-ln -sf "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
+ln -sf "$DOTFILES_DIR/starship.toml" "$HOME/.config/starship.toml"
 if [ -f "$HOME/.vimrc" ]; then
   mv "$HOME/.vimrc" "$HOME/.vimrc.bak"  # Backup existing .vimrc
 fi
 ln -sf "$DOTFILES_DIR/.vimrc" "$HOME/.vimrc"
+
+# Append Starship init to .bashrc if not present
+if ! grep -q "starship init bash" "$HOME/.bashrc"; then
+  echo '# Initialize Starship prompt' >> "$HOME/.bashrc"
+  echo 'eval "$(starship init bash)"' >> "$HOME/.bashrc"
+fi
 
 # Source Bash profile
 source "$HOME/.bash_profile"

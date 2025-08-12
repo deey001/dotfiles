@@ -46,9 +46,12 @@ esac
 
 if [ -n "$force_color_prompt" ]; then
     if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-	color_prompt=yes
+        # We have color support; assume it's compliant with Ecma-48
+        # (ISO/IEC-6429). (Lack of such support is extremely rare, and such
+        # a case would tend to support setf rather than setaf.)
+        color_prompt=yes
     else
-	color_prompt=
+        color_prompt=
     fi
 fi
 
@@ -71,7 +74,7 @@ xterm*|rxvt*)
     ;;
 esac
 
-# Color support for ls and aliases
+# Enable color support of ls and handy aliases
 # Enable color for ls and grep commands if dircolors is available.
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
@@ -81,7 +84,7 @@ if [ -x /usr/bin/dircolors ]; then
     alias egrep='egrep --color=auto'
 fi
 
-# GCC color settings (disabled by default)
+# Colored GCC warnings and errors (disabled by default)
 # Enable colored output for GCC warnings/errors (commented out).
 #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
@@ -95,7 +98,7 @@ alias l='ls -CF'
 # Notify after long-running commands complete.
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
-# Source aliases file
+# Alias definitions
 # Load custom aliases from .bash_aliases if it exists.
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
@@ -111,9 +114,18 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# Custom prompt with Git status
-# Define functions for Git branch and dirty status, then set PS1 to show user@host, dir, Git info with colors and icons.
+# Fuzzy history search with fzf (Ctrl-R)
+# Source fzf keybindings if available for interactive history search.
+if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
+  source /usr/share/doc/fzf/examples/key-bindings.bash
+fi
+
+# Alias for fuzzy directory finder
+# cd into a directory chosen via fzf from a recursive search.
+alias ff='cd $(find . -type d | fzf)'
+
 # Modern Prompt for Bash: user@host dir git-branch/status (with Nerd Font icons)
+# Define functions for Git branch and dirty status, then set PS1 to show user@host, dir, Git info with colors and icons.
 function parse_git_dirty {
   [[ $(git status --porcelain 2> /dev/null) ]] && echo "*"
 }
@@ -121,4 +133,3 @@ function parse_git_branch {
   git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/  (\1$(parse_git_dirty))/"
 }
 export PS1="\[\033[32m\]\u@\h \w\[\033[33m\]\$(parse_git_branch)\[\033[00m\] ❯ "
-eval "$(starship init bash)"
