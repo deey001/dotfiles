@@ -86,12 +86,6 @@ fi
 # Alias for fuzzy directory finder
 alias ff='cd $(find . -type d | fzf)'
 
-# Starship initialization
-if ! grep -q "starship init bash" ~/.bashrc && [ -f /usr/local/bin/starship ]; then
-    echo '# Initialize Starship prompt' >> ~/.bashrc
-    echo 'eval "$(starship init bash)"' >> ~/.bashrc
-fi
-
 function parse_git_dirty {
   [[ $(git status --porcelain 2> /dev/null) ]] && echo "*"
 }
@@ -100,7 +94,12 @@ function parse_git_branch {
 }
 export PS1="\[\033[32m\]\u@\h \w\[\033[33m\]\$(parse_git_branch)\[\033[00m\] ❯ "
 
-# zoxide initialization (moved to end as recommended)
+# zoxide initialization
 if command -v zoxide >/dev/null 2>&1; then
     eval "$(zoxide init bash --cmd cd)"
+fi
+
+# Initialize Starship prompt (ensure it runs after other configurations)
+if [ -f /usr/local/bin/starship ]; then
+    eval "$(starship init bash)"
 fi
