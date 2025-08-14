@@ -4,5 +4,23 @@
 # Add user bin directory to PATH
 export PATH="$PATH:$HOME/bin"
 
+export TERM=xterm-256color
+
+export LESS='-R'
+export LESSOPEN='|~/.lessfilter %s'
+
+# perl plenv
+# export PATH="$HOME/.plenv/bin:$PATH"
+# eval "$(plenv init -)"
+
+# golang
+export GOPATH=~/gocode
+export PATH="$GOPATH/bin:${PATH}:/usr/local/go/bin"
+
+# ruby rbenv
+export PATH="$HOME/.rbenv/bin:$PATH"
+eval "$(rbenv init -)"
+export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"
+
 # Set default editor to Vim
-export EDITOR=vim
+export EDITOR=/usr/bin/vim
