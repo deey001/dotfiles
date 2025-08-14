@@ -4,6 +4,15 @@
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Strict validation of .bashrc
+if [ -f "$DOTFILES_DIR/.bashrc" ]; then
+  if ! bash -c ". '$DOTFILES_DIR/.bashrc' 2>/dev/null"; then
+    echo "Error: .bashrc contains syntax errors or causes segfault. Aborting installation."
+    echo "Please fix .bashrc or comment out problematic sections (e.g., zoxide)."
+    exit 1
+  fi
+fi
+
 OS="$(uname)"
 if [ "$OS" = "Darwin" ]; then
   # macOS
