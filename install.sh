@@ -8,7 +8,7 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ -f "$DOTFILES_DIR/.bashrc" ]; then
   if ! bash -c ". '$DOTFILES_DIR/.bashrc' 2>/dev/null"; then
     echo "Error: .bashrc contains syntax errors or causes segfault. Aborting installation."
-    echo "Please fix .bashrc or comment out problematic sections (e.g., zoxide, starship)."
+    echo "Please fix .bashrc or comment out problematic sections (e.g., zoxide)."
     exit 1
   fi
 fi
@@ -67,7 +67,7 @@ if [ -f "$HOME/.vimrc" ]; then
 fi
 ln -sf "$DOTFILES_DIR/.vimrc" "$HOME/.vimrc"
 
-# Append Starship init to .bashrc if not present (moved to ensure it runs)
+# Append Starship init to .bashrc if not present (moved to ensure it runs before zoxide)
 if ! grep -q "starship init bash" "$HOME/.bashrc" && [ -f /usr/local/bin/starship ]; then
   echo '# Initialize Starship prompt' >> "$HOME/.bashrc"
   echo 'eval "$(starship init bash)"' >> "$HOME/.bashrc"
