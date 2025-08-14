@@ -8,9 +8,6 @@ case $- in
       *) return;;
 esac
 
-# Add zoxide to PATH
-export PATH="$HOME/.local/bin:$PATH"
-
 # History settings
 HISTCONTROL=ignoreboth
 shopt -s histappend
@@ -86,6 +83,16 @@ fi
 # Alias for fuzzy directory finder
 alias ff='cd $(find . -type d | fzf)'
 
+# zoxide initialization (disabled due to segfault)
+# if command -v zoxide >/dev/null 2>&1; then
+#     eval "$(zoxide init bash --cmd cd)"
+# fi
+
+# Starship initialization
+if [ -f /usr/local/bin/starship ]; then
+    eval "$(starship init bash)"
+fi
+
 function parse_git_dirty {
   [[ $(git status --porcelain 2> /dev/null) ]] && echo "*"
 }
@@ -93,13 +100,3 @@ function parse_git_branch {
   git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/ \($1$(parse_git_dirty))/"
 }
 export PS1="\[\033[32m\]\u@\h \w\[\033[33m\]\$(parse_git_branch)\[\033[00m\] ❯ "
-
-# Initialize Starship prompt
-if [ -f /usr/local/bin/starship ]; then
-    eval "$(starship init bash)"
-fi
-
-# zoxide initialization (moved after Starship)
-if command -v zoxide >/dev/null 2>&1; then
-    eval "$(zoxide init bash --cmd cd)"
-fi
