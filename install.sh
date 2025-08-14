@@ -4,6 +4,14 @@
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Check if the .bashrc is valid before applying
+if [ -f "$DOTFILES_DIR/.bashrc" ]; then
+  if ! bash -c ". '$DOTFILES_DIR/.bashrc' 2>/dev/null"; then
+    echo "Error: .bashrc contains syntax errors. Please fix before proceeding."
+    exit 1
+  fi
+fi
+
 OS="$(uname)"
 if [ "$OS" = "Darwin" ]; then
   # macOS
@@ -43,7 +51,7 @@ if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
   git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 fi
 
-# Symlink dotfiles including .config/starship.toml and .vimrc (backup existing .vimrc)
+# Symlink dotfiles including starship.toml and .vimrc (backup existing .vimrc)
 echo "Creating symlinks..."
 ln -sf "$DOTFILES_DIR/.bash_aliases" "$HOME/.bash_aliases"
 ln -sf "$DOTFILES_DIR/.bash_exports" "$HOME/.bash_exports"
@@ -52,7 +60,7 @@ ln -sf "$DOTFILES_DIR/.bash_wrappers" "$HOME/.bash_wrappers"
 ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
 ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 mkdir -p "$HOME/.config"
-ln -sf "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"  # Updated path
+ln -sf "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
 if [ -f "$HOME/.vimrc" ]; then
   mv "$HOME/.vimrc" "$HOME/.vimrc.bak"  # Backup existing .vimrc
 fi
