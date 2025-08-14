@@ -1,7 +1,7 @@
-# .bash_profile: Configuration for login shells
-# This file is sourced on login and typically sets up the environment for interactive sessions.
+if [ -n "$TMUX" ]; then
+    # called inside tmux session, do tmux things
+    . ~/.profile
 
-# Source .bashrc if it exists to include non-login shell settings
-if [ -f ~/.bashrc ]; then
-   . ~/.bashrc
 fi
+# Trigger ~/.bashrc commands
+. ~/.bashrc
