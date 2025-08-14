@@ -1,20 +1,8 @@
-export TERM=xterm-256color
+# .bash_exports: Exported environment variables
+# This file defines variables that are exported to child processes, like PATH modifications or default editor.
 
-export LESS='-R'
-export LESSOPEN='|~/.lessfilter %s'
+# Add user bin directory to PATH
+export PATH="$PATH:$HOME/bin"
 
-# perl plenv
-# export PATH="$HOME/.plenv/bin:$PATH"
-# eval "$(plenv init -)"
-
-# golang
-export GOPATH=~/gocode
-export PATH="$GOPATH/bin:${PATH}:/usr/local/go/bin"
-
-# ruby rbenv
-export PATH="$HOME/.rbenv/bin:$PATH"
-eval "$(rbenv init -)"
-export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"
-
-export EDITOR=/usr/bin/vim
-
+# Set default editor to Vim
+export EDITOR=vim
