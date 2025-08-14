@@ -8,6 +8,9 @@ case $- in
       *) return;;
 esac
 
+# Add zoxide to PATH
+export PATH="$HOME/.local/bin:$PATH"
+
 # History settings
 HISTCONTROL=ignoreboth
 shopt -s histappend
@@ -66,6 +69,7 @@ if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
 
+# Programmable completion
 if ! shopt -oq posix; then
   if [ -f /usr/share/bash-completion/bash_completion ]; then
     . /usr/share/bash-completion/bash_completion
@@ -74,22 +78,29 @@ if ! shopt -oq posix; then
   fi
 fi
 
+# Fuzzy history search with fzf
 if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
   source /usr/share/doc/fzf/examples/key-bindings.bash
 fi
 
+# Alias for fuzzy directory finder
 alias ff='cd $(find . -type d | fzf)'
 
-[[ $- != *i* ]] && return
-
-if command -v zoxide >/dev/null 2>&1; then
-    eval "$(zoxide init bash --cmd cd)"
+# Starship initialization
+if ! grep -q "starship init bash" ~/.bashrc && [ -f /usr/local/bin/starship ]; then
+    echo '# Initialize Starship prompt' >> ~/.bashrc
+    echo 'eval "$(starship init bash)"' >> ~/.bashrc
 fi
 
 function parse_git_dirty {
   [[ $(git status --porcelain 2> /dev/null) ]] && echo "*"
 }
 function parse_git_branch {
-  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/  (\1$(parse_git_dirty))/"
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/ \($1$(parse_git_dirty))/"
 }
 export PS1="\[\033[32m\]\u@\h \w\[\033[33m\]\$(parse_git_branch)\[\033[00m\] ❯ "
+
+# zoxide initialization (moved to end as recommended)
+if command -v zoxide >/dev/null 2>&1; then
+    eval "$(zoxide init bash --cmd cd)"
+fi
