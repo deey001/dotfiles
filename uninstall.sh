@@ -10,7 +10,7 @@ rm -f "$HOME/.bash_profile"
 rm -f "$HOME/.bash_wrappers"
 rm -f "$HOME/.bashrc"
 rm -f "$HOME/.tmux.conf"
-rm -f "$HOME/.config/starship.toml"  # Updated path
+rm -f "$HOME/.config/starship.toml"
 rm -f "$HOME/.vimrc"  # Remove .vimrc symlink (backup .bak remains)
 
 # Remove Starship init from .bashrc (if present)
