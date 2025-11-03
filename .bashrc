@@ -60,6 +60,19 @@ fi
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
+
+# exa aliases (better ls)
+if command -v exa >/dev/null 2>&1; then
+    alias ls='exa --color=auto'
+    alias ll='exa -alF'
+    alias la='exa -A'
+    alias l='exa -CF'
+fi
+
+# bat alias (better cat)
+if command -v bat >/dev/null 2>&1; then
+    alias cat='bat'
+fi
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 if [ -f ~/.bash_aliases ]; then
@@ -75,6 +88,11 @@ if ! shopt -oq posix; then
   fi
 fi
 
+# bash-preexec for predictive text hooks
+if [ -f ~/.bash-preexec/bash-preexec.sh ]; then
+    source ~/.bash-preexec/bash-preexec.sh
+fi
+
 # Fuzzy history search with fzf
 if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
   source /usr/share/doc/fzf/examples/key-bindings.bash
@@ -83,10 +101,13 @@ fi
 # Alias for fuzzy directory finder
 alias ff='cd $(find . -type d | fzf)'
 
-# zoxide initialization (disabled due to segfault)
-# if command -v zoxide >/dev/null 2>&1; then
-#     eval "$(zoxide init bash --cmd cd)"
-# fi
+# hstr for better history search
+alias hh=hstr
+
+# zoxide initialization
+if command -v zoxide >/dev/null 2>&1; then
+    eval "$(zoxide init bash --cmd cd)"
+fi
 
 # Starship initialization
 if [ -f /usr/local/bin/starship ]; then

@@ -20,14 +20,14 @@ if [ "$OS" = "Darwin" ]; then
     echo "Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
-  echo "Installing tmux, git, fzf, vim, starship via Homebrew..."
-  brew install tmux git fzf vim starship
+  echo "Installing tmux, git, fzf, vim, neovim, starship, hstr, bat, exa, zoxide, fastfetch via Homebrew..."
+  brew install tmux git fzf vim neovim starship hstr bat exa zoxide fastfetch
   brew install --cask font-jetbrains-mono-nerd-font
 elif [ "$OS" = "Linux" ]; then
   # Assume Debian-based; adjust for other distros
   sudo apt update
-  echo "Installing tmux, git, fzf, vim, xclip, bash-completion, zoxide..."
-  sudo apt install -y tmux git fzf vim xclip bash-completion zoxide
+  echo "Installing tmux, git, fzf, vim, neovim, xclip, bash-completion, zoxide, hstr, bat, exa, fastfetch..."
+  sudo apt install -y tmux git fzf vim neovim xclip bash-completion zoxide hstr bat exa fastfetch
   if [ -n "$WAYLAND_DISPLAY" ]; then
     sudo apt install -y wl-clipboard
   fi
@@ -44,6 +44,18 @@ elif [ "$OS" = "Linux" ]; then
 else
   echo "Unsupported OS: $OS"
   exit 1
+fi
+
+# Clone bash-preexec for predictive text
+if [ ! -d "$HOME/.bash-preexec" ]; then
+  echo "Cloning bash-preexec..."
+  git clone https://github.com/rcaloras/bash-preexec.git ~/.bash-preexec
+fi
+
+# Clone base16-shell for themes
+if [ ! -d "$HOME/.config/base16-shell" ]; then
+  echo "Cloning base16-shell..."
+  git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
 fi
 
 # Clone TPM if not present
@@ -66,6 +78,9 @@ if [ -f "$HOME/.vimrc" ]; then
   mv "$HOME/.vimrc" "$HOME/.vimrc.bak"  # Backup existing .vimrc
 fi
 ln -sf "$DOTFILES_DIR/.vimrc" "$HOME/.vimrc"
+# Symlink Neovim config
+mkdir -p "$HOME/.config/nvim"
+ln -sf "$DOTFILES_DIR/.config/nvim/init.vim" "$HOME/.config/nvim/init.vim"
 
 # Append Starship init to .bashrc if not present
 if ! grep -q "starship init bash" "$HOME/.bashrc" && [ -f /usr/local/bin/starship ]; then

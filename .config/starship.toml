@@ -1,7 +1,7 @@
 add_newline = false  # Forces single-line prompt
 
 # Custom format to force single-line: All modules + character on one line
-format = "$username$hostname$directory$git_branch$git_status$character "
+format = "$username$hostname$directory$git_branch$git_status$battery$time$character "
 
 # Username: Bold green for normal, red for root
 [username]
@@ -41,7 +41,15 @@ staged = '[++\($count\)](green)'
 renamed = "👅"
 deleted = "🗑"
 
-# Character: Arrow for success/error
-[character]
-success_symbol = "[❯](bold green)"
-error_symbol = "[❯](bold red)"
+# Battery: Show battery status
+[battery]
+full_symbol = "🔋"
+charging_symbol = "⚡"
+discharging_symbol = "💀"
+
+# Time: Show current time
+[time]
+disabled = false
+format = "[$time]($style) "
+style = "bold yellow"
+time_format = "%T"
