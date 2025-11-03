@@ -8,8 +8,9 @@
 - .bashrc: Main Bash config with history settings, color prompts, aliases, bash completion, fzf fuzzy search, starship prompt, git branch in PS1, bash-preexec for hooks, hstr for history search, zoxide for smart cd, exa and bat aliases.
 - .tmux.conf: Tmux config with prefix C-a, mouse mode, custom theme, status bar showing IP and time, keybinds for splitting, resizing panes, and navigation.
 - .vimrc: Extensive Vim configuration with syntax highlighting, line numbers, indentation (4 spaces), plugins like NERDTree, Airline, CtrlP, and custom mappings.
+- .config/alacritty/alacritty.yml: Alacritty terminal config with Nerd Font, base16 colors, opacity, and key bindings for ricing.
 - .config/nvim/init.vim: Neovim config based on .vimrc with modern plugins (Packer, Treesitter, Telescope, LSP, CMP) for enhanced editing.
-- install.sh: Installs dependencies (tmux, git, fzf, vim, neovim, starship, Nerd Font, hstr, bat, exa, zoxide, fastfetch, bash-preexec, base16-shell), clones repos, and symlinks dotfiles.
+- install.sh: Installs dependencies (tmux, git, fzf, vim, neovim, starship, Nerd Font, hstr, bat, exa, zoxide, fastfetch, bash-preexec, base16-shell, alacritty), clones repos, and symlinks dotfiles.
 - uninstall.sh: Removes symlinks and optional cleanup of installed tools.
 - starship.toml: Starship prompt configuration with custom format showing username, hostname, directory, git status with emojis, battery, and time.
 

@@ -1,0 +1,68 @@
+# Alacritty configuration for riced terminal
+# See https://alacritty.org/config-alacritty.html for full options
+
+# Window settings
+window:
+  opacity: 0.95
+  padding:
+    x: 10
+    y: 10
+  decorations: none  # Borderless for ricing
+
+# Font settings (uses installed Nerd Font)
+font:
+  normal:
+    family: "JetBrainsMono Nerd Font"
+    style: Regular
+  bold:
+    family: "JetBrainsMono Nerd Font"
+    style: Bold
+  italic:
+    family: "JetBrainsMono Nerd Font"
+    style: Italic
+  bold_italic:
+    family: "JetBrainsMono Nerd Font"
+    style: Bold Italic
+  size: 12.0
+
+# Colors (base16-default-dark theme for consistency)
+colors:
+  primary:
+    background: '0x181818'
+    foreground: '0xd8d8d8'
+  cursor:
+    text: '0x181818'
+    cursor: '0xd8d8d8'
+  normal:
+    black:   '0x181818'
+    red:     '0xab4642'
+    green:   '0xa1b56c'
+    yellow:  '0xf7ca88'
+    blue:    '0x7cafc2'
+    magenta: '0xba8baf'
+    cyan:    '0x86c1b9'
+    white:   '0xd8d8d8'
+  bright:
+    black:   '0x585858'
+    red:     '0xab4642'
+    green:   '0xa1b56c'
+    yellow:  '0xf7ca88'
+    blue:    '0x7cafc2'
+    magenta: '0xba8baf'
+    cyan:    '0x86c1b9'
+    white:   '0xf8f8f8'
+
+# Key bindings (optional ricing shortcuts)
+key_bindings:
+  - { key: N, mods: Control|Shift, action: SpawnNewInstance }
+  - { key: Q, mods: Control|Shift, action: Quit }
+
+# Performance
+scrolling:
+  history: 10000
+
+# Shell (uses your Bash setup)
+shell:
+  program: /bin/bash
+  args:
+    - --login

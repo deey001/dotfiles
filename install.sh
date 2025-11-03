@@ -20,14 +20,14 @@ if [ "$OS" = "Darwin" ]; then
     echo "Installing Homebrew..."
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   fi
-  echo "Installing tmux, git, fzf, vim, neovim, starship, hstr, bat, exa, zoxide, fastfetch via Homebrew..."
-  brew install tmux git fzf vim neovim starship hstr bat exa zoxide fastfetch
+  echo "Installing tmux, git, fzf, vim, neovim, starship, hstr, bat, exa, zoxide, fastfetch, alacritty via Homebrew..."
+  brew install tmux git fzf vim neovim starship hstr bat exa zoxide fastfetch alacritty
   brew install --cask font-jetbrains-mono-nerd-font
 elif [ "$OS" = "Linux" ]; then
   # Assume Debian-based; adjust for other distros
   sudo apt update
-  echo "Installing tmux, git, fzf, vim, neovim, xclip, bash-completion, zoxide, hstr, bat, exa, fastfetch..."
-  sudo apt install -y tmux git fzf vim neovim xclip bash-completion zoxide hstr bat exa fastfetch
+  echo "Installing tmux, git, fzf, vim, neovim, xclip, bash-completion, zoxide, hstr, bat, exa, fastfetch, alacritty..."
+  sudo apt install -y tmux git fzf vim neovim xclip bash-completion zoxide hstr bat exa fastfetch alacritty
   if [ -n "$WAYLAND_DISPLAY" ]; then
     sudo apt install -y wl-clipboard
   fi
@@ -81,6 +81,9 @@ ln -sf "$DOTFILES_DIR/.vimrc" "$HOME/.vimrc"
 # Symlink Neovim config
 mkdir -p "$HOME/.config/nvim"
 ln -sf "$DOTFILES_DIR/.config/nvim/init.vim" "$HOME/.config/nvim/init.vim"
+# Symlink Alacritty config
+mkdir -p "$HOME/.config/alacritty"
+ln -sf "$DOTFILES_DIR/.config/alacritty/alacritty.yml" "$HOME/.config/alacritty/alacritty.yml"
 
 # Append Starship init to .bashrc if not present
 if ! grep -q "starship init bash" "$HOME/.bashrc" && [ -f /usr/local/bin/starship ]; then
