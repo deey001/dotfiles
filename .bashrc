@@ -123,7 +123,7 @@ fi
 if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
     LOGFILE="$HOME/ssh_logs/$(date +%Y%m%d_%H%M%S)_ssh.log"
     mkdir -p "$HOME/ssh_logs"
-    script -q -a -f "$LOGFILE"
+    script -q -a "$LOGFILE"
 fi
 
 function parse_git_dirty {
