@@ -1,7 +1,10 @@
 add_newline = false  # Forces single-line prompt
 
 # Custom format to force single-line: All modules + character on one line
-format = "$username$hostname$directory$git_branch$git_status$battery$time$character "
+format = "$username$hostname$directory$git_branch$git_status$battery$character"
+
+# Right-aligned prompt with time
+right_format = "$time"
 
 # Username: Bold green for normal, red for root
 [username]
