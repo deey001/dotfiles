@@ -120,11 +120,12 @@ if command -v fastfetch >/dev/null 2>&1; then
 fi
 
 # Auto-log SSH sessions (excludes passwords since they're not echoed)
-if ([ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]) && [ -z "$SCRIPT" ]; then
-    LOGFILE="$HOME/ssh_logs/$(date +%Y%m%d_%H%M%S)_ssh.log"
-    mkdir -p "$HOME/ssh_logs"
-    script -q -a "$LOGFILE"
-fi
+# Temporarily disabled due to PTY issues
+# if ([ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]) && [ -z "$SCRIPT" ]; then
+#     LOGFILE="$HOME/ssh_logs/$(date +%Y%m%d_%H%M%S)_ssh.log"
+#     mkdir -p "$HOME/ssh_logs"
+#     script -q -a "$LOGFILE"
+# fi
 
 function parse_git_dirty {
   [[ $(git status --porcelain 2> /dev/null) ]] && echo "*"
