@@ -114,6 +114,11 @@ if [ -f /usr/local/bin/starship ]; then
     eval "$(starship init bash)"
 fi
 
+# Fastfetch system info on login
+if command -v fastfetch >/dev/null 2>&1; then
+    fastfetch
+fi
+
 function parse_git_dirty {
   [[ $(git status --porcelain 2> /dev/null) ]] && echo "*"
 }
