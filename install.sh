@@ -153,10 +153,11 @@ fi
 # fi
 
 # Clone bash-preexec for predictive text
-if [ ! -d "$HOME/.bash-preexec" ]; then
-  echo "Cloning bash-preexec..."
-  git clone https://github.com/rcaloras/bash-preexec.git ~/.bash-preexec
-fi
+# DISABLED - may be causing bash crashes
+# if [ ! -d "$HOME/.bash-preexec" ]; then
+#   echo "Cloning bash-preexec..."
+#   git clone https://github.com/rcaloras/bash-preexec.git ~/.bash-preexec
+# fi
 
 # Clone base16-shell for themes
 if [ ! -d "$HOME/.config/base16-shell" ]; then

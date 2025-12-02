@@ -89,9 +89,10 @@ if ! shopt -oq posix; then
 fi
 
 # bash-preexec for predictive text hooks
-if [ -f ~/.bash-preexec/bash-preexec.sh ]; then
-    source ~/.bash-preexec/bash-preexec.sh
-fi
+# DISABLED - may be causing bash crashes
+# if [ -f ~/.bash-preexec/bash-preexec.sh ]; then
+#     source ~/.bash-preexec/bash-preexec.sh
+# fi
 
 # Fuzzy history search with fzf
 if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
