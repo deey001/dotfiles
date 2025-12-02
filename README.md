@@ -52,3 +52,5 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
 
 ## Uninstallation
 Run `./uninstall.sh` to remove symlinks. This will remove all symlinks created by the install script.
+
+Thanks to @deey001 for the initial dotfiles configuration.
