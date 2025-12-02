@@ -51,4 +51,4 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
     - **Neovim**: Open `nvim` and run `:PackerSync` (if not auto-triggered).
 
 ## Uninstallation
-Run `./uninstall.sh` to remove symlinks.
+Run `./uninstall.sh` to remove symlinks. This will remove all symlinks created by the install script.
