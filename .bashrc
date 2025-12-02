@@ -129,7 +129,7 @@ fi
 
 # ble.sh (Bash Line Editor) for predictive text and syntax highlighting
 # Must be sourced at the end of .bashrc
-# DISABLED - causing bash crashes on cd commands on some systems
-# if [ -f ~/.local/share/blesh/ble.sh ]; then
-#     source ~/.local/share/blesh/ble.sh
-# fi
+# TESTING - likely the crash culprit
+if [ -f ~/.local/share/blesh/ble.sh ]; then
+    source ~/.local/share/blesh/ble.sh
+fi
