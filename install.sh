@@ -144,12 +144,13 @@ fi
 # Install ble.sh (Bash Line Editor)
 # A command line editor written in pure Bash 5.0+.
 # Provides syntax highlighting, auto-suggestions, and vim modes for the command line.
-if [ ! -d "$HOME/.local/share/blesh" ]; then
-    echo "Installing ble.sh..."
-    git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git
-    make -C ble.sh install PREFIX=~/.local
-    rm -rf ble.sh
-fi
+# DISABLED - causes bash crashes on cd commands on some systems
+# if [ ! -d "$HOME/.local/share/blesh" ]; then
+#     echo "Installing ble.sh..."
+#     git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git
+#     make -C ble.sh install PREFIX=~/.local
+#     rm -rf ble.sh
+# fi
 
 # Clone bash-preexec for predictive text
 if [ ! -d "$HOME/.bash-preexec" ]; then
