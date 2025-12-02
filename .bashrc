@@ -61,12 +61,12 @@ alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
 
-# exa aliases (better ls)
-if command -v exa >/dev/null 2>&1; then
-    alias ls='exa --color=auto'
-    alias ll='exa -alF'
-    alias la='exa -A'
-    alias l='exa -CF'
+# eza aliases (better ls)
+if command -v eza >/dev/null 2>&1; then
+    alias ls='eza --color=auto'
+    alias ll='eza -alF'
+    alias la='eza -A'
+    alias l='eza -CF'
 fi
 
 # bat alias (better cat)
@@ -127,10 +127,8 @@ fi
 #     script -q -a "$LOGFILE"
 # fi
 
-function parse_git_dirty {
-  [[ $(git status --porcelain 2> /dev/null) ]] && echo "*"
-}
-function parse_git_branch {
-  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/ \($1$(parse_git_dirty))/"
-}
-export PS1="\[\033[32m\]\u@\h \w\[\033[33m\]\$(parse_git_branch)\[\033[00m\] ❯ "
+# ble.sh (Bash Line Editor) for predictive text and syntax highlighting
+# Must be sourced at the end of .bashrc
+if [ -f ~/.local/share/blesh/ble.sh ]; then
+    source ~/.local/share/blesh/ble.sh
+fi

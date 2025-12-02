@@ -210,72 +210,60 @@ augroup END
 # Reselect last-pasted text.
 nnoremap gp `[v`]
 
-# Pathogen Plugins
-# Start NERDTree if no files specified.
+# Vim-Plug Plugins
+call plug#begin('~/.vim/plugged')
+
+" Essentials
+Plug 'scrooloose/nerdtree'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'airblade/vim-gitgutter'
+Plug 'tpope/vim-surround'
+Plug 'ctrlpvim/ctrlp.vim'
+
+" Syntax / Language Support
+Plug 'pearofducks/ansible-vim'
+Plug 'hashivim/vim-terraform'
+Plug 'jvirtanen/vim-hcl'
+
+call plug#end()
+
+# Plugin Settings
+
+# NERDTree
 autocmd StdinReadPre * let s:std_in=1
 autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
-# Close NERDTree if it's the only window left.
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
-# Exclude NERDTree from indent guides.
 let g:indent_guides_exclude_filetypes = ['nerdtree']
 
-# Airline Plugin
+# Airline
 let g:airline#extensions#tabline#enabled = 1
 set laststatus=2
 let g:airline_theme='murmur'
 let g:airline#extensions#hunks#enabled=0
 let g:airline#extensions#branch#enabled=1
 
-# Windowswap Plugin
-let g:windowswap_map_keys = 0
-nnoremap <silent> <leader>yw :call WindowSwap#MarkWindowSwap()<CR>
-nnoremap <silent> <leader>pw :call WindowSwap#DoWindowSwap()<CR>
-nnoremap <silent> <leader>ww :call WindowSwap#EasyWindowSwap()<CR>
-
-# CtrlP Plugin
-set runtimepath^=~/.vim/bundle/ctrlp.vim
-
-# Ansible-vim Plugin
+# Ansible
 let g:ansible_extra_keywords_highlight = 1
 let g:ansible_name_highlight = 'b'
 let g:ansible_extra_syntaxes = "sh.vim"
+
+# Terraform
+let g:terraform_align = 1
+let g:hcl_fmt_autosave = 1
+let g:tf_fmt_autosave = 0
+let g:nomad_fmt_autosave = 1
+
+# Autocomplete
+set omnifunc=syntaxcomplete#Complete
+inoremap <C-Space> <C-x><C-o>
+set completeopt=menu,menuone,preview
+set complete+=k
+
+# Trailing Whitespace Cleanup
 func! DeleteTrailingWS()
     exe "normal mz"
     %s/\s\+$//ge
     exe "normal `z"
 endfunc
 autocmd BufWrite * :call DeleteTrailingWS()
-
-# vim-hclfmt Plugin
-let g:hcl_fmt_autosave = 1
-let g:tf_fmt_autosave = 0
-let g:nomad_fmt_autosave = 1
-
-# Custom toggle for indent guides
-nmap <silent> <leader><bslash> :call ToggleIndentGuidesSpaces()<cr>
-function! ToggleIndentGuidesSpaces()
-    if exists('b:iguides_spaces')
-        call matchdelete(b:iguides_spaces)
-        unlet b:iguides_spaces
-    else
-        let pos = range(1, &l:textwidth, &l:shiftwidth)
-        call map(pos, '"\\%" . v:val . "v"')
-        let pat = '\%(\_^\s*\)\@<=\%(' . join(pos, '\|') . '\)\s'
-        let b:iguides_spaces = matchadd('CursorLine', pat)
-    endif
-endfunction
-
-# vim-hashicorp-terraform Plugin
-let g:terraform_align = 1
-
-# Autocomplete Enhancement
-# Enable Vim's built-in omni-completion for various filetypes (e.g., Python, HTML).
-set omnifunc=syntaxcomplete#Complete
-# Map Ctrl+Space to trigger autocomplete (works in Insert mode).
-inoremap <C-Space> <C-x><C-o>
-# Enable auto-completion popup menu with Tab (menu with one match, preview).
-set completeopt=menu,menuone,preview
-# Add dictionary completion (e.g., for custom words).
-set complete+=k
-# Optional: Set a dictionary file (create ~/.vim/dict/words with custom words).
-# set dictionary+=~/.vim/dict/words

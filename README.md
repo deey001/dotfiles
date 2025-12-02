@@ -1,25 +1,54 @@
-# Dotfiles
+# Headless Server Dotfiles
 
-## Files
-- .bash_aliases: Custom aliases for common commands like `ll`, `la`, `grep` with color, `gti` for git, `vi` for vim, etc.
-- .bash_exports: Exported environment variables (currently empty).
-- .bash_profile: Login shell config that sources .bashrc.
-- .bash_wrappers: Custom function wrappers (currently empty).
-- .bashrc: Main Bash config with history settings, color prompts, aliases, bash completion, fzf fuzzy search, starship prompt, git branch in PS1, bash-preexec for hooks, hstr for history search, zoxide for smart cd, exa and bat aliases.
-- .tmux.conf: Tmux config with prefix C-a, mouse mode, custom theme, status bar showing IP and time, keybinds for splitting, resizing panes, and navigation.
-- .vimrc: Extensive Vim configuration with syntax highlighting, line numbers, indentation (4 spaces), plugins like NERDTree, Airline, CtrlP, and custom mappings.
-- .config/alacritty/alacritty.yml: Alacritty terminal config with Nerd Font, base16 colors, opacity, and key bindings for ricing.
-- .config/nvim/init.vim: Neovim config based on .vimrc with modern plugins (Packer, Treesitter, Telescope, LSP, CMP) for enhanced editing.
-- install.sh: Installs dependencies (tmux, git, fzf, vim, neovim, starship, Nerd Font, hstr, bat, exa, zoxide, fastfetch, bash-preexec, base16-shell, alacritty), clones repos, and symlinks dotfiles.
-- uninstall.sh: Removes symlinks and optional cleanup of installed tools.
-- starship.toml: Starship prompt configuration with custom format showing username, hostname, directory, git status with emojis, battery, and time.
+A streamlined, modern dotfiles configuration designed for headless servers (Linux/macOS). Optimized for performance, ease of use, and remote development.
+
+**Supported OS**: macOS, Debian/Ubuntu, RHEL/CentOS/Fedora, Arch Linux.
+
+## Features
+
+### 🚀 Modern Shell Experience
+- **Starship Prompt**: Minimal, fast, and informative prompt showing git status, package versions, and execution time.
+- **Predictive Text**: `ble.sh` provides syntax highlighting and autosuggestions (like zsh) in pure Bash.
+- **Modern Tools**:
+  - `eza` (better `ls` with icons and git status)
+  - `bat` (better `cat` with syntax highlighting)
+  - `zoxide` (smarter `cd` navigation)
+  - `fzf` (fuzzy finding for files and history)
+  - `hstr` (visual history search)
+  - `cmatrix` (matrix screen saver)
+  - `btop` (beautiful resource monitor)
+  - `lazygit` (terminal UI for Git)
+  - `glow` (markdown renderer)
+  - `tldr` (simplified man pages)
+
+### 🧹 Minimalist Ubuntu
+- **Snap Removal**: On Ubuntu systems, `snapd` is automatically purged to ensure a lightweight, bloat-free environment.
+
+### 📝 Neovim-Only Workflow
+- **Neovim**: Replaces Vim completely. Aliases `vi` and `vim` point to `nvim`.
+- **Plugins**: Pre-configured with Packer, Treesitter (syntax), Telescope (fuzzy find), LSP, and Autocomplete.
+
+### 💻 Terminal Multiplexing
+- **Tmux**: Pre-configured with:
+  - Mouse support
+  - Split/navigation keybinds
+  - **Persistence**: Automatically saves and restores sessions (`tmux-resurrect` + `tmux-continuum`).
 
 ## Installation
-1. Clone: git clone https://github.com/deey001/dotfiles.git ~/dotfiles
-2. cd ~/dotfiles && ./install.sh
-3. tmux: prefix + I for plugins
+
+1.  **Clone**:
+    ```bash
+    git clone https://github.com/deey001/dotfiles.git ~/dotfiles
+    ```
+2.  **Install**:
+    ```bash
+    cd ~/dotfiles && ./install.sh
+    ```
+    *Installs all dependencies (Neovim, Tmux, Starship, etc.) and sets up symlinks.*
+
+3.  **Finalize**:
+    - **Tmux**: Press `Prefix + I` (default `Ctrl+a` then `I`) to install plugins.
+    - **Neovim**: Open `nvim` and run `:PackerSync` (if not auto-triggered).
 
 ## Uninstallation
-./uninstall.sh
-
-Requirements handled by install.sh.
+Run `./uninstall.sh` to remove symlinks.
