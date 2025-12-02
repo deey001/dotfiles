@@ -31,14 +31,13 @@ if [ "$OS" = "Darwin" ]; then
   # Hstr: Bash history suggest box. Easily view, navigate, search, and use your command history.
   # Bat: A cat clone with syntax highlighting and Git integration.
   # Eza: A modern, maintained replacement for ls. Features colors, icons, and git status.
-  # Zoxide: A smarter cd command. Remembers which directories you use most frequently.
   # Fastfetch: A neofetch-like tool for fetching system information and displaying it prettily.
   # Cmatrix: Matrix screen saver.
   # Btop: Beautiful resource monitor with graphs and colors.
   # Lazygit: Terminal UI for Git operations.
   # Glow: Markdown renderer for the terminal.
   # Tldr: Simplified man pages with practical examples.
-  brew install tmux git fzf neovim starship hstr bat eza zoxide fastfetch cmatrix btop lazygit glow tldr
+  brew install tmux git fzf neovim starship hstr bat eza fastfetch cmatrix btop lazygit glow tldr
 
 elif [ "$OS" = "Linux" ]; then
   if [ -f /etc/debian_version ]; then
@@ -52,13 +51,12 @@ elif [ "$OS" = "Linux" ]; then
     # Neovim: Modern Vim editor.
     # Xclip: Command line interface to the X11 clipboard (useful for clipboard sharing).
     # Bash-completion: Programmable completion for the bash shell.
-    # Zoxide: Smarter cd.
     # Hstr: History search.
     # Bat: Better cat.
     # Cmatrix: Matrix screen saver.
     # Btop: Beautiful resource monitor.
     # Tldr: Simplified man pages.
-    sudo apt install -y tmux git fzf neovim xclip bash-completion zoxide hstr bat cmatrix btop tldr
+    sudo apt install -y tmux git fzf neovim xclip bash-completion hstr bat cmatrix btop tldr
     
     # Install fastfetch from PPA
     echo "Installing fastfetch from PPA..."
@@ -102,7 +100,6 @@ elif [ "$OS" = "Linux" ]; then
     # Git: Version control.
     # Fzf: Fuzzy finder.
     # Neovim: Modern Vim editor.
-    # Zoxide: Smarter cd.
     # Hstr: History search.
     # Bat: Better cat.
     # Fastfetch: System info.
@@ -111,10 +108,10 @@ elif [ "$OS" = "Linux" ]; then
     # Lazygit: Terminal UI for Git.
     # Glow: Markdown renderer.
     # Tldr: Simplified man pages.
-    if command -v dnf >/dev/null 2>&1; then
-        sudo dnf install -y git tmux fzf neovim zoxide hstr bat fastfetch cmatrix btop lazygit glow tldr
+    if command -v dnf > /dev/null 2>&1; then
+        sudo dnf install -y git tmux fzf neovim hstr bat fastfetch cmatrix btop lazygit glow tldr
     else
-        sudo yum install -y git tmux fzf neovim zoxide hstr bat fastfetch cmatrix btop lazygit glow tldr
+        sudo yum install -y git tmux fzf neovim hstr bat fastfetch cmatrix btop lazygit glow tldr
     fi
   elif [ -f /etc/arch-release ]; then
     # Arch Linux
@@ -124,7 +121,6 @@ elif [ "$OS" = "Linux" ]; then
     # Git: Version control.
     # Fzf: Fuzzy finder.
     # Neovim: Modern Vim editor.
-    # Zoxide: Smarter cd.
     # Hstr: History search.
     # Bat: Better cat.
     # Eza: Modern ls.
@@ -134,7 +130,7 @@ elif [ "$OS" = "Linux" ]; then
     # Lazygit: Terminal UI for Git.
     # Glow: Markdown renderer.
     # Tldr: Simplified man pages.
-    sudo pacman -Syu --noconfirm git tmux fzf neovim zoxide hstr bat eza fastfetch cmatrix btop lazygit glow tldr
+    sudo pacman -Syu --noconfirm git tmux fzf neovim hstr bat eza fastfetch cmatrix btop lazygit glow tldr
   fi
   
   # Install Starship
