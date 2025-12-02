@@ -105,10 +105,10 @@ alias ff='cd $(find . -type d | fzf)'
 # hstr for better history search
 alias hh=hstr
 
-# zoxide initialization (DISABLED - conflicts with ble.sh causing bash hangs)
-# if command -v zoxide >/dev/null 2>&1; then
-#     eval "$(zoxide init bash)" 2>/dev/null || true
-# fi
+# zoxide initialization - TESTING (use 'z' command for smarter cd)
+if command -v zoxide >/dev/null 2>&1; then
+    eval "$(zoxide init bash)" 2>/dev/null || true
+fi
 
 # Starship initialization
 if [ -f /usr/local/bin/starship ]; then
