@@ -55,14 +55,31 @@ elif [ "$OS" = "Linux" ]; then
     # Zoxide: Smarter cd.
     # Hstr: History search.
     # Bat: Better cat.
-    # Fastfetch: System info.
     # Cmatrix: Matrix screen saver.
     # Btop: Beautiful resource monitor.
-    # Lazygit: Terminal UI for Git.
-    # Glow: Markdown renderer.
     # Tldr: Simplified man pages.
-    # Note: eza is not always in default repos, falling back or assuming user handles it.
-    sudo apt install -y tmux git fzf neovim xclip bash-completion zoxide hstr bat fastfetch cmatrix btop lazygit glow tldr
+    sudo apt install -y tmux git fzf neovim xclip bash-completion zoxide hstr bat cmatrix btop tldr
+    
+    # Install fastfetch from PPA
+    echo "Installing fastfetch from PPA..."
+    sudo add-apt-repository -y ppa:zhangsongcui3371/fastfetch
+    sudo apt update
+    sudo apt install -y fastfetch
+    
+    # Install lazygit from GitHub releases
+    echo "Installing lazygit from GitHub..."
+    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+    curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+    tar xf lazygit.tar.gz lazygit
+    sudo install lazygit /usr/local/bin
+    rm lazygit lazygit.tar.gz
+    
+    # Install glow from GitHub releases
+    echo "Installing glow from GitHub..."
+    GLOW_VERSION=$(curl -s "https://api.github.com/repos/charmbracelet/glow/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+    curl -Lo glow.deb "https://github.com/charmbracelet/glow/releases/latest/download/glow_${GLOW_VERSION}_amd64.deb"
+    sudo dpkg -i glow.deb
+    rm glow.deb
     
     # Ubuntu Minimal Cleanup
     if grep -qi "ubuntu" /etc/os-release; then
