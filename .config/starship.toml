@@ -1,7 +1,6 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
 # Global performance tweaks – always at the top
-[performance]
 scan_timeout = 10
 command_timeout = 100
 
