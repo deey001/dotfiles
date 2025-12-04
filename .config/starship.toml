@@ -1,5 +1,10 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
+# Global performance tweaks – always at the top
+[performance]
+scan_timeout = 10
+command_timeout = 100
+
 format = """
 [░▒▓](#a3aed2)\
 $os\
@@ -91,8 +96,3 @@ show_always = true
 style_user = "fg:#090c0c bg:#a3aed2"
 style_root = "fg:#ff0000 bg:#a3aed2"
 format = '[$user ](bg:#a3aed2)'
-
-
-[performance]
-scan_timeout = 10      # default is 30 ms
-command_timeout = 100  # default is 500 ms
