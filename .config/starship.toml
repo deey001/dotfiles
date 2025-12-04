@@ -18,9 +18,10 @@ $nodejs\
 $rust\
 $golang\
 $php\
-[](fg:#212736 bg:#1d2230)\
+# [](fg:#212736 bg:#1d2230)\
+[](fg:#212736)\
 $fill\
-[](fg:#1d2230)[  $time ](bg:#1d2230 fg:#a0a9cb)[ ](fg:#1d2230)\
+[](fg:#1d2230)[  $time ](bg:#1d2230 fg:#a0a9cb)[ ](fg:#1d2230)\
 \n$character"""
 
 # This creates the empty space that pushes time to the right
