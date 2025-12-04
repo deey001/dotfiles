@@ -3,13 +3,13 @@
 " Enable Pathogen plugin manager (commented out as it requires manual setup)
 " execute pathogen#infect()
 
-# Mouse and terminal settings
-# Disable mouse support and terminal mouse tracking for better compatibility with some terminals.
+" Mouse and terminal settings
+" Disable mouse support and terminal mouse tracking for better compatibility with some terminals.
 set mouse=
 set ttymouse=
 
-# Sudo save workaround
-# Allow saving files as sudo when forgetting to start Vim with sudo privileges.
+" Sudo save workaround
+" Allow saving files as sudo when forgetting to start Vim with sudo privileges.
 cmap w!! w !sudo tee > /dev/null %
 
 " Highlight characters over 80 columns (commented out)
@@ -19,15 +19,15 @@ cmap w!! w !sudo tee > /dev/null %
 "  autocmd BufEnter * match OverLength /\%81v.*/
 "augroup END
 
-# Crontab and backup settings
-# Allow editing crontab files by skipping certain backup paths. Enable backups, disable swap files, and set directories.
+" Crontab and backup settings
+" Allow editing crontab files by skipping certain backup paths. Enable backups, disable swap files, and set directories.
 set backupskip=/tmp/*,/private/tmp/*
 set backup                        " Enable backup files
 set noswapfile                    " Disable swap files (modern practice)
 set undodir=~/.vim/tmp/undo//     " Directory for undo files
 set backupdir=~/.vim/tmp/backup// " Directory for backup files
 set directory=~/.vim/tmp/swap//   " Directory for swap files (though disabled)
-# Create directories if they don't exist
+" Create directories if they don't exist
 if !isdirectory(expand(&undodir))
     call mkdir(expand(&undodir), "p")
 endif
@@ -38,8 +38,8 @@ if !isdirectory(expand(&directory))
     call mkdir(expand(&directory), "p")
 endif
 
-# Window resizing and layout
-# Automatically resize splits when the Vim window is resized.
+" Window resizing and layout
+" Automatically resize splits when the Vim window is resized.
 au VimResized * :wincmd =
 
 " General settings
@@ -58,8 +58,8 @@ set title                         " Set the terminal title
 set linebreak                     " Wrap lines at convenient points
 set colorcolumn=+1                " Highlight column after textwidth (if set)
 
-# Filetype and indentation
-# Enable filetype-specific plugins and indentation.
+" Filetype and indentation
+" Enable filetype-specific plugins and indentation.
 filetype plugin on
 filetype indent on
 
@@ -83,8 +83,8 @@ set t_vb=                         " Disable visual bell
 set t_ut=                         " Clear terminal background (for 256-color)
 set tm=500                        " Terminal mode timeout (ms)
 
-# Colors and Fonts
-# Set 256-color mode if supported, enable syntax highlighting, and customize line numbers.
+" Colors and Fonts
+" Set 256-color mode if supported, enable syntax highlighting, and customize line numbers.
 set t_Co=256
 syntax enable
 set cursorline                    " Highlight current line
@@ -93,13 +93,13 @@ highlight LineNr term=bold cterm=NONE ctermfg=DarkGrey ctermbg=NONE gui=NONE gui
 set nu                            " Enable line numbers
 set relativenumber                " Show relative line numbers
 set background=dark               " Dark background theme
-#let g:solarized_termcolors=256   " Use 256 colors with Solarized (commented out)
-#colorscheme slate                " Slate theme (commented out)
+"let g:solarized_termcolors=256   " Use 256 colors with Solarized (commented out)
+"colorscheme slate                " Slate theme (commented out)
 set encoding=utf8                 " Use UTF-8 encoding
 set ffs=unix,dos,mac              " Prefer Unix file formats
 
-# Text, tab, and indent related
-# Use spaces instead of tabs, with smart indentation.
+" Text, tab, and indent related
+" Use spaces instead of tabs, with smart indentation.
 set expandtab
 set smarttab
 set shiftwidth=4                  " Indent with 4 spaces
@@ -110,19 +110,19 @@ set ai                            " Auto-indent
 set si                            " Smart-indent
 set wrap                          " Wrap long lines
 
-# Visual mode related
-# Search for visually selected text with * or #.
+" Visual mode related
+" Search for visually selected text with * or #.
 vnoremap <silent> * :call VisualSelection('f')<CR>
 vnoremap <silent> # :call VisualSelection('b')<CR>
 
-# Status line
-# Always show the status line (commented out to use default or plugin).
-#set laststatus=1
-# Format status line with paste mode, file info, and CWD (commented out).
-#set statusline=\ %{HasPaste()}%F%m%r%h\ %w\ \ CWD:\ %r%{getcwd()}%h\ \ \ Line:\ %l
+" Status line
+" Always show the status line (commented out to use default or plugin).
+"set laststatus=1
+" Format status line with paste mode, file info, and CWD (commented out).
+"set statusline=\ %{HasPaste()}%F%m%r%h\ %w\ \ CWD:\ %r%{getcwd()}%h\ \ \ Line:\ %l
 
-# Moving around, tabs, windows, and buffers
-# Resize splits with + - > < keys.
+" Moving around, tabs, windows, and buffers
+" Resize splits with + - > < keys.
 map + <c-w>-
 map - <c-w>+
 map > <c-w><
@@ -154,15 +154,15 @@ autocmd BufReadPost *
 " Remember open buffers on close.
 set viminfo^=%
 
-# Vim split navigation
-# Remap Ctrl + HJKL to navigate splits.
+" Vim split navigation
+" Remap Ctrl + HJKL to navigate splits.
 nnoremap <C-J> <C-W><C-J>
 nnoremap <C-K> <C-W><C-K>
 nnoremap <C-L> <C-W><C-L>
 nnoremap <C-H> <C-W><C-H>
 
-# Helper functions
-# Execute a command from the command line.
+" Helper functions
+" Execute a command from the command line.
 function! CmdLine(str)
     exe "menu Foo.Bar :" . a:str
     emenu Foo.Bar
@@ -194,8 +194,8 @@ function! HasPaste()
     return ''
 endfunction
 
-# Trailing whitespace and line return
-# Toggle trailing whitespace visibility in non-insert mode.
+" Trailing whitespace and line return
+" Toggle trailing whitespace visibility in non-insert mode.
 augroup trailing
     au!
     au InsertEnter * :set listchars-=trail:⌴
@@ -214,8 +214,9 @@ nnoremap gp `[v`]
 
 " Neovim-specific enhancements
 " Install packer if not present
-if empty(glob('~/.local/share/nvim/site/pack/packer/start/packer.nvim'))
-  silent !git clone --depth 1 https://github.com/wbthomason/packer.nvim ~/.local/share/nvim/site/pack/packer/start/packer.nvim
+let data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
+if empty(glob(data_dir . '/pack/packer/start/packer.nvim'))
+  silent execute '!git clone --depth 1 https://github.com/wbthomason/packer.nvim ' . data_dir . '/pack/packer/start/packer.nvim'
   autocmd VimEnter * PackerSync
 endif
 
