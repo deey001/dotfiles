@@ -133,3 +133,5 @@ fi
 if [ -f ~/.local/share/blesh/ble.sh ]; then
     source ~/.local/share/blesh/ble.sh
 fi
+# Ctrl-R for history, Ctrl-T for files, Alt-C for zoxide cd
+eval "$(fzf --bash)"

@@ -91,3 +91,7 @@ show_always = true
 style_user = "fg:#090c0c bg:#a3aed2"
 style_root = "fg:#ff0000 bg:#a3aed2"
 format = '[$user ](bg:#a3aed2)'
+
+
+scan_timeout = 10       # default 30 → faster prompt
+command_timeout = 100   # default 500
