@@ -46,12 +46,16 @@ elif [ "$OS" = "Linux" ]; then
     sudo apt update
     echo "Installing tools via apt..."
     
-    # Install Neovim via AppImage (more reliable than PPA)
-    echo "Installing latest Neovim AppImage..."
+    # Install Neovim via AppImage (extracted to avoid FUSE issues)
+    echo "Installing latest Neovim..."
     if [ ! -f /usr/local/bin/nvim ]; then
         curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
         chmod u+x nvim.appimage
-        sudo mv nvim.appimage /usr/local/bin/nvim
+        # Extract the AppImage to avoid FUSE dependency
+        ./nvim.appimage --appimage-extract > /dev/null 2>&1
+        sudo mv squashfs-root /usr/local/nvim
+        sudo ln -sf /usr/local/nvim/usr/bin/nvim /usr/local/bin/nvim
+        rm nvim.appimage
     fi
     
     # Tmux: Terminal Multiplexer.
