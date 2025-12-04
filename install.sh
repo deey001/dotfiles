@@ -46,11 +46,13 @@ elif [ "$OS" = "Linux" ]; then
     sudo apt update
     echo "Installing tools via apt..."
     
-    # Install Neovim from unstable PPA (required for modern plugins)
-    echo "Installing latest Neovim from PPA..."
-    sudo add-apt-repository -y ppa:neovim-ppa/unstable
-    sudo apt update
-    sudo apt install -y neovim
+    # Install Neovim via AppImage (more reliable than PPA)
+    echo "Installing latest Neovim AppImage..."
+    if [ ! -f /usr/local/bin/nvim ]; then
+        curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim.appimage
+        chmod u+x nvim.appimage
+        sudo mv nvim.appimage /usr/local/bin/nvim
+    fi
     
     # Tmux: Terminal Multiplexer.
     # Git: Version control.
