@@ -46,10 +46,15 @@ elif [ "$OS" = "Linux" ]; then
     sudo apt update
     echo "Installing tools via apt..."
     
+    # Install Neovim from unstable PPA (required for modern plugins)
+    echo "Installing latest Neovim from PPA..."
+    sudo add-apt-repository -y ppa:neovim-ppa/unstable
+    sudo apt update
+    sudo apt install -y neovim
+    
     # Tmux: Terminal Multiplexer.
     # Git: Version control.
     # Fzf: Fuzzy finder.
-    # Neovim: Modern Vim editor.
     # Xclip: Command line interface to the X11 clipboard (useful for clipboard sharing).
     # Bash-completion: Programmable completion for the bash shell.
     # Hstr: History search.
@@ -57,7 +62,7 @@ elif [ "$OS" = "Linux" ]; then
     # Cmatrix: Matrix screen saver.
     # Btop: Beautiful resource monitor.
     # Tldr: Simplified man pages.
-    sudo apt install -y tmux git fzf neovim xclip bash-completion hstr bat cmatrix btop tldr
+    sudo apt install -y tmux git fzf xclip bash-completion hstr bat cmatrix btop tldr
     
     # Install fastfetch from PPA
     echo "Installing fastfetch from PPA..."
