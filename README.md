@@ -9,6 +9,7 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
 ### 🚀 Modern Shell Experience
 - **Starship Prompt**: Minimal, fast, and informative prompt showing git status, package versions, and execution time.
 - **Predictive Text**: `ble.sh` provides syntax highlighting and autosuggestions (like zsh) in pure Bash.
+- **Predictive Text**: `ble.sh` provides syntax highlighting and autosuggestions (like zsh) in pure Bash.
 - **Modern Tools**:
   - `eza` (better `ls` with icons and git status)
   - `bat` (better `cat` with syntax highlighting)

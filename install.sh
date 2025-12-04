@@ -38,6 +38,7 @@ if [ "$OS" = "Darwin" ]; then
   # Glow: Markdown renderer for the terminal.
   # Tldr: Simplified man pages with practical examples.
   brew install tmux git fzf neovim starship hstr bat eza fastfetch cmatrix btop lazygit glow tldr
+  brew install --cask font-ubuntu-nerd-font
 
 elif [ "$OS" = "Linux" ]; then
   if [ -f /etc/debian_version ]; then
@@ -133,6 +134,18 @@ elif [ "$OS" = "Linux" ]; then
     sudo pacman -Syu --noconfirm git tmux fzf neovim hstr bat eza fastfetch cmatrix btop lazygit glow tldr
   fi
   
+  # Install Ubuntu Nerd Font (Linux)
+  FONT_DIR="$HOME/.local/share/fonts"
+  if [ ! -f "$FONT_DIR/UbuntuNerdFont-Regular.ttf" ]; then
+    echo "Installing Ubuntu Nerd Font..."
+    mkdir -p "$FONT_DIR"
+    curl -fLo "$FONT_DIR/UbuntuNerdFont-Regular.ttf" \
+      https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuNerdFont-Regular.ttf
+    if command -v fc-cache >/dev/null 2>&1; then
+      fc-cache -f -v
+    fi
+  fi
+
   # Install Starship
   # The minimal, blazing-fast, and infinitely customizable prompt for any shell.
   curl -sS https://starship.rs/install.sh | sh -s -- -y
@@ -144,20 +157,12 @@ fi
 # Install ble.sh (Bash Line Editor)
 # A command line editor written in pure Bash 5.0+.
 # Provides syntax highlighting, auto-suggestions, and vim modes for the command line.
-# DISABLED - causes bash crashes on cd commands on some systems
-# if [ ! -d "$HOME/.local/share/blesh" ]; then
-#     echo "Installing ble.sh..."
-#     git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git
-#     make -C ble.sh install PREFIX=~/.local
-#     rm -rf ble.sh
-# fi
-
-# Clone bash-preexec for predictive text
-# DISABLED - may be causing bash crashes
-# if [ ! -d "$HOME/.bash-preexec" ]; then
-#   echo "Cloning bash-preexec..."
-#   git clone https://github.com/rcaloras/bash-preexec.git ~/.bash-preexec
-# fi
+if [ ! -d "$HOME/.local/share/blesh" ]; then
+    echo "Installing ble.sh..."
+    git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git
+    make -C ble.sh install PREFIX=~/.local
+    rm -rf ble.sh
+fi
 
 # Clone base16-shell for themes
 if [ ! -d "$HOME/.config/base16-shell" ]; then
@@ -171,7 +176,7 @@ if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
   git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 fi
 
-# Symlink dotfiles including starship.toml and .vimrc (backup existing .vimrc)
+# Symlink dotfiles including starship.toml
 echo "Creating symlinks..."
 ln -sf "$DOTFILES_DIR/.bash_aliases" "$HOME/.bash_aliases"
 ln -sf "$DOTFILES_DIR/.bash_exports" "$HOME/.bash_exports"
@@ -181,10 +186,7 @@ ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
 ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 mkdir -p "$HOME/.config"
 ln -sf "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
-if [ -f "$HOME/.vimrc" ]; then
-  mv "$HOME/.vimrc" "$HOME/.vimrc.bak"  # Backup existing .vimrc
-fi
-ln -sf "$DOTFILES_DIR/.vimrc" "$HOME/.vimrc"
+
 # Symlink Neovim config
 mkdir -p "$HOME/.config/nvim"
 ln -sf "$DOTFILES_DIR/.config/nvim/init.vim" "$HOME/.config/nvim/init.vim"
