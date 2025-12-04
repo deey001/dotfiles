@@ -194,45 +194,11 @@ ln -sf "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
 
 # Symlink Neovim config
 mkdir -p "$HOME/.config/nvim"
-ln -sf "$DOTFILES_DIR/.config/nvim/init.vim" "$HOME/.config/nvim/init.vim"
+ln -sf "$DOTFILES_DIR/.config/nvim/init.lua" "$HOME/.config/nvim/init.lua"
 
-# Install Neovim plugins with Packer
-echo "Installing Neovim plugins..."
-if command -v nvim &> /dev/null; then
-    # Determine the correct data directory
-    DATA_DIR=$(nvim --headless -c "echo stdpath('data')" -c "quit" 2>&1 | tail -n 1)
-    PACKER_DIR="${DATA_DIR}/site/pack/packer/start/packer.nvim"
-    
-    # Install Packer if not present
-    if [ ! -d "$PACKER_DIR" ]; then
-        echo "Installing Packer plugin manager..."
-        git clone --depth 1 https://github.com/wbthomason/packer.nvim "$PACKER_DIR"
-    fi
-    
-    # Create a minimal init file for plugin installation
-    TEMP_INIT=$(mktemp)
-    cat > "$TEMP_INIT" << 'NVIM_EOF'
-lua << LUA
-require('packer').startup(function(use)
-  use 'wbthomason/packer.nvim'
-  use 'nvim-treesitter/nvim-treesitter'
-  use 'nvim-telescope/telescope.nvim'
-  use 'nvim-lua/plenary.nvim'
-  use 'neovim/nvim-lspconfig'
-  use 'hrsh7th/nvim-cmp'
-  use 'hrsh7th/cmp-nvim-lsp'
-  use 'L3MON4D3/LuaSnip'
-end)
-LUA
-NVIM_EOF
-    
-    # Install plugins
-    nvim --headless -u "$TEMP_INIT" -c 'autocmd User PackerComplete quitall' -c 'PackerSync'
-    rm "$TEMP_INIT"
-    echo "Neovim plugins installed successfully."
-else
-    echo "Warning: nvim not found. Skipping plugin installation."
-fi
+# LazyVim will auto-install on first run
+echo "Neovim configured with LazyVim. Plugins will install on first launch."
+
 
 # Symlink Alacritty config
 mkdir -p "$HOME/.config/alacritty"
