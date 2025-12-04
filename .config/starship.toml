@@ -18,7 +18,6 @@ $nodejs\
 $rust\
 $golang\
 $php\
-#   [](fg:#212736 bg:#1d2230)\
 $fill\
 [](fg:#1d2230)[  $time ](bg:#0d2230 fg:#a0a9cb)[ ](fg:#1d2230)\
 \n$character"""
