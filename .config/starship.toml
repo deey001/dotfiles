@@ -3,7 +3,6 @@
 format = """
 [░▒▓](#a3aed2)\
 $os\
-$username\
 [](bg:#769ff0 fg:#a3aed2)\
 $directory\
 [](fg:#769ff0 bg:#394260)\
@@ -18,12 +17,6 @@ $php\
 $time\
 [ ](fg:#1d2230)\
 \n$character"""
-
-[username]
-show_always = true
-style_user = "fg:#090c0c bg:#a3aed2"
-style_root = "fg:#ff0000 bg:#a3aed2"
-format = '[$user ](bg:#a3aed2)'
 
 [directory]
 style = "fg:#e3e5e5 bg:#769ff0"
@@ -75,7 +68,7 @@ format = '[[  $time ](fg:#a0a9cb bg:#1d2230)]($style)'
 [os]
 disabled = false
 style = "bg:#a3aed2 fg:#090c0c"
-format = '[$symbol ](bg:#a3aed2)'
+format = '[ $symbol ]($style)'
 
 [os.symbols]
 Windows = ""
