@@ -3,6 +3,7 @@
 format = """
 [░▒▓](#a3aed2)\
 $os\
+$username\
 [](bg:#769ff0 fg:#a3aed2)\
 $directory\
 [](fg:#769ff0 bg:#394260)\
