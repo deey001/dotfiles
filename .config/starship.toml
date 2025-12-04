@@ -1,5 +1,6 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
+# Global performance tweaks – always at the top
 scan_timeout = 10
 command_timeout = 100
 
@@ -17,23 +18,16 @@ $nodejs\
 $rust\
 $golang\
 $php\
-[](fg:#212736)\
+[](fg:#212736 bg:#1d2230)\
 $fill\
-[](fg:#1d2230)$time[ ](fg:#1d2230)\
+[](fg:#1d2230)[  $time ](bg:#1d2230 fg:#a0a9cb)[ ](fg:#1d2230)\
 \n$character"""
 
+# This creates the empty space that pushes time to the right
 [fill]
 symbol = " "
 style = "bg:none"
 
-# ←←← This is the ONLY [time] section you need → keeps icons + colors working
-[time]
-disabled = false
-time_format = "%R"
-style = "bg:#1d2230 fg:#a0a9cb"
-format = "[ 󰥔 $time ]($style)"
-
-# ——— rest of your modules (unchanged) ———
 [directory]
 style = "fg:#e3e5e5 bg:#769ff0"
 format = "[ $path ]($style)"
@@ -47,7 +41,7 @@ truncation_symbol = "…/"
 "Pictures" = " "
 
 [git_branch]
-symbol = "󰊢"
+symbol = ""
 style = "bg:#394260"
 format = '[[ $symbol $branch ](fg:#769ff0 bg:#394260)]($style)'
 
@@ -61,7 +55,6 @@ style = "bg:#212736"
 format = '[[ $symbol ($version) ](fg:#769ff0 bg:#212736)]($style)'
 
 [rust]
-]
 symbol = ""
 style = "bg:#212736"
 format = '[[ $symbol ($version) ](fg:#769ff0 bg:#212736)]($style)'
@@ -76,22 +69,34 @@ symbol = ""
 style = "bg:#212736"
 format = '[[ $symbol ($version) ](fg:#769ff0 bg:#212736)]($style)'
 
+[time]
+disabled = false
+time_format = "%R" # Hour:Minute Format
+style = "bg:#1d2230"
+format = '[[  $time ](fg:#a0a9cb bg:#1d2230)]($style)'
+
 [os]
 disabled = false
 style = "bg:#a3aed2 fg:#090c0c"
-format = "[ $symbol ]($style)"
+format = '[ $symbol ]($style)'
 
 [os.symbols]
-Windows = "󰍲"
-Ubuntu = "󰕈"
-Debian = "󰣚"
-Mint = "󰣭"
-Macos = "󰀵"
-Arch = "󰣨"
-Linux = "󰌽"
+Windows = ""
+Ubuntu = ""
+Debian = ""
+Raspbian = "dh"
+Mint = ""
+Macos = ""
+Manjaro = ""
+Linux = ""
+Alpine = ""
+Arch = ""
+Amazon = ""
+Android = ""
+FreeBSD = ""
 
 [username]
 show_always = true
 style_user = "fg:#090c0c bg:#a3aed2"
 style_root = "fg:#ff0000 bg:#a3aed2"
-format = '[ $user ](bg:#a3aed2)'
+format = '[$user ](bg:#a4aed2)'
