@@ -42,7 +42,7 @@ endif
 # Automatically resize splits when the Vim window is resized.
 au VimResized * :wincmd =
 
-# General settings
+" General settings
 set modelines=1                   " Process first line for modelines
 set showmode                      " Display current mode (e.g., INSERT)
 set history=700                   " Store 700 lines of command history
@@ -63,7 +63,7 @@ set colorcolumn=+1                " Highlight column after textwidth (if set)
 filetype plugin on
 filetype indent on
 
-# Display and navigation
+" Display and navigation
 set ruler                         " Show cursor position
 set clipboard=unnamedplus         " Use system clipboard
 set cmdheight=2                   " Height of the command bar
@@ -127,31 +127,31 @@ map + <c-w>-
 map - <c-w>+
 map > <c-w><
 map < <c-w>>
-# Close current buffer with leader+bd.
+" Close current buffer with leader+bd.
 map <leader>bd :Bclose<cr>
-# Close all buffers with leader+ba.
+" Close all buffers with leader+ba.
 map <leader>ba :1,1000 bd!<cr>
-# Useful mappings for managing tabs.
+" Useful mappings for managing tabs.
 map <leader>tn :tabnew<cr>
 map <leader>to :tabonly<cr>
 map <leader>tc :tabclose<cr>
 map <leader>tm :tabmove
-# Open new tab with current buffer's path.
+" Open new tab with current buffer's path.
 map <leader>te :tabedit <c-r>=expand("%:p:h")<cr>/
-# Switch CWD to open buffer's directory.
+" Switch CWD to open buffer's directory.
 map <leader>cd :cd %:p:h<cr>:pwd<cr>
-# Behavior when switching buffers.
+" Behavior when switching buffers.
 try
   set switchbuf=useopen,usetab,newtab
   set stal=2
 catch
 endtry
-# Return to last edit position on file open.
+" Return to last edit position on file open.
 autocmd BufReadPost *
      \ if line("'\"") > 0 && line("'\"") <= line("$") |
      \   exe "normal! g`\"" |
      \ endif
-# Remember open buffers on close.
+" Remember open buffers on close.
 set viminfo^=%
 
 # Vim split navigation
@@ -168,7 +168,7 @@ function! CmdLine(str)
     emenu Foo.Bar
     unmenu Foo
 endfunction
-# Handle visual selection for search/replace.
+" Handle visual selection for search/replace.
 function! VisualSelection(direction) range
     let l:saved_reg = @"
     execute "normal! vgvy"
@@ -186,7 +186,7 @@ function! VisualSelection(direction) range
     let @/ = l:pattern
     let @" = l:saved_reg
 endfunction
-# Check if paste mode is enabled.
+" Check if paste mode is enabled.
 function! HasPaste()
     if &paste
         return 'PASTE MODE  '
@@ -201,7 +201,7 @@ augroup trailing
     au InsertEnter * :set listchars-=trail:⌴
     au InsertLeave * :set listchars+=trail:⌴
 augroup END
-# Return to last edit position on file open (alternative method).
+" Return to last edit position on file open (alternative method).
 augroup line_return
     au!
     au BufReadPost *
@@ -209,7 +209,7 @@ augroup line_return
         \     execute 'normal! g`"zvzz' |
         \ endif
 augroup END
-# Reselect last-pasted text.
+" Reselect last-pasted text.
 nnoremap gp `[v`]
 
 " Neovim-specific enhancements
