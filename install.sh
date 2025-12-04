@@ -49,7 +49,7 @@ elif [ "$OS" = "Linux" ]; then
     # Install Neovim from official tarball (most reliable method)
     echo "Installing latest Neovim..."
     if [ ! -f /usr/local/bin/nvim ]; then
-        curl -L -o nvim-linux64.tar.gz https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.tar.gz
+        curl -L -o nvim-linux64.tar.gz https://github.com/neovim/neovim/releases/download/v0.10.2/nvim-linux64.tar.gz
         sudo tar -C /usr/local -xzf nvim-linux64.tar.gz
         sudo ln -sf /usr/local/nvim-linux64/bin/nvim /usr/local/bin/nvim
         rm nvim-linux64.tar.gz
