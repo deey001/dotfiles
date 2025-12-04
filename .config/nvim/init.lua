@@ -61,6 +61,8 @@ require("lazy").setup({
     priority = 1000,
     config = function()
       vim.cmd([[colorscheme tokyonight-night]])
+      -- Override comment color to bright green for better visibility in tmux
+      vim.api.nvim_set_hl(0, "Comment", { fg = "#00ff00", italic = true })
     end,
   },
 
