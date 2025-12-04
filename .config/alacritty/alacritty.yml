@@ -3,32 +3,6 @@
 
 # Window settings
 window:
-  opacity: 0.95
-  padding:
-    x: 10
-    y: 10
-  decorations: none  # Borderless for ricing
-
-# Font settings (uses installed Nerd Font)
-font:
-  normal:
-    family: "Ubuntu Nerd Font"
-    style: Regular
-  bold:
-    family: "Ubuntu Nerd Font"
-    style: Bold
-  italic:
-    family: "Ubuntu Nerd Font"
-    style: Italic
-  bold_italic:
-    family: "Ubuntu Nerd Font"
-    style: Bold Italic
-  size: 12.0
-
-# Colors (base16-default-dark theme for consistency)
-colors:
-  primary:
-    background: '0x181818'
     foreground: '0xd8d8d8'
   cursor:
     text: '0x181818'
