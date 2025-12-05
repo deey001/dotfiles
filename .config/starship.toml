@@ -32,7 +32,7 @@ command_timeout = 5000
 [username]
 show_always = true
 style_user = "bg:#3B4252"
-style_root = "bg:#3B4252"
+style_root = "bg:#3B4252 fg:#BF616A"
 format = '[$user ]($style)'
 
 [directory]
