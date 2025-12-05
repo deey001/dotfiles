@@ -114,7 +114,7 @@ alias ff='cd $(find . -type d | fzf)'
 alias hh=hstr
 
 # zoxide initialization - TESTING (use 'z' command for smarter cd)
-if command -v zoxide >/dev/null 2>&1; then
+if command -v zoxide > /dev/null 2>&1; then
     eval "$(zoxide init bash)" 2>/dev/null || true
 fi
 
@@ -123,9 +123,11 @@ if [ -f /usr/local/bin/starship ]; then
     eval "$(starship init bash)"
 fi
 
-# Fastfetch system info on login
-if command -v fastfetch >/dev/null 2>&1; then
-    fastfetch
+# Fastfetch system info on login (only for login shells, not tmux panes)
+if command -v fastfetch > /dev/null 2>&1; then
+    if shopt -q login_shell && [ -z "$TMUX" ]; then
+        fastfetch
+    fi
 fi
 
 # Auto-log SSH sessions (excludes passwords since they're not echoed)
