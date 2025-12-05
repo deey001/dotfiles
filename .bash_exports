@@ -22,8 +22,12 @@ export PATH="$HOME/.rbenv/bin:$PATH"
 eval "$(rbenv init -)"
 export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"
 
-# Set default editor to Neovim
-export EDITOR=/usr/bin/nvim
+# Set default editor to Neovim (dynamically find nvim location)
+if command -v nvim > /dev/null 2>&1; then
+    export EDITOR=$(command -v nvim)
+else
+    export EDITOR=$(command -v vim)
+fi
 
 # bat theme configuration
 export BAT_THEME="Dark+"
