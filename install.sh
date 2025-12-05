@@ -188,6 +188,7 @@ fi
 echo "Creating symlinks..."
 ln -sf "$DOTFILES_DIR/.bash_aliases" "$HOME/.bash_aliases"
 ln -sf "$DOTFILES_DIR/.bash_exports" "$HOME/.bash_exports"
+ln -sf "$DOTFILES_DIR/.bash_functions" "$HOME/.bash_functions"
 ln -sf "$DOTFILES_DIR/.bash_profile" "$HOME/.bash_profile"
 ln -sf "$DOTFILES_DIR/.bash_wrappers" "$HOME/.bash_wrappers"
 ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
@@ -211,6 +212,9 @@ ln -sf "$DOTFILES_DIR/.config/nvim/init.lua" "$HOME/.config/nvim/init.lua"
 # LazyVim will auto-install on first run
 echo "Neovim configured with LazyVim. Plugins will install on first launch."
 
+# Symlink fastfetch config
+mkdir -p "$HOME/.config/fastfetch"
+ln -sf "$DOTFILES_DIR/.config/fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
 
 # Symlink Alacritty config
 mkdir -p "$HOME/.config/alacritty"

@@ -6,6 +6,7 @@
 echo "Removing symlinks..."
 rm -f "$HOME/.bash_aliases"
 rm -f "$HOME/.bash_exports"
+rm -f "$HOME/.bash_functions"
 rm -f "$HOME/.bash_profile"
 rm -f "$HOME/.bash_wrappers"
 rm -f "$HOME/.bashrc"
@@ -17,6 +18,10 @@ rm -f "$HOME/.config/alacritty/alacritty.yml"
 # Remove bat config
 echo "Removing bat configuration..."
 rm -rf "$HOME/.config/bat"
+
+# Remove fastfetch config
+echo "Removing fastfetch configuration..."
+rm -rf "$HOME/.config/fastfetch"
 
 # Remove Starship init from .bashrc (if present)
 sed -i '/# Initialize Starship prompt/d' "$HOME/.bashrc"

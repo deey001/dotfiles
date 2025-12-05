@@ -15,7 +15,7 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
   - `zoxide` (smarter `cd` navigation)
   - `fzf` (fuzzy finding for files and history)
   - `hstr` (visual history search)
-  - `fastfetch` (system information display)
+  - `fastfetch` (system information display with custom config and tree-style formatting)
   - `cmatrix` (matrix screen saver)
   - `btop` (beautiful resource monitor)
   - `lazygit` (terminal UI for Git)
@@ -80,14 +80,16 @@ Run `./uninstall.sh` to remove all symlinks, configurations, and cloned reposito
 ## File Structure
 
 - `.bashrc` - Main bash configuration with tool initialization
-- `.bash_aliases` - Command aliases (ll, la, vi, vim, etc.)
-- `.bash_exports` - Environment variables (EDITOR, BAT_THEME, PATH, etc.)
+- `.bash_aliases` - Command aliases (ll, la, vi, vim, .., h, p, f, etc.)
+- `.bash_exports` - Environment variables (EDITOR, BAT_THEME, PATH, history config, etc.)
+- `.bash_functions` - Utility functions (extract, mkdirg, up, ftext, distribution, etc.)
 - `.bash_wrappers` - Custom functions (colored man pages, whatsgoingon)
 - `.bash_profile` - Bash profile for login shells
 - `.tmux.conf` - Tmux configuration
-- `.config/starship.toml` - Starship prompt configuration
+- `.config/starship.toml` - Starship prompt configuration (Tokyo Night theme)
 - `.config/nvim/init.lua` - Neovim LazyVim configuration
 - `.config/bat/themes/` - Bat color themes (Visual Studio Dark+)
+- `.config/fastfetch/config.jsonc` - Fastfetch system info configuration
 - `.config/alacritty/alacritty.yml` - Alacritty terminal configuration
 - `install.sh` - Installation script
 - `uninstall.sh` - Uninstallation script

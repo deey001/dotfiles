@@ -9,13 +9,21 @@ case $- in
 esac
 
 # History settings
-HISTCONTROL=ignoreboth
+HISTCONTROL=erasedups:ignoredups:ignorespace
 shopt -s histappend
-HISTSIZE=1000
-HISTFILESIZE=2000
+HISTSIZE=5000
+HISTFILESIZE=10000
+PROMPT_COMMAND='history -a'  # Save history immediately
 
 # Window size check
 shopt -s checkwinsize
+
+# Allow ctrl-S for history navigation (with ctrl-R)
+stty -ixon 2>/dev/null
+
+# Bash completion improvements
+bind "set completion-ignore-case on" 2>/dev/null
+bind "set show-all-if-ambiguous on" 2>/dev/null
 
 # Lesspipe setup
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
@@ -86,6 +94,10 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
+fi
+
+if [ -f ~/.bash_functions ]; then
+    . ~/.bash_functions
 fi
 
 # Programmable completion
