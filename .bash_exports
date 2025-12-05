@@ -28,9 +28,9 @@ fi
 
 # Set default editor to Neovim (dynamically find nvim location)
 if command -v nvim > /dev/null 2>&1; then
-    export EDITOR=$(command -v nvim)
+    export EDITOR="$(type -P nvim)"
 else
-    export EDITOR=$(command -v vim)
+    export EDITOR="$(type -P vim)"
 fi
 
 # bat theme configuration
