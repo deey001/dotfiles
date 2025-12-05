@@ -15,13 +15,16 @@ $directory\
 [](fg:#769ff0 bg:#394260)\
 $git_branch\
 $git_status\
-[](fg:#394260 bg:#212736)\
+[](fg:#394260)\
 $nodejs\
 $rust\
 $golang\
 $php\
+[](fg:#212736)\
 $fill\
-[](fg:#1d2230)[   $time ](bg:#0d2230 fg:#a0a9cb)[ ](fg:#1d2230)\
+[](fg:#1d2230)\
+$time\
+[ ](fg:#1d2230)\
 \n$character"""
 
 # [fill] module
