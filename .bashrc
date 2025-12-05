@@ -70,11 +70,17 @@ if command -v eza >/dev/null 2>&1; then
 fi
 
 # bat alias (better cat)
-DISTRIBUTION=$(distribution)
-if [ "$DISTRIBUTION" = "redhat" ] || [ "$DISTRIBUTION" = "arch" ]; then
-      alias cat='bat'
+# Detect distribution and use appropriate bat command
+if [ -f /etc/redhat-release ] || [ -f /etc/arch-release ]; then
+    # RedHat/CentOS/Fedora or Arch Linux use 'bat'
+    if command -v bat > /dev/null 2>&1; then
+        alias cat='bat'
+    fi
 else
-      alias cat='batcat'
+    # Debian/Ubuntu use 'batcat'
+    if command -v batcat > /dev/null 2>&1; then
+        alias cat='batcat'
+    fi
 fi
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
@@ -137,4 +143,12 @@ if [ -f ~/.local/share/blesh/ble.sh ]; then
     source ~/.local/share/blesh/ble.sh
 fi
 # Ctrl-R for history, Ctrl-T for files, Alt-C for zoxide cd
-eval "$(fzf --bash)"
+# fzf key bindings and completion (if available)
+if command -v fzf > /dev/null 2>&1; then
+    if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
+        source /usr/share/doc/fzf/examples/key-bindings.bash
+    fi
+    if [ -f /usr/share/doc/fzf/examples/completion.bash ]; then
+        source /usr/share/doc/fzf/examples/completion.bash
+    fi
+fi

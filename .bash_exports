@@ -17,10 +17,14 @@ export LESSOPEN='|~/.lessfilter %s'
 export GOPATH=~/gocode
 export PATH="$GOPATH/bin:${PATH}:/usr/local/go/bin"
 
-# ruby rbenv
-export PATH="$HOME/.rbenv/bin:$PATH"
-eval "$(rbenv init -)"
-export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"
+# ruby rbenv (only if installed)
+if [ -d "$HOME/.rbenv" ]; then
+    export PATH="$HOME/.rbenv/bin:$PATH"
+    if command -v rbenv > /dev/null 2>&1; then
+        eval "$(rbenv init -)"
+    fi
+    export PATH="$HOME/.rbenv/plugins/ruby-build/bin:$PATH"
+fi
 
 # Set default editor to Neovim (dynamically find nvim location)
 if command -v nvim > /dev/null 2>&1; then
