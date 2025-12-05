@@ -195,6 +195,15 @@ ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 mkdir -p "$HOME/.config"
 ln -sf "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
 
+# Symlink bat themes and rebuild cache
+mkdir -p "$HOME/.config/bat"
+ln -sf "$DOTFILES_DIR/.config/bat/themes" "$HOME/.config/bat/themes"
+if command -v bat > /dev/null 2>&1; then
+    bat cache --build
+elif command -v batcat > /dev/null 2>&1; then
+    batcat cache --build
+fi
+
 # Symlink Neovim config
 mkdir -p "$HOME/.config/nvim"
 ln -sf "$DOTFILES_DIR/.config/nvim/init.lua" "$HOME/.config/nvim/init.lua"
