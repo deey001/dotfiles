@@ -145,3 +145,12 @@ distribution() {
 
     echo $dtype
 }
+
+# Override cd to automatically list directory contents after changing
+cd() {
+    if [ -n "$1" ]; then
+        builtin cd "$@" && ll -lhs
+    else
+        builtin cd ~ && ll -lhs
+    fi
+}
