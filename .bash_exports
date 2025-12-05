@@ -28,10 +28,10 @@ fi
 
 # Set default editor to Neovim (dynamically find nvim location)
 if command -v nvim > /dev/null 2>&1; then
-    export EDITOR="$(type -P nvim)"
+    export EDITOR="$(which nvim)"
 else
-    export EDITOR="$(type -P vim)"
+    export EDITOR="$(which vim)"
 fi
 
 # bat theme configuration
-export BAT_THEME="Dark+"
+export BAT_THEME="Visual Studio Dark+"
