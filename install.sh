@@ -44,6 +44,8 @@ elif [ "$OS" = "Linux" ]; then
   if [ -f /etc/debian_version ]; then
     # Debian/Ubuntu
     sudo apt update
+    # Install prerequisites immediately
+    sudo apt install -y curl xz-utils tar
     echo "Installing tools via apt..."
     
     # Install Neovim from official tarball (most reliable method)
