@@ -11,8 +11,12 @@ rm -f "$HOME/.bash_wrappers"
 rm -f "$HOME/.bashrc"
 rm -f "$HOME/.tmux.conf"
 rm -f "$HOME/.config/starship.toml"
-rm -f "$HOME/.config/nvim/init.vim"
+rm -f "$HOME/.config/nvim/init.lua"
 rm -f "$HOME/.config/alacritty/alacritty.yml"
+
+# Remove bat config
+echo "Removing bat configuration..."
+rm -rf "$HOME/.config/bat"
 
 # Remove Starship init from .bashrc (if present)
 sed -i '/# Initialize Starship prompt/d' "$HOME/.bashrc"
@@ -27,7 +31,7 @@ if [ -f "$HOME/.local/share/fonts/UbuntuNerdFont-Regular.ttf" ]; then
     echo "Removing Ubuntu Nerd Font..."
     rm -f "$HOME/.local/share/fonts/UbuntuNerdFont-Regular.ttf"
     # Update font cache if possible
-    if command -v fc-cache >/dev/null 2>&1; then
+    if command -v fc-cache > /dev/null 2>&1; then
       fc-cache -f -v
     fi
 fi
@@ -37,13 +41,14 @@ fi
 
 # Optional: Uninstall vim and new tools (uncomment with caution)
 # if [ "$(uname)" = "Darwin" ]; then
-#   brew uninstall vim neovim hstr bat exa zoxide fastfetch alacritty
+#   brew uninstall vim neovim hstr bat eza zoxide fastfetch alacritty
 # elif [ "$(uname)" = "Linux" ]; then
-#   sudo apt remove -y vim neovim hstr bat exa fastfetch alacritty
+#   sudo apt remove -y vim neovim hstr bat eza fastfetch alacritty
 # fi
 
-# Clean up tmux plugins (optional: uncomment if desired)
-# rm -rf "$HOME/.tmux/plugins"
+# Clean up tmux plugins
+echo "Removing tmux plugins..."
+rm -rf "$HOME/.tmux/plugins"
 
 # Remove cloned repos
 echo "Removing cloned repositories..."
