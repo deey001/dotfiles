@@ -130,6 +130,11 @@ if command -v zoxide > /dev/null 2>&1; then
     eval "$(zoxide init bash)" 2>/dev/null || true
 fi
 
+# ble.sh (Bash Line Editor) for predictive text and syntax highlighting
+if [ -f ~/.local/share/blesh/ble.sh ]; then
+    source ~/.local/share/blesh/ble.sh
+fi
+
 # Starship initialization
 if [ -f /usr/local/bin/starship ]; then
     eval "$(starship init bash)"
@@ -150,12 +155,7 @@ fi
 #     script -q -a "$LOGFILE"
 # fi
 
-# ble.sh (Bash Line Editor) for predictive text and syntax highlighting
-# Must be sourced at the end of .bashrc
-# TESTING - likely the crash culprit
-if [ -f ~/.local/share/blesh/ble.sh ]; then
-    source ~/.local/share/blesh/ble.sh
-fi
+
 # Ctrl-R for history, Ctrl-T for files, Alt-C for zoxide cd
 # fzf key bindings and completion (if available)
 if command -v fzf > /dev/null 2>&1; then
