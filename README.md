@@ -8,7 +8,7 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
 
 ### 🚀 Modern Shell Experience
 - **Starship Prompt**: Minimal, fast, and informative prompt with Tokyo Night theme showing git status, package versions, and execution time. Root user displays in red for safety.
-- **Predictive Text**: `ble.sh` provides syntax highlighting, autosuggestions, and Tab autocomplete (like zsh) in pure Bash.
+- **Predictive Text**: `ble.sh` provides syntax highlighting, autosuggestions, and Tab autocomplete (like zsh) in pure Bash. Configured for immediate multiline execution (no `Ctrl+J` confirmation).
 - **Modern Tools**:
   - `eza` (better `ls` with icons and git status)
   - `bat` / `batcat` (better `cat` with syntax highlighting and Visual Studio Dark+ theme)
@@ -67,15 +67,15 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
 
 ## Uninstallation
 
-Run `./uninstall.sh` to remove all symlinks, configurations, and cloned repositories created by the install script. This will:
-- Remove all dotfile symlinks
-- Clean up bat configuration and themes
-- Remove ble.sh
-- Remove Ubuntu Nerd Font
-- Remove tmux plugins
-- Remove cloned repositories (base16-shell, bash-preexec)
+Run `./uninstall.sh` to perform a comprehensive cleanup, which supports a full **Factory Reset** of the environment. This script will:
 
-**Note**: Installed packages (neovim, bat, etc.) are NOT removed by default. Uncomment lines 38-43 in `uninstall.sh` if you want to remove those as well.
+- **Remove Symlinks**: Cleans up all dotfile symlinks (`.bashrc`, `.config/*`, etc.).
+- **Remove Configurations**: Deletes config directories for `nvim`, `alacritty`, `bat`, `fastfetch`, and `base16-shell`.
+- **Remove Tools**: Deletes `ble.sh` and `Ubuntu Nerd Font`.
+- **Remove SSH Key**: Safely removes the specific SSH key added by the installer from `~/.ssh/authorized_keys`.
+- **Interactive Package Removal**: Asks if you want to uninstall system packages (neovim, tmux, starship, etc.) to restore the system to its original state.
+
+**Note**: The script handles distribution-specific package managers (apt, dnf, yum, pacman, brew) automatically.
 
 ## File Structure
 
@@ -93,6 +93,7 @@ Run `./uninstall.sh` to remove all symlinks, configurations, and cloned reposito
 - `.config/alacritty/alacritty.yml` - Alacritty terminal configuration
 - `install.sh` - Installation script
 - `uninstall.sh` - Uninstallation script
+- `.blerc` - ble.sh configuration (disables multiline confirmation)
 
 ## SSH Key Installation
 
