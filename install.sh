@@ -197,6 +197,7 @@ ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
 ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 mkdir -p "$HOME/.config"
 ln -sf "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
+ln -sf "$DOTFILES_DIR/.blerc" "$HOME/.blerc"
 
 # Symlink bat themes and rebuild cache
 mkdir -p "$HOME/.config/bat"

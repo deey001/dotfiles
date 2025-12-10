@@ -1,0 +1,4 @@
+# ble.sh configuration
+
+# Disable multiline confirmation (Ctrl+J) and execute immediately
+ble-bind -m multiline -f 'RET' 'ble/widget/accept-line'
