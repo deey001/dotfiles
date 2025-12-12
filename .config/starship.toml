@@ -55,6 +55,17 @@ Windows = "󰍲 "
 Macos = " "
 
 [username]
+show_always = true
+style_user = "bg:#3B4252"
+style_root = "bg:#3B4252 fg:#BF616A"
+format = '[$user]($style)'
+
+[hostname]
+ssh_only = false
+style = "bg:#3B4252"
+format = '[@$hostname ]($style)'
+
+[directory]
 style = "bg:#434C5E"
 format = "[ $path ]($style)"
 truncation_length = 3
