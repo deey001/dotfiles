@@ -1,10 +1,10 @@
 # ble.sh configuration
 
-# Disable all paste confirmations
+# Disable all paste confirmations and syntax validation
 bleopt edit_abell=
 bleopt exec_errexit_mark=
 bleopt accept_line_threshold=-1
-bleopt syntax_eval_ignore_errors=1
 bleopt exec_elapsed_mark=
+bleopt highlight_syntax=
 ble-bind -m emacs -f 'RET' 'accept-line'
 ble-bind -m vi_imap -f 'RET' 'accept-line'
