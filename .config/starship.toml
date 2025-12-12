@@ -45,16 +45,16 @@ format = '[@$hostname ]($style)'
 [os]
 disabled = false
 style = "bg:#3B4252"
-format = '[$symbol ]($style)'
+format = '[$symbol]($style)'
 
 [os.symbols]
-Ubuntu = ""
-Debian = ""
-Linux = ""
-Windows = "󰍲"
-Macos = ""
+Ubuntu = " "
+Debian = " "
+Linux = " "
+Windows = "󰍲 "
+Macos = " "
 
-[directory]
+[username]
 style = "bg:#434C5E"
 format = "[ $path ]($style)"
 truncation_length = 3
@@ -94,9 +94,9 @@ style = "bg:#86BBD8"
 format = '[ $symbol ($version) ]($style)'
 
 [git_branch]
-symbol = ""
+symbol = " "
 style = "bg:#4C566A"
-format = '[ $symbol $branch ]($style)'
+format = '[ $symbol$branch ]($style)'
 
 [git_status]
 style = "bg:#4C566A"
