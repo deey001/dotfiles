@@ -132,10 +132,9 @@ if command -v zoxide > /dev/null 2>&1; then
 fi
 
 # ble.sh (Bash Line Editor) for predictive text and syntax highlighting
-# Disabled - requires Ctrl+J for multiline paste which is annoying
-# if [ -f ~/.local/share/blesh/ble.sh ]; then
-#     source ~/.local/share/blesh/ble.sh
-# fi
+if [ -f ~/.local/share/blesh/ble.sh ]; then
+    source ~/.local/share/blesh/ble.sh
+fi
 
 # Starship initialization
 if [ -f /usr/local/bin/starship ]; then
