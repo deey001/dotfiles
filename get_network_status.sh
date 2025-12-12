@@ -2,9 +2,9 @@
 # Network status script with icons for tmux status bar
 
 # Nerd Font Icons
-ICON_LAN=""      # LAN/Network icon
-ICON_VPN=""      # VPN/Shield icon
-ICON_GLOBE=""    # Generic globe for unknown ISP
+ICON_LAN="\uf796"      # LAN/Network icon (network-wired)
+ICON_VPN="\uf023"      # VPN/Shield icon (lock)
+ICON_GLOBE="\uf0ac"    # Generic globe for unknown ISP
 
 # Get local IP
 LOCAL_IP=$(ip route get 1.2.3.4 2>/dev/null | awk '{print $7}')
@@ -22,13 +22,13 @@ ISP=$(curl -s --connect-timeout 2 https://ipapi.co/org/ 2>/dev/null)
 # Determine ISP icon
 ISP_ICON="$ICON_GLOBE"
 case "$ISP" in
-    *Comcast*|*Xfinity*)     ISP_ICON="" ;;
-    *Verizon*)               ISP_ICON="" ;;
-    *AT\&T*|*ATT*)          ISP_ICON="󰈀" ;;
-    *Spectrum*|*Charter*)    ISP_ICON="" ;;
-    *Google*)                ISP_ICON="󰊭" ;;
-    *T-Mobile*)              ISP_ICON="" ;;
-    *Cox*)                   ISP_ICON="" ;;
+    *Comcast*|*Xfinity*)     ISP_ICON="\uf85a" ;; # Comcast/Xfinity icon
+    *Verizon*)               ISP_ICON="\ue943" ;; # Verizon check
+    *AT\&T*|*ATT*)          ISP_ICON="\uf080" ;; # AT&T globe/signal
+    *Spectrum*|*Charter*)    ISP_ICON="\uf85b" ;; # Spectrum/Charter
+    *Google*)                ISP_ICON="\uf1a0" ;; # Google
+    *T-Mobile*)              ISP_ICON="\uf129" ;; # Info icon/T-Mobile
+    *Cox*)                   ISP_ICON="\uf85c" ;; # Cox
 esac
 
 # Build output
