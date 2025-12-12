@@ -1,5 +1,6 @@
 format = """
 [](#3B4252)\
+$os\
 $python\
 $username\
 $hostname\
@@ -40,6 +41,18 @@ format = '[$user]($style)'
 ssh_only = false
 style = "bg:#3B4252"
 format = '[@$hostname ]($style)'
+
+[os]
+disabled = false
+style = "bg:#3B4252"
+format = '[$symbol ]($style)'
+
+[os.symbols]
+Ubuntu = ""
+Debian = ""
+Linux = ""
+Windows = "󰍲"
+Macos = ""
 
 [directory]
 style = "bg:#434C5E"
