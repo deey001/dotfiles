@@ -3,5 +3,6 @@
 # Disable paste confirmation - execute immediately on Enter
 bleopt edit_abell=
 bleopt exec_errexit_mark=
+bleopt accept_line_threshold=-1
 ble-bind -m emacs -f 'RET' 'accept-line'
 ble-bind -m vi_imap -f 'RET' 'accept-line'
