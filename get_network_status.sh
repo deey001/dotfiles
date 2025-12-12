@@ -36,17 +36,17 @@ OUTPUT=""
 
 # LAN (always show if available)
 if [ -n "$LOCAL_IP" ]; then
-    OUTPUT="${OUTPUT}#[fg=green]${ICON_LAN} ${LOCAL_IP} "
+    OUTPUT="${OUTPUT}#[fg=green]\uf817 ${LOCAL_IP} "
 fi
 
 # VPN (only show if connected)
 if [ -n "$VPN_IP" ]; then
-    OUTPUT="${OUTPUT}#[fg=yellow]${ICON_VPN} ${VPN_IP} "
+    OUTPUT="${OUTPUT}#[fg=yellow]\uf023 ${VPN_IP} "
 fi
 
 # WAN (always show if available)
 if [ -n "$WAN_IP" ]; then
-    OUTPUT="${OUTPUT}#[fg=cyan]${ISP_ICON} ${WAN_IP}"
+    OUTPUT="${OUTPUT}#[fg=cyan]WAN: ${ISP_ICON} ${WAN_IP}"
 fi
 
 echo "$OUTPUT"
