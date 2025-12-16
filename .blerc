@@ -1,10 +1,16 @@
 # ble.sh configuration
 
-# Disable all paste confirmations and syntax validation
+# Force immediate execution of multiline pastes
 bleopt edit_abell=
 bleopt exec_errexit_mark=
 bleopt accept_line_threshold=-1
 bleopt exec_elapsed_mark=
 bleopt highlight_syntax=
+
+# Key options to fix paste behavior
+bleopt rline_multiline_mode=
+bleopt bracketed_paste_mode=
+
 ble-bind -m emacs -f 'RET' 'accept-line'
 ble-bind -m vi_imap -f 'RET' 'accept-line'
+ble-bind -f 'C-j' 'accept-line'
