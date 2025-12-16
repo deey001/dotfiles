@@ -134,6 +134,10 @@ fi
 # ble.sh (Bash Line Editor) for predictive text and syntax highlighting
 if [ -f ~/.local/share/blesh/ble.sh ]; then
     source ~/.local/share/blesh/ble.sh
+    # Explicitly source config to ensure settings apply
+    if [ -f ~/.blerc ]; then
+        source ~/.blerc
+    fi
 fi
 
 # Starship initialization
