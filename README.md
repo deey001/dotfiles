@@ -106,8 +106,21 @@ Run `./uninstall.sh` to perform a comprehensive cleanup, which supports a full *
 - `uninstall.sh` - Uninstallation script
 - `.blerc` - ble.sh configuration (disables multiline confirmation)
 
-## SSH Key Installation
+## Troubleshooting
 
+### 📋 Clipboard Copy Not Working
+If the `y` key copy method fails (e.g., text copies inside tmux but doesn't reach your Windows/Mac clipboard):
+1.  **Check Terminal Support**: Your terminal **MUST** support **OSC 52**.
+    *   **Recommended**: Windows Terminal, Alacritty, iTerm2, WezTerm.
+    *   **PuTTY**: Requires "Allow terminal to access clipboard" enabled in settings. If it still fails, PuTTY is likely blocking the escape sequence strictly.
+2.  **Test Manually**: Run `~/.config/tmux/scripts/test_copy.sh`.
+    *   If this script fails to copy text to your local clipboard, the issue is **Client-Side (Your Terminal)**, not the server setup.
+
+### 📶 Network Icons Missing
+- Ensure you have installed a **Nerd Font** (e.g., Ubuntu Nerd Font) on your **local machine** (Windows/Mac) and set it as the terminal font.
+- The server installs the font for Linux desktop usage, but your Putty/Terminal needs the font installed locally to render icons.
+
+## SSH Key Installation
 The install script automatically installs the SSH public key from `MDC_public.pub` to `~/.ssh/authorized_keys` for easy remote access.
 
 ---
