@@ -12,7 +12,7 @@
 # ------------------------------------------------------------------------------
 # Icon Definitions (Nerd Fonts)
 # ------------------------------------------------------------------------------
-ICON_LAN="\uf0003"       #   nf-md-lan_connect
+ICON_LAN="󰌘"            # 󰌘 nf-md-lan_connect
 ICON_VPN="\uf023"       #   Lock/Secure
 ICON_WAN="\uf0ac"       #   Globe/World
 ICON_OFFLINE="\uf127"   #   Broken chain/Offline
