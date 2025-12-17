@@ -11,7 +11,14 @@ echo "Attempting to copy: '$TEXT' to your client clipboard."
 # \a -> Bell (End of sequence)
 
 encoded=$(echo -n "$TEXT" | base64 | tr -d '\n')
+
+echo "Method 1: Direct OSC 52 (Works if outside tmux)"
 printf "\033]52;c;%s\a" "$encoded"
+echo
+
+echo "Method 2: Tmux Passthrough (Required inside tmux)"
+# Wraps the sequence in \ePtmux;...\e\\
+printf "\033Ptmux;\033\033]52;c;%s\007\033\\" "$encoded"
 
 echo
 echo "Done. Try pasting on Windows (Ctrl+V) now."
