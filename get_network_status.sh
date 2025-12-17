@@ -1,52 +1,96 @@
 #!/bin/bash
-# Network status script with icons for tmux status bar
 
-# Nerd Font Icons
-ICON_LAN="\uf796"      # LAN/Network icon (network-wired)
-ICON_VPN="\uf023"      # VPN/Shield icon (lock)
-ICON_GLOBE="\uf0ac"    # Generic globe for unknown ISP
+# ==============================================================================
+# get_network_status.sh
+# ==============================================================================
+# This script retrieves network information (LAN, VPN, WAN) and formats it
+# for the Tmux status bar using Nerd Font icons.
+#
+# Format: Icon $LAN: IP, Icon $VPN IP, Icon WAN: IP
+# ==============================================================================
 
-# Get local IP
-LOCAL_IP=$(ip route get 1.2.3.4 2>/dev/null | awk '{print $7}')
+# ------------------------------------------------------------------------------
+# Icon Definitions (Nerd Fonts)
+# ------------------------------------------------------------------------------
+ICON_LAN="\uf796"       #   Network wired
+ICON_VPN="\uf023"       #   Lock/Secure
+ICON_WAN="\uf0ac"       #   Globe/World
+ICON_OFFLINE="\uf127"   #   Broken chain/Offline
 
-# Get VPN IP (check tun0 and ppp0)
+# ISP Specific Icons
+ICON_COMCAST="\uf85a"   # Comcast/Xfinity
+ICON_VERIZON="\ue943"   # Verizon check
+ICON_ATT="\uf080"       # AT&T signal
+ICON_GOOGLE="\uf1a0"    # Google
+ICON_TMOBILE="\uf129"   # T-Mobile info
+ICON_COX="\uf85c"       # Cox
+
+# ------------------------------------------------------------------------------
+# Network Information Retrieval
+# ------------------------------------------------------------------------------
+
+# 1. Get Local IP (LAN)
+# Uses `ip route` to find the source address for the default route.
+LOCAL_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{print $7}')
+
+# 2. Get VPN IP (Tunnel Interface)
+# Checks for common VPN interfaces like tun0 or ppp0.
 VPN_IP=$(ip addr show tun0 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1)
 if [ -z "$VPN_IP" ]; then
     VPN_IP=$(ip addr show ppp0 2>/dev/null | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1)
 fi
 
-# Get WAN IP and ISP
-WAN_IP=$(curl -s --connect-timeout 2 ifconfig.me)
-ISP=$(curl -s --connect-timeout 2 https://ipapi.co/org/ 2>/dev/null)
+# 3. Get WAN IP and ISP (Only if online)
+# Set a short timeout to prevent blocking if offline.
+WAN_IP=""
+ISP=""
+ISP_ICON="$ICON_WAN"
 
-# Determine ISP icon
-ISP_ICON="$ICON_GLOBE"
-case "$ISP" in
-    *Comcast*|*Xfinity*)     ISP_ICON="\uf85a" ;; # Comcast/Xfinity icon
-    *Verizon*)               ISP_ICON="\ue943" ;; # Verizon check
-    *AT\&T*|*ATT*)          ISP_ICON="\uf080" ;; # AT&T globe/signal
-    *Spectrum*|*Charter*)    ISP_ICON="\uf85b" ;; # Spectrum/Charter
-    *Google*)                ISP_ICON="\uf1a0" ;; # Google
-    *T-Mobile*)              ISP_ICON="\uf129" ;; # Info icon/T-Mobile
-    *Cox*)                   ISP_ICON="\uf85c" ;; # Cox
-esac
+# Check connectivity first to avoid long timeouts
+if ping -c 1 8.8.8.8 &> /dev/null; then
+    WAN_IP=$(curl -s --connect-timeout 2 ifconfig.me)
+    # Get ISP name (Org) from ipapi.co
+    ISP=$(curl -s --connect-timeout 2 https://ipapi.co/org/ 2>/dev/null)
+    
+    # Map ISP to Icon
+    case "$ISP" in
+        *Comcast*|*Xfinity*)     ISP_ICON="$ICON_COMCAST" ;;
+        *Verizon*)               ISP_ICON="$ICON_VERIZON" ;;
+        *AT\&T*|*ATT*)           ISP_ICON="$ICON_ATT" ;;
+        *Spectrum*|*Charter*)    ISP_ICON="$ICON_WAN" ;; # Default to WAN for others for now
+        *Google*)                ISP_ICON="$ICON_GOOGLE" ;;
+        *T-Mobile*)              ISP_ICON="$ICON_TMOBILE" ;;
+        *Cox*)                   ISP_ICON="$ICON_COX" ;;
+    esac
+else
+    WAN_IP="Offline"
+    ISP_ICON="$ICON_OFFLINE"
+fi
 
-# Build output
+# ------------------------------------------------------------------------------
+# Status Construction
+# ------------------------------------------------------------------------------
+
 OUTPUT=""
 
-# LAN (always show if available)
+# Format: LAN
 if [ -n "$LOCAL_IP" ]; then
-    OUTPUT="${OUTPUT}#[fg=green]\uf796 ${LOCAL_IP} "
+    # Green for LAN
+    OUTPUT="#[fg=green]${ICON_LAN} LAN: ${LOCAL_IP}"
+else
+    OUTPUT="#[fg=red]${ICON_LAN} LAN: Disconnected"
 fi
 
-# VPN (only show if connected)
+# Format: VPN (Only if connected)
 if [ -n "$VPN_IP" ]; then
-    OUTPUT="${OUTPUT}#[fg=yellow]\uf023 ${VPN_IP} "
+    # Yellow for VPN
+    OUTPUT="${OUTPUT}  #[fg=yellow]${ICON_VPN} VPN: ${VPN_IP}"
 fi
 
-# WAN (always show if available)
+# Format: WAN
 if [ -n "$WAN_IP" ]; then
-    OUTPUT="${OUTPUT}#[fg=cyan]WAN: ${ISP_ICON} ${WAN_IP}"
+    # Cyan for WAN
+    OUTPUT="${OUTPUT}  #[fg=cyan]${ISP_ICON} WAN: ${WAN_IP}"
 fi
 
 echo -e "$OUTPUT"

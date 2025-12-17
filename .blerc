@@ -1,15 +1,31 @@
-# ble.sh configuration
+# ~/.blerc
+# Configuration for ble.sh (Bash Line Editor)
 
-# Disable paste confirmation and syntax validation logic
-bleopt edit_abell=
+# ------------------------------------------------------------------------------
+# Paste & Clipboard Settings
+# ------------------------------------------------------------------------------
+# Disable bracketed paste confirm feature that requires C-q/C-j
+# This fixes the "Crtl-J" requirement when pasting multiple lines.
 bleopt exec_errexit_mark=
 bleopt exec_elapsed_mark=
 
-# Threshold for accepting lines (0 means accept all immediately)
+# Automatically accept pasted lines without confirmation
+bleopt canvas_winch_action=redraw-here
+bleopt edit_abell=
+bleopt history_share=
+
+# CRITICAL: Adjust bracketed paste behavior to execute immediately if safe
+# or at least not require awkward key combos.
+# 0 means accept immediately.
 bleopt accept_line_threshold=0
 
-# Bindings to force execution
+# ------------------------------------------------------------------------------
+# Key Bindings
+# ------------------------------------------------------------------------------
+# Ensure Return/Enter works as expected in all modes
 ble-bind -m emacs -f 'C-m' 'accept-line'
 ble-bind -m emacs -f 'RET' 'accept-line'
 ble-bind -m vi_imap -f 'C-m' 'accept-line'
 ble-bind -m vi_imap -f 'RET' 'accept-line'
+ble-bind -m vi_nmap -f 'C-m' 'accept-line'
+ble-bind -m vi_nmap -f 'RET' 'accept-line'
