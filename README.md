@@ -38,6 +38,17 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
   - **Persistence**: Automatically saves and restores sessions (`tmux-resurrect` + `tmux-continuum`).
   - **Smart fastfetch**: Only displays on initial login, not in new panes.
 
+### 📋 Copy/Paste Workflow (Keyboard Only)
+1.  **Enter Copy Mode**: Press `Prefix + [` (Default: `Ctrl-a` then `[`).
+    *   You will see a yellow indicator in the top right.
+2.  **Navigate**: Use arrow keys (or `h`,`j`,`k`,`l`) to move the cursor to where you want to start copying.
+3.  **Start Selection**: Press `v` (visual mode) to begin highlighting text.
+4.  **Copy**: Press `y` (yank).
+    *   This copies the text to the system clipboard (Windows/Mac) via OSC 52.
+    *   It also exits copy mode automatically.
+5.  **Paste**: Use `Ctrl+v` (Windows) or `Cmd+v` (Mac) to paste anywhere.
+
+
 ### 🎨 Theming
 - **Starship**: Tokyo Night color scheme with custom icons and formatting
 - **Bat**: Visual Studio Dark+ theme for syntax highlighting
