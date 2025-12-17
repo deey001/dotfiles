@@ -24,6 +24,7 @@ rm -rf "$HOME/.config/nvim"
 rm -rf "$HOME/.config/bat"
 rm -rf "$HOME/.config/fastfetch"
 rm -rf "$HOME/.config/base16-shell"
+rm -rf "$HOME/.config/tmux"
 
 # Remove ble.sh
 echo "Removing ble.sh..."

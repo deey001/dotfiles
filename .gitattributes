@@ -1,0 +1,10 @@
+# Force unix line endings for shell scripts and config files
+*.sh text eol=lf
+*.bash text eol=lf
+*.conf text eol=lf
+*.tmux text eol=lf
+.bashrc text eol=lf
+.profile text eol=lf
+.bash_aliases text eol=lf
+.bash_functions text eol=lf
+.bash_exports text eol=lf

@@ -273,11 +273,12 @@ ln -sf "$DOTFILES_DIR/.blerc" "$HOME/.blerc"
 mkdir -p "$HOME/.config"
 ln -sf "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
 
-# Link local bin scripts (Important for get_network_status.sh)
-mkdir -p "$HOME/.local/bin"
-ln -sf "$DOTFILES_DIR/get_network_status.sh" "$HOME/.local/bin/get_network_status.sh"
-# Ensure the script is executable
-chmod +x "$HOME/.local/bin/get_network_status.sh"
+# Symlink Tmux Config & Scripts
+# This puts the scripts in ~/.config/tmux/scripts/ which is cleaner than ~/.local/bin
+mkdir -p "$HOME/.config/tmux"
+ln -sf "$DOTFILES_DIR/.config/tmux/scripts" "$HOME/.config/tmux/scripts"
+# Ensure the script is executable (in the source repo)
+chmod +x "$DOTFILES_DIR/.config/tmux/scripts/get_network_status.sh"
 
 # Bat (Better Cat) Theme Setup
 mkdir -p "$HOME/.config/bat"

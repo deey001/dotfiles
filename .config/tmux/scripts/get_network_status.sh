@@ -6,6 +6,9 @@
 # Format: Icon $LAN: IP, Icon $VPN IP, Icon WAN: IP
 # ==============================================================================
 
+# Explicitly set PATH to ensure tools are found (crucial for cron/tmux)
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
 # ------------------------------------------------------------------------------
 # Icon Definitions (Nerd Fonts)
 # ------------------------------------------------------------------------------
