@@ -214,7 +214,7 @@ elif [ "$OS" = "Linux" ]; then
             fi
             
             # Wayland support for clipboard
-            if [ -n "$WAYLAND_DISPLAY" ]; then
+            if [ -n "${WAYLAND_DISPLAY:-}" ]; then
                 sudo apt install -y wl-clipboard
             fi
         else
