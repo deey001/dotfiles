@@ -11,23 +11,24 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
 - **Predictive Text**: `ble.sh` provides syntax highlighting, autosuggestions, and Tab autocomplete (like zsh) in pure Bash. Configured for immediate multiline execution (no `Ctrl+J` confirmation).
 - **Enhanced Readline**: `.inputrc` configuration with intelligent tab completion, case-insensitive matching, and history search
 - **Environment Detection**: Automatically detects SSH sessions, WSL, Docker containers, and Tmux for adaptive behavior
-- **Modern Tools**:
-  - `eza` (better `ls` with icons and git status)
-  - `bat` / `batcat` (better `cat` with syntax highlighting and Visual Studio Dark+ theme)
-  - `zoxide` (smarter `cd` navigation)
-  - `fzf` (fuzzy finding for files and history)
-  - `ripgrep` (faster grep)
-  - `fd` (faster find)
-  - `dust` (better du)
-  - `procs` (modern ps)
-  - `bottom` (alternative resource monitor)
-  - `hstr` (visual history search)
-  - `fastfetch` (system information display with custom config and tree-style formatting)
-  - `cmatrix` (matrix screen saver)
-  - `btop` (beautiful resource monitor)
-  - `lazygit` (terminal UI for Git)
-  - `glow` (markdown renderer)
-  - `tldr` (simplified man pages)
+- **Modern CLI Tools** (with fallback aliases to original commands):
+  - `eza` - Better `ls` with icons and git status (alias: `oldls` for original)
+  - `bat`/`batcat` - Better `cat` with syntax highlighting and Visual Studio Dark+ theme (alias: `oldcat`)
+  - `zoxide` - Smarter `cd` that learns your navigation patterns (alias: `cd`)
+  - `fzf` - Fuzzy finder for files and command history
+  - `ripgrep` (`rg`) - Faster grep that respects .gitignore
+  - `fd` - Faster find with simpler syntax (alias: `oldfind`)
+  - `dust` - Better `du` with tree visualization (alias: `olddu`)
+  - `duf` - Better `df` with colorful output (alias: `olddf`)
+  - `procs` - Modern `ps` with colors and tree view (alias: `oldps`)
+  - `btop` - Beautiful resource monitor (alias: `oldtop`)
+  - `bottom` - Alternative resource monitor
+  - `hstr` - Visual history search with reverse-i-search
+  - `fastfetch` - System information display with custom config
+  - `cmatrix` - Matrix-style screensaver
+  - `lazygit` - Terminal UI for Git operations
+  - `glow` - Beautiful markdown renderer
+  - `tldr` - Simplified man pages with practical examples
 
 ### 🧹 Minimalist Ubuntu
 - **Snap Removal**: On Ubuntu systems, `snapd` is automatically purged to ensure a lightweight, bloat-free environment.
@@ -157,6 +158,452 @@ Run `./uninstall.sh` to perform a comprehensive cleanup, which supports a full *
 - `Makefile` - Convenient management commands
 - `Brewfile` - macOS package declarations
 
+## Modern CLI Tools Usage Guide
+
+All modern tools are automatically installed by `install.sh` and are available immediately after installation. Each tool replaces a standard Unix command with a modern, feature-rich alternative. The original commands are still accessible via `old*` aliases.
+
+### 📁 File Listing: `eza` (replaces `ls`)
+
+**What it does**: Modern replacement for `ls` with icons, git status, and colors.
+
+**Why use it**: Shows file icons, git modification status, and uses colors to distinguish file types at a glance.
+
+**Examples**:
+```bash
+# Basic listing with icons (same as 'ls')
+eza
+
+# Long format with all files (same as 'ls -la')
+ll
+
+# List with git status indicators
+eza --git
+
+# Tree view of directory structure
+eza --tree --level=2
+
+# Sort by modification time
+eza -l --sort=modified
+
+# Use original ls if needed
+oldls -la
+```
+
+**Auto-configured**: The `cd` command automatically shows an `eza` listing when you change directories.
+
+---
+
+### 📄 File Viewing: `bat` (replaces `cat`)
+
+**What it does**: Display file contents with syntax highlighting, line numbers, and git integration.
+
+**Why use it**: Makes reading code files easier with automatic language detection and syntax highlighting.
+
+**Examples**:
+```bash
+# View a file with syntax highlighting (same as 'cat')
+cat file.js
+
+# View with line numbers
+bat -n file.py
+
+# Show git modifications
+bat --diff file.sh
+
+# Plain output without decorations
+bat --style=plain config.json
+
+# Use original cat if needed
+oldcat file.txt
+```
+
+**Theme**: Pre-configured with "Visual Studio Dark+" theme (set in `.bash_exports`).
+
+---
+
+### 🚀 Smart Navigation: `zoxide` (replaces `cd`)
+
+**What it does**: Learns your most-used directories and lets you jump to them with partial names.
+
+**Why use it**: No need to type full paths. After visiting a directory once, jump to it from anywhere.
+
+**Examples**:
+```bash
+# First time: use full path
+cd ~/Projects/dotfiles
+
+# Later: jump using just part of the name
+cd dot        # Goes to ~/Projects/dotfiles
+
+# Jump to most frecent directory matching "config"
+cd conf       # Might go to ~/.config
+
+# Interactive selection if multiple matches
+cd -i proj    # Shows menu of matching directories
+
+# List all tracked directories with scores
+zoxide query -l
+
+# Remove a directory from database
+zoxide remove ~/old/path
+```
+
+**How it learns**: Every `cd` command is tracked. Directories you visit frequently rank higher.
+
+---
+
+### 🔍 File Search: `fd` (replaces `find`)
+
+**What it does**: Fast, user-friendly file finder with sensible defaults.
+
+**Why use it**: Simpler syntax than `find`, respects `.gitignore`, and much faster.
+
+**Examples**:
+```bash
+# Find all .js files (same as complex 'find' command)
+fd '\.js$'
+
+# Find by name (case-insensitive by default)
+fd readme
+
+# Find in specific directory
+fd config /etc
+
+# Find and execute command
+fd '\.txt$' --exec wc -l
+
+# Find hidden files too
+fd -H config
+
+# Search only directories
+fd -t d dotfiles
+
+# Use original find if needed
+oldfind . -name "*.txt"
+```
+
+**Note**: On Debian/Ubuntu, installed as `fdfind` but symlinked to `fd` at `~/.local/bin/fd`.
+
+---
+
+### 📊 Disk Usage: `dust` (replaces `du`)
+
+**What it does**: Visualize disk usage with a tree display and percentages.
+
+**Why use it**: Instantly see which directories consume the most space.
+
+**Examples**:
+```bash
+# Show disk usage of current directory (same as 'du')
+dust
+
+# Limit tree depth
+dust -d 2
+
+# Show only top 15 entries
+dust -n 15
+
+# Reverse sort (smallest first)
+dust -r
+
+# Show apparent size instead of disk usage
+dust -b
+
+# Use original du if needed
+olddu -sh *
+```
+
+**Visual**: Shows bars and percentages, making it easy to spot large directories.
+
+---
+
+### 💾 Disk Space: `duf` (replaces `df`)
+
+**What it does**: Display disk usage with colors, sorting, and filtering.
+
+**Why use it**: Cleaner output with colors and automatic filtering of pseudo filesystems.
+
+**Examples**:
+```bash
+# Show all mounted filesystems (same as 'df')
+duf
+
+# Show only local filesystems (hides tmpfs, devtmpfs, etc.)
+duf --only local
+
+# Sort by usage
+duf --sort usage
+
+# Show specific filesystem
+duf /home
+
+# JSON output for scripting
+duf --json
+
+# Use original df if needed
+olddf -h
+```
+
+**Auto-filtered**: Hides clutter like `/dev`, `/proc`, `/sys` by default.
+
+---
+
+### ⚙️ Process Viewer: `procs` (replaces `ps`)
+
+**What it does**: Modern process viewer with colors, tree view, and better defaults.
+
+**Why use it**: Easier to read, supports filtering, and shows process tree relationships.
+
+**Examples**:
+```bash
+# Show all processes (same as 'ps aux')
+procs
+
+# Filter by name
+procs firefox
+
+# Show process tree
+procs --tree
+
+# Sort by CPU usage
+procs --sortd cpu
+
+# Sort by memory
+procs --sortd mem
+
+# Watch mode (refresh every 2 seconds)
+procs --watch
+
+# Use original ps if needed
+oldps aux
+```
+
+**Colored output**: Different colors for users, states, and resource usage.
+
+---
+
+### 📈 System Monitor: `btop` (replaces `top`)
+
+**What it does**: Beautiful, interactive resource monitor with mouse support.
+
+**Why use it**: Modern interface with graphs, colors, and easy navigation.
+
+**Examples**:
+```bash
+# Launch system monitor (same as 'top')
+btop
+
+# Inside btop:
+# - Arrow keys: Navigate
+# - F2: Options menu
+# - Mouse: Click to interact
+# - q: Quit
+```
+
+**Features**: CPU/memory graphs, network stats, disk I/O, process management.
+
+**Alternative**: `bottom` is also installed (run with `btm` command).
+
+---
+
+### 🔎 Code Search: `ripgrep` (use as `rg`)
+
+**What it does**: Blazing-fast search that respects `.gitignore` and shows colored matches.
+
+**Why use it**: Much faster than `grep`, automatically skips hidden files and git-ignored paths.
+
+**Examples**:
+```bash
+# Search for pattern in current directory
+rg "function"
+
+# Search with case-insensitive
+rg -i "error"
+
+# Search specific file types
+rg -t js "import"
+
+# Search and show context (3 lines before/after)
+rg -C 3 "TODO"
+
+# Search hidden files too
+rg --hidden "secret"
+
+# List file types
+rg --type-list
+```
+
+**Note**: The `grep` alias still uses traditional grep with colors for compatibility.
+
+---
+
+### 📜 Command History: `hstr`
+
+**What it does**: Visual, searchable command history browser.
+
+**Why use it**: Quickly find and re-run previous commands with interactive search.
+
+**Examples**:
+```bash
+# Launch history search (alias: hh)
+hstr
+
+# Inside hstr:
+# - Type to filter commands
+# - Arrow keys to navigate
+# - Enter to select and run
+# - Tab to select and edit
+# - Ctrl-/ to toggle regex search
+```
+
+**Keybinding**: Can also be bound to `Ctrl-r` for reverse-i-search replacement.
+
+---
+
+### 🔧 Git Interface: `lazygit`
+
+**What it does**: Terminal UI for git with keyboard shortcuts and visual interface.
+
+**Why use it**: Manage branches, commits, diffs, and merges without memorizing git commands.
+
+**Examples**:
+```bash
+# Launch in current repository
+lazygit
+
+# Inside lazygit:
+# - 1-5: Switch between panels (Status, Files, Branches, Commits, Stash)
+# - Space: Stage/unstage files
+# - c: Commit
+# - p: Pull
+# - P: Push
+# - x: Show command menu
+# - q: Quit
+```
+
+**Features**: Interactive rebasing, cherry-picking, stashing, and conflict resolution.
+
+---
+
+### 📖 Quick Help: `tldr`
+
+**What it does**: Community-driven man pages with practical examples.
+
+**Why use it**: Get straight to examples without reading lengthy man pages.
+
+**Examples**:
+```bash
+# Get examples for tar command
+tldr tar
+
+# Get examples for git
+tldr git-commit
+
+# Update tldr cache
+tldr --update
+
+# List all available pages
+tldr --list
+```
+
+**Philosophy**: "Too Long; Didn't Read" - simplified, example-focused documentation.
+
+---
+
+### 📝 Markdown Viewer: `glow`
+
+**What it does**: Render markdown files beautifully in the terminal.
+
+**Why use it**: Read README files, documentation, and notes with proper formatting.
+
+**Examples**:
+```bash
+# Render a markdown file
+glow README.md
+
+# Pager mode (like less)
+glow -p CHANGELOG.md
+
+# Fetch and render from URL
+glow https://raw.githubusercontent.com/user/repo/main/README.md
+
+# Interactive file browser
+glow .
+```
+
+**Use cases**: Reading GitHub READMEs locally, previewing markdown before committing.
+
+---
+
+### 🎨 System Info: `fastfetch`
+
+**What it does**: Display system information with logo and stats.
+
+**Why use it**: Quick system overview on login or for screenshots.
+
+**Examples**:
+```bash
+# Show system info
+fastfetch
+
+# Use different logo
+fastfetch --logo arch
+
+# JSON output
+fastfetch --format json
+
+# Show specific modules
+fastfetch --config none --structure Title:Separator:OS:Kernel:Uptime
+```
+
+**Auto-run**: Configured to display on login shells (not in tmux panes).
+
+---
+
+### 🎬 Matrix Effect: `cmatrix`
+
+**What it does**: Fun Matrix-style falling characters screensaver.
+
+**Why use it**: Look cool or use as a screensaver.
+
+**Examples**:
+```bash
+# Start the Matrix
+cmatrix
+
+# Asynchronous scroll
+cmatrix -a
+
+# Bold characters
+cmatrix -b
+
+# Custom color (green, red, blue, yellow, etc.)
+cmatrix -C blue
+
+# Quit with Ctrl-C
+```
+
+**Just for fun**: Not a productivity tool, but great for impressing people.
+
+---
+
+### 🔄 Accessing Original Commands
+
+All replaced commands are still accessible via `old*` aliases:
+
+```bash
+oldcat file.txt     # Use original cat
+oldfind . -name "*" # Use original find
+olddu -sh *         # Use original du
+olddf -h            # Use original df
+oldps aux           # Use original ps
+oldtop              # Use original top
+```
+
+This ensures scripts and workflows that depend on original command behavior still work.
+
+---
+
 ## Troubleshooting
 
 ### 📋 Clipboard Copy Not Working
@@ -173,6 +620,91 @@ If the `y` key copy method fails (e.g., text copies inside tmux but doesn't reac
 
 ## SSH Key Installation
 The install script automatically installs the SSH public key from `MDC_public.pub` to `~/.ssh/authorized_keys` for easy remote access.
+
+---
+
+## Technical Implementation Details
+
+### Modern Tools Installation
+
+All modern CLI tools are installed automatically by [install.sh](install.sh) with cross-platform support:
+
+#### macOS (Homebrew)
+- **Package Manager**: Uses [Brewfile](Brewfile) for declarative package management
+- **Tools**: All modern tools available via `brew install`
+- **Fonts**: Ubuntu Nerd Font via `brew install --cask font-ubuntu-nerd-font`
+
+#### Debian/Ubuntu (apt)
+- **Core Tools**: Installed from official repositories (`ripgrep`, `fd-find`, `duf`)
+- **Binary Releases**: Tools not in repos installed from GitHub releases:
+  - `zoxide` - From official install script
+  - `eza` - Latest x86_64 Linux tarball
+  - `dust` - Latest x86_64 musl tarball
+- **Font Fix**: Ubuntu Nerd Font downloaded as `.zip` and extracted to `~/.local/share/fonts/Ubuntu/`
+- **fd Symlink**: `fdfind` → `~/.local/bin/fd` (added to PATH in [.bash_exports:5](.bash_exports#L5))
+
+#### RHEL/CentOS/Fedora (dnf/yum)
+- **EPEL Repository**: Automatically enabled for RHEL/CentOS to access more packages
+- **Core Tools**: Installed from EPEL repositories when available
+- **Binary Releases**: Same as Ubuntu for tools not in repos
+- **duf Installation**: Uses `.rpm` package from GitHub releases
+
+#### Arch Linux (pacman)
+- **All in One**: All modern tools available in official repos
+- **Single Command**: `pacman -Syu` installs everything
+
+### Alias System
+
+All modern tools have conditional aliases in [.bash_aliases](.bash_aliases#L33-L82):
+
+```bash
+# Example: duf replaces df, but keeps original accessible
+if command -v duf >/dev/null 2>&1; then
+    alias df='duf'      # Modern command
+    alias olddf='/bin/df'  # Original command
+fi
+```
+
+**Why this approach?**
+- ✅ Modern tools work seamlessly (just type `df` to get `duf`)
+- ✅ Original commands still accessible (`olddf` for scripts)
+- ✅ Graceful degradation (if tool not installed, uses original)
+- ✅ No conflicts with system scripts that depend on original behavior
+
+### PATH Configuration
+
+The [.bash_exports:5](.bash_exports#L5) adds `~/.local/bin` to PATH:
+
+```bash
+export PATH="$PATH:$HOME/bin:$HOME/.local/bin"
+```
+
+**Why needed?**
+- Ubuntu installs `fd-find` as `/usr/bin/fdfind` (naming conflict)
+- Install script creates symlink: `~/.local/bin/fd` → `/usr/bin/fdfind`
+- This PATH entry makes the `fd` command work system-wide
+
+### Theme Configuration
+
+- **bat theme**: Set to "Visual Studio Dark+" in [.bash_exports:42](.bash_exports#L42)
+- **Starship theme**: Tokyo Night colors in [.config/starship.toml](.config/starship.toml)
+- **Nerd Font**: Ubuntu Nerd Font for icons (installed on all platforms)
+
+### Auto-listing on `cd`
+
+The [.bash_functions](.bash_functions#L150-L156) overrides `cd` to auto-list:
+
+```bash
+cd() {
+    if [ -n "$1" ]; then
+        builtin cd "$@" && if command -v eza > /dev/null 2>&1; then eza -lha --icons; else ls -lhsA; fi
+    else
+        builtin cd ~ && if command -v eza > /dev/null 2>&1; then eza -lha --icons; else ls -lhsA; fi
+    fi
+}
+```
+
+**Why?** Automatically shows directory contents after changing directories (saves typing `ls`).
 
 ---
 
