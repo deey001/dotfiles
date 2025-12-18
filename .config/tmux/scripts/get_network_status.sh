@@ -92,9 +92,9 @@ OUTPUT=""
 
 # Format: LAN
 if [ -n "$LOCAL_IP" ]; then
-    OUTPUT="#[fg=green]${ICON_LAN} LAN: ${LOCAL_IP}"
+    OUTPUT=" #[fg=green] ${ICON_LAN} LAN: ${LOCAL_IP}"
 else
-    OUTPUT="#[fg=red]${ICON_LAN} LAN: Disconnected"
+    OUTPUT=" #[fg=red] ${ICON_LAN} LAN: Disconnected"
 fi
 
 # Format: VPN
