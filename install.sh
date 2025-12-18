@@ -171,8 +171,8 @@ elif [ "$OS" = "Linux" ]; then
 
             # Install additional modern tools (ripgrep, dust, procs, bottom, zoxide, eza, duf, fd-find)
             echo "Installing additional modern tools..."
-            # Core modern tools from apt (most are in Ubuntu repos)
-            sudo apt install -y ripgrep fd-find duf dust
+            # Core modern tools from apt (available in Ubuntu repos)
+            sudo apt install -y ripgrep fd-find duf
 
             # zoxide - Smarter cd
             if ! command -v zoxide >/dev/null 2>&1; then
@@ -185,6 +185,16 @@ elif [ "$OS" = "Linux" ]; then
                 curl -Lo eza.tar.gz "https://github.com/eza-community/eza/releases/latest/download/eza_x86_64-unknown-linux-gnu.tar.gz"
                 sudo tar -xzf eza.tar.gz -C /usr/local/bin
                 rm eza.tar.gz
+            fi
+
+            # dust - Better du (from binary release, not in Ubuntu repos)
+            if ! command -v dust >/dev/null 2>&1; then
+                echo "Installing dust..."
+                DUST_VERSION=$(curl -s "https://api.github.com/repos/bootandy/dust/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+                curl -Lo dust.tar.gz "https://github.com/bootandy/dust/releases/latest/download/dust-v${DUST_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+                tar -xzf dust.tar.gz
+                sudo install dust-v${DUST_VERSION}-x86_64-unknown-linux-musl/dust /usr/local/bin/
+                rm -rf dust.tar.gz dust-v${DUST_VERSION}-x86_64-unknown-linux-musl
             fi
 
             # Create fd symlink (Debian/Ubuntu installs fd-find as 'fdfind')
