@@ -113,7 +113,7 @@ if [ "$OS" = "Darwin" ]; then
             brew bundle --file="$DOTFILES_DIR/Brewfile"
         else
             echo "Warning: Brewfile not found. Installing packages individually..."
-            brew install tmux git fzf neovim starship hstr bat eza ripgrep fd zoxide fastfetch cmatrix btop lazygit glow tldr dust procs bottom
+            brew install tmux git fzf neovim starship hstr bat eza ripgrep fd zoxide fastfetch cmatrix btop lazygit glow tldr dust duf procs bottom
             brew install --cask font-ubuntu-nerd-font
         fi
     else
@@ -132,7 +132,7 @@ elif [ "$OS" = "Linux" ]; then
         if [ "$IS_ONLINE" = true ]; then
             sudo apt update
             # Install build prerequisites
-            sudo apt install -y curl xz-utils tar build-essential
+            sudo apt install -y curl xz-utils tar unzip build-essential
             
             echo "Installing tools via apt..."
             # Core tools from repositories
@@ -229,9 +229,52 @@ elif [ "$OS" = "Linux" ]; then
         echo "Installing tools via dnf/yum..."
         PKG_MANAGER="yum"
         command -v dnf > /dev/null 2>&1 && PKG_MANAGER="dnf"
-        
+
         if [ "$IS_ONLINE" = true ]; then
-            sudo $PKG_MANAGER install -y git tmux fzf neovim hstr bat fastfetch cmatrix btop lazygit glow tldr
+            # Install EPEL for RHEL/CentOS to get more packages
+            if grep -qi "centos\|rhel" /etc/redhat-release; then
+                sudo $PKG_MANAGER install -y epel-release
+            fi
+
+            # Core tools (most available in EPEL or standard repos)
+            sudo $PKG_MANAGER install -y git tmux fzf neovim hstr bat fastfetch cmatrix btop lazygit glow tldr ripgrep fd-find unzip
+
+            # Modern tools that may need manual installation
+            # zoxide
+            if ! command -v zoxide >/dev/null 2>&1; then
+                curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+            fi
+
+            # eza (from binary release)
+            if ! command -v eza >/dev/null 2>&1; then
+                EZA_VERSION=$(curl -s "https://api.github.com/repos/eza-community/eza/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+                curl -Lo eza.tar.gz "https://github.com/eza-community/eza/releases/latest/download/eza_x86_64-unknown-linux-gnu.tar.gz"
+                sudo tar -xzf eza.tar.gz -C /usr/local/bin
+                rm eza.tar.gz
+            fi
+
+            # dust (from binary release)
+            if ! command -v dust >/dev/null 2>&1; then
+                DUST_VERSION=$(curl -s "https://api.github.com/repos/bootandy/dust/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+                curl -Lo dust.tar.gz "https://github.com/bootandy/dust/releases/latest/download/dust-v${DUST_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+                tar -xzf dust.tar.gz
+                sudo install dust-v${DUST_VERSION}-x86_64-unknown-linux-musl/dust /usr/local/bin/
+                rm -rf dust.tar.gz dust-v${DUST_VERSION}-x86_64-unknown-linux-musl
+            fi
+
+            # duf (from binary release - not in RHEL repos)
+            if ! command -v duf >/dev/null 2>&1; then
+                DUF_VERSION=$(curl -s "https://api.github.com/repos/muesli/duf/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+                curl -Lo duf.rpm "https://github.com/muesli/duf/releases/latest/download/duf_${DUF_VERSION}_linux_x86_64.rpm"
+                sudo rpm -i duf.rpm || sudo $PKG_MANAGER install -y duf.rpm
+                rm duf.rpm
+            fi
+
+            # Create fd symlink if needed
+            if command -v fdfind >/dev/null 2>&1 && [ ! -f "$HOME/.local/bin/fd" ]; then
+                mkdir -p "$HOME/.local/bin"
+                ln -sf "$(which fdfind)" "$HOME/.local/bin/fd"
+            fi
         else
             echo "Offline Mode: Installing what is available..."
             sudo $PKG_MANAGER install -y git tmux fzf neovim hstr bat || true
@@ -243,7 +286,8 @@ elif [ "$OS" = "Linux" ]; then
     elif [ -f /etc/arch-release ]; then
         echo "Installing tools via pacman..."
         if [ "$IS_ONLINE" = true ]; then
-            sudo pacman -Syu --noconfirm git tmux fzf neovim hstr bat eza fastfetch cmatrix btop lazygit glow tldr
+            # Arch has most modern tools in official repos or AUR
+            sudo pacman -Syu --noconfirm git tmux fzf neovim hstr bat eza fastfetch cmatrix btop lazygit glow tldr ripgrep fd dust duf zoxide unzip
         else
             echo "Offline Mode: Updating skipped."
         fi
@@ -255,11 +299,14 @@ elif [ "$OS" = "Linux" ]; then
     # Only install fonts if online, otherwise assume they are pre-bundled or installed manually
     if [ "$IS_ONLINE" = true ]; then
         FONT_DIR="$HOME/.local/share/fonts"
-        if [ ! -f "$FONT_DIR/UbuntuNerdFont-Regular.ttf" ]; then
+        if [ ! -d "$FONT_DIR/Ubuntu" ]; then
             echo "Installing Ubuntu Nerd Font..."
             mkdir -p "$FONT_DIR"
-            curl -fLo "$FONT_DIR/UbuntuNerdFont-Regular.ttf" \
-              https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuNerdFont-Regular.ttf
+            cd "$FONT_DIR"
+            curl -fLo Ubuntu.zip https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Ubuntu.zip
+            unzip -q -o Ubuntu.zip -d Ubuntu
+            rm Ubuntu.zip
+            cd - > /dev/null
             if command -v fc-cache >/dev/null 2>&1; then
                 fc-cache -f -v
             fi

@@ -1,8 +1,8 @@
 # .bash_exports: Exported environment variables
 # This file defines variables that are exported to child processes, like PATH modifications or default editor.
 
-# Add user bin directory to PATH
-export PATH="$PATH:$HOME/bin"
+# Add user bin directories to PATH
+export PATH="$PATH:$HOME/bin:$HOME/.local/bin"
 
 
 

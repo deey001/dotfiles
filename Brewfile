@@ -66,6 +66,9 @@ brew "zoxide"
 # Dust - More intuitive 'du' (disk usage)
 brew "dust"
 
+# Duf - Better 'df' (disk free) with colors
+brew "duf"
+
 # Procs - Modern replacement for 'ps'
 brew "procs"
 
