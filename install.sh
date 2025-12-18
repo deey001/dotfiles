@@ -169,10 +169,10 @@ elif [ "$OS" = "Linux" ]; then
             sudo dpkg -i glow.deb
             rm glow.deb
 
-            # Install additional modern tools (ripgrep, dust, procs, bottom, zoxide, eza)
+            # Install additional modern tools (ripgrep, dust, procs, bottom, zoxide, eza, duf, fd-find)
             echo "Installing additional modern tools..."
-            # ripgrep (rg) - Better grep
-            sudo apt install -y ripgrep
+            # Core modern tools from apt (most are in Ubuntu repos)
+            sudo apt install -y ripgrep fd-find duf dust
 
             # zoxide - Smarter cd
             if ! command -v zoxide >/dev/null 2>&1; then
@@ -186,7 +186,14 @@ elif [ "$OS" = "Linux" ]; then
                 sudo tar -xzf eza.tar.gz -C /usr/local/bin
                 rm eza.tar.gz
             fi
-            
+
+            # Create fd symlink (Debian/Ubuntu installs fd-find as 'fdfind')
+            if command -v fdfind >/dev/null 2>&1 && [ ! -f "$HOME/.local/bin/fd" ]; then
+                mkdir -p "$HOME/.local/bin"
+                ln -sf "$(which fdfind)" "$HOME/.local/bin/fd"
+                echo "Created fd symlink at ~/.local/bin/fd"
+            fi
+
             # Clean up Snap (Ubuntu specific optimization for servers)
             if grep -qi "ubuntu" /etc/os-release; then
                 echo "Optimizing Ubuntu: Removing snapd..."
