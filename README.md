@@ -9,11 +9,18 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
 ### 🚀 Modern Shell Experience
 - **Starship Prompt**: Minimal, fast, and informative prompt with Tokyo Night theme showing git status, package versions, and execution time. Root user displays in red for safety.
 - **Predictive Text**: `ble.sh` provides syntax highlighting, autosuggestions, and Tab autocomplete (like zsh) in pure Bash. Configured for immediate multiline execution (no `Ctrl+J` confirmation).
+- **Enhanced Readline**: `.inputrc` configuration with intelligent tab completion, case-insensitive matching, and history search
+- **Environment Detection**: Automatically detects SSH sessions, WSL, Docker containers, and Tmux for adaptive behavior
 - **Modern Tools**:
   - `eza` (better `ls` with icons and git status)
   - `bat` / `batcat` (better `cat` with syntax highlighting and Visual Studio Dark+ theme)
   - `zoxide` (smarter `cd` navigation)
   - `fzf` (fuzzy finding for files and history)
+  - `ripgrep` (faster grep)
+  - `fd` (faster find)
+  - `dust` (better du)
+  - `procs` (modern ps)
+  - `bottom` (alternative resource monitor)
   - `hstr` (visual history search)
   - `fastfetch` (system information display with custom config and tree-style formatting)
   - `cmatrix` (matrix screen saver)
@@ -33,10 +40,13 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
 
 ### 💻 Terminal Multiplexing
 - **Tmux**: Pre-configured with:
-  - Mouse support
+  - Mouse support (toggle with `Prefix + m/M`)
   - Split/navigation keybinds
-  - **Persistence**: Automatically saves and restores sessions (`tmux-resurrect` + `tmux-continuum`).
-  - **Smart fastfetch**: Only displays on initial login, not in new panes.
+  - **Pane Synchronization**: Type in all panes at once (`Prefix + S`)
+  - **Persistence**: Automatically saves and restores sessions (`tmux-resurrect` + `tmux-continuum`)
+  - **Smart fastfetch**: Only displays on initial login, not in new panes
+  - **Network Status Bar**: Real-time LAN/VPN/WAN IP display with ISP detection (cached for performance)
+  - History limit of 50,000 lines
 
 ### 📋 Copy/Paste Workflow (Keyboard Only)
 1.  **Enter Copy Mode**: Press `Prefix + [` (Default: `Ctrl-a` then `[`).
@@ -59,7 +69,23 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
 - **Conditional Initialization**: Only loads tools if they're installed (rbenv, zoxide, etc.)
 - **Dynamic Paths**: Uses `which` to find executables for maximum portability
 
+### 🔐 Configuration & Security
+- **Git Configuration**: Pre-configured `.gitconfig` with aliases, colors, and best practices
+- **SSH Config Template**: Connection multiplexing, keep-alive, and host shortcuts
+- **Secret Management**: `.bash_local` support for machine-specific and private settings
+- **Backup on Install**: Existing configs are automatically backed up before installation
+- **EditorConfig**: Consistent code formatting across different editors
+
+### 🛠️ Developer Experience
+- **Makefile**: Simple commands for installation, testing, and updates
+- **Version-Locked Tools**: Critical tools (Neovim) locked to specific versions for stability
+- **Testing Suite**: Validation script to verify installation and configuration
+- **Brewfile**: Declarative package management for macOS
+- **Comprehensive Documentation**: Every config file includes detailed comments and usage examples
+
 ## Installation
+
+### Quick Install
 
 1.  **Clone**:
     ```bash
@@ -69,12 +95,23 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
     ```bash
     cd ~/dotfiles && ./install.sh
     ```
-    *Installs all dependencies (Neovim v0.11.0, Tmux, Starship, bat themes, fonts, etc.) and sets up symlinks.*
+    *Installs all dependencies (Neovim v0.11.0, Tmux, Starship, bat themes, fonts, etc.) and sets up symlinks. Existing configs are backed up automatically.*
 
 3.  **Finalize**:
     - **Tmux**: Press `Prefix + I` (default `Ctrl+a` then `I`) to install plugins.
     - **Neovim**: LazyVim will auto-install plugins on first launch.
     - **Reload Shell**: Run `source ~/.bashrc` or restart your terminal.
+
+### Using Makefile
+
+Alternatively, use the Makefile for easier management:
+```bash
+cd ~/dotfiles
+make install      # Install dotfiles
+make test         # Validate installation
+make update       # Update from git and reinstall
+make help         # Show all available commands
+```
 
 ## Uninstallation
 
@@ -90,21 +127,35 @@ Run `./uninstall.sh` to perform a comprehensive cleanup, which supports a full *
 
 ## File Structure
 
+### Shell Configuration
 - `.bashrc` - Main bash configuration with tool initialization
 - `.bash_aliases` - Command aliases (ll, la, vi, vim, .., h, p, f, etc.)
 - `.bash_exports` - Environment variables (EDITOR, BAT_THEME, PATH, history config, etc.)
 - `.bash_functions` - Utility functions (extract, mkdirg, up, ftext, distribution, etc.)
 - `.bash_wrappers` - Custom functions (colored man pages, whatsgoingon)
 - `.bash_profile` - Bash profile for login shells
+- `.bash_local` - Machine-specific settings (not tracked in git)
+- `.inputrc` - Readline configuration with enhanced completion
+- `.blerc` - ble.sh configuration (disables multiline confirmation)
+
+### Application Configs
 - `.tmux.conf` - Tmux configuration
+- `.gitconfig` - Git global configuration
+- `.ssh/config` - SSH client configuration template
+- `.editorconfig` - Editor formatting rules
 - `.config/starship.toml` - Starship prompt configuration (Tokyo Night theme)
 - `.config/nvim/init.lua` - Neovim LazyVim configuration
 - `.config/bat/themes/` - Bat color themes (Visual Studio Dark+)
 - `.config/fastfetch/config.jsonc` - Fastfetch system info configuration
 - `.config/alacritty/alacritty.yml` - Alacritty terminal configuration
-- `install.sh` - Installation script
-- `uninstall.sh` - Uninstallation script
-- `.blerc` - ble.sh configuration (disables multiline confirmation)
+- `.config/tmux/scripts/` - Tmux status bar scripts
+
+### Management Scripts
+- `install.sh` - Installation script with version management
+- `uninstall.sh` - Comprehensive uninstallation script
+- `test.sh` - Validation and testing script
+- `Makefile` - Convenient management commands
+- `Brewfile` - macOS package declarations
 
 ## Troubleshooting
 

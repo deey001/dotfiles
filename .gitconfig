@@ -1,0 +1,190 @@
+# ==============================================================================
+# .gitconfig - Global Git Configuration
+# ==============================================================================
+# This file contains global Git settings that apply to all repositories on your
+# system. It includes user identification, aliases, UI preferences, and behavior
+# settings.
+#
+# USAGE:
+#   1. Update [user] section with your name and email
+#   2. Symlink this file to ~/.gitconfig (done automatically by install.sh)
+#   3. Git will use these settings globally unless overridden per-repository
+#
+# EXAMPLES:
+#   git st                    # Run 'git status' using alias
+#   git co main               # Checkout main branch using alias
+#   git lg                    # Show beautiful log graph
+#   git undo                  # Undo last commit (keep changes)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# User Information
+# ------------------------------------------------------------------------------
+# Update these with your actual name and email address
+# These values appear in commit metadata and Git logs
+
+[user]
+	name = Your Name
+	email = your.email@example.com
+
+# ------------------------------------------------------------------------------
+# Core Settings
+# ------------------------------------------------------------------------------
+# General Git behavior and editor configuration
+
+[core]
+	# Use Neovim as the default editor for commit messages and interactive rebases
+	editor = nvim
+
+	# Automatically convert CRLF to LF on commit (Windows compatibility)
+	autocrlf = input
+
+	# Treat space changes more intelligently in diffs
+	whitespace = trailing-space,space-before-tab
+
+	# Use custom global .gitignore for common patterns
+	# excludesfile = ~/.gitignore_global
+
+# ------------------------------------------------------------------------------
+# UI and Color Settings
+# ------------------------------------------------------------------------------
+# Make Git output more readable with colors and formatting
+
+[color]
+	# Enable colored output in terminal
+	ui = auto
+
+[color "branch"]
+	current = yellow bold
+	local = green
+	remote = cyan
+
+[color "diff"]
+	meta = yellow bold
+	frag = magenta bold
+	old = red
+	new = green
+
+[color "status"]
+	added = green
+	changed = yellow
+	untracked = red
+
+# ------------------------------------------------------------------------------
+# Diff and Merge Tools
+# ------------------------------------------------------------------------------
+# Configure how diffs are shown and conflicts are resolved
+
+[diff]
+	# Use better diff algorithm for more accurate changes
+	algorithm = histogram
+
+	# Show original text in conflict markers (diff3 style)
+	conflictStyle = diff3
+
+	# Enable color highlighting for moved code blocks
+	colorMoved = default
+
+[merge]
+	# Include common ancestor in conflict markers
+	conflictStyle = diff3
+
+	# Automatically launch merge tool for conflicts
+	tool = nvimdiff
+
+[mergetool "nvimdiff"]
+	cmd = nvim -d $LOCAL $REMOTE $MERGED -c '$wincmd w' -c 'wincmd J'
+
+# ------------------------------------------------------------------------------
+# Push and Pull Behavior
+# ------------------------------------------------------------------------------
+# Control how Git handles remote operations
+
+[push]
+	# Only push current branch to its upstream
+	default = simple
+
+	# Automatically setup remote tracking
+	autoSetupRemote = true
+
+[pull]
+	# Rebase instead of merge when pulling (cleaner history)
+	rebase = true
+
+# ------------------------------------------------------------------------------
+# Aliases
+# ------------------------------------------------------------------------------
+# Shortcuts for common Git commands
+
+[alias]
+	# Status and branch shortcuts
+	st = status
+	br = branch
+	co = checkout
+	cob = checkout -b
+
+	# Commit shortcuts
+	ci = commit
+	cm = commit -m
+	ca = commit --amend
+	can = commit --amend --no-edit
+
+	# Diff shortcuts
+	df = diff
+	dfs = diff --staged
+	dfn = diff --name-only
+
+	# Log shortcuts
+	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
+	ll = log --pretty=format:'%C(yellow)%h%Cred%d %Creset%s%Cblue [%cn]' --decorate --numstat
+	last = log -1 HEAD --stat
+	hist = log --pretty=format:'%h %ad | %s%d [%an]' --graph --date=short
+
+	# Undo shortcuts
+	undo = reset HEAD~1 --mixed
+	unstage = reset HEAD --
+
+	# Show what's changed
+	changed = diff --name-only --diff-filter=ACMR
+
+	# List all aliases
+	aliases = config --get-regexp ^alias\\.
+
+# ------------------------------------------------------------------------------
+# Branch and Remote Settings
+# ------------------------------------------------------------------------------
+
+[branch]
+	# Show upstream tracking info in git branch -v
+	autoSetupMerge = always
+
+[remote "origin"]
+	# Prune deleted remote branches automatically
+	prune = true
+
+# ------------------------------------------------------------------------------
+# Additional Features
+# ------------------------------------------------------------------------------
+
+[init]
+	# Use 'main' as default branch name for new repositories
+	defaultBranch = main
+
+[credential]
+	# Cache credentials for 1 hour (3600 seconds)
+	helper = cache --timeout=3600
+
+[fetch]
+	# Automatically prune deleted remote branches when fetching
+	prune = true
+
+# ------------------------------------------------------------------------------
+# Git LFS (Large File Storage)
+# ------------------------------------------------------------------------------
+# Uncomment if you use Git LFS for binary files
+
+# [filter "lfs"]
+# 	clean = git-lfs clean -- %f
+# 	smudge = git-lfs smudge -- %f
+# 	process = git-lfs filter-process
+# 	required = true

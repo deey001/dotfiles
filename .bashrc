@@ -33,6 +33,43 @@ HISTFILESIZE=20000
 PROMPT_COMMAND='history -a'
 
 # ------------------------------------------------------------------------------
+# Environment Detection
+# ------------------------------------------------------------------------------
+# Detect special environments and set flags for conditional behavior
+
+# Detect SSH session
+# USAGE: Check if you're connected via SSH to adjust prompt/behavior
+if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
+    export IS_SSH=1
+else
+    export IS_SSH=0
+fi
+
+# Detect WSL (Windows Subsystem for Linux)
+# USAGE: Enable Windows-specific integrations when running in WSL
+if grep -qEi "(Microsoft|WSL)" /proc/version 2>/dev/null; then
+    export IS_WSL=1
+else
+    export IS_WSL=0
+fi
+
+# Detect Docker container
+# USAGE: Adjust resource-intensive operations in containers
+if [ -f /.dockerenv ] || grep -q docker /proc/1/cgroup 2>/dev/null; then
+    export IS_DOCKER=1
+else
+    export IS_DOCKER=0
+fi
+
+# Detect if running in Tmux
+# USAGE: Prevent nested tmux or adjust terminal behavior
+if [ -n "$TMUX" ]; then
+    export IS_TMUX=1
+else
+    export IS_TMUX=0
+fi
+
+# ------------------------------------------------------------------------------
 # Shell Options
 # ------------------------------------------------------------------------------
 # Update window size after each command (useful for resizing)
@@ -178,6 +215,21 @@ if [ -f ~/.local/share/blesh/ble.sh ]; then
     if [ -f ~/.blerc ]; then
         source ~/.blerc
     fi
+fi
+
+# ------------------------------------------------------------------------------
+# Local/Private Configuration
+# ------------------------------------------------------------------------------
+# Source machine-specific or private settings (API keys, custom paths, etc.)
+# This file is NOT tracked in git and should be created manually if needed
+#
+# USAGE:
+#   Create ~/.bash_local with your private settings:
+#   echo 'export GITHUB_TOKEN="ghp_your_token_here"' >> ~/.bash_local
+#   echo 'export CUSTOM_PATH="/opt/mytools"' >> ~/.bash_local
+#
+if [ -f ~/.bash_local ]; then
+    source ~/.bash_local
 fi
 
 # ------------------------------------------------------------------------------

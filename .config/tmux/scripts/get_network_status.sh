@@ -1,13 +1,30 @@
 #!/bin/bash
+set -euo pipefail
 
 # ==============================================================================
 # get_network_status.sh
 # ==============================================================================
-# Format: Icon $LAN: IP, Icon $VPN IP, Icon WAN: IP
+# Displays network status in tmux status bar with LAN, VPN, and WAN information.
+# Uses caching to avoid repeated external API calls.
+#
+# USAGE:
+#   Called automatically by tmux status bar (configured in .tmux.conf)
+#   Can also be run manually: bash ~/.config/tmux/scripts/get_network_status.sh
+#
+# CACHING:
+#   WAN IP and ISP info are cached for 5 minutes to reduce API calls
+#   Cache file: /tmp/tmux_network_cache_$USER
+#
+# FORMAT:
+#   Icon LAN: IP, Icon VPN: IP, Icon WAN: IP (ISP)
 # ==============================================================================
 
 # Explicitly set PATH to ensure tools are found (crucial for cron/tmux)
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Cache configuration
+CACHE_FILE="/tmp/tmux_network_cache_${USER}"
+CACHE_TTL=300  # 5 minutes in seconds
 
 # ------------------------------------------------------------------------------
 # Icon Definitions (Nerd Fonts)
@@ -52,36 +69,54 @@ if command -v ip >/dev/null 2>&1; then
     fi
 fi
 
-# 3. Get WAN IP and ISP (Only if online)
+# 3. Get WAN IP and ISP (Only if online, with caching)
 WAN_IP=""
 ISP=""
 ISP_ICON="$ICON_WAN"
 
-# Check connectivity with short timeout (1 second)
-if ping -c 1 -W 1 8.8.8.8 &> /dev/null; then
-    WAN_IP=$(curl -s --connect-timeout 2 ifconfig.me)
-    if [ -z "$WAN_IP" ]; then
-         WAN_IP=$(curl -s --connect-timeout 2 icanhazip.com)
+# Check if cache exists and is fresh
+if [ -f "$CACHE_FILE" ]; then
+    CACHE_AGE=$(($(date +%s) - $(stat -c %Y "$CACHE_FILE" 2>/dev/null || stat -f %m "$CACHE_FILE" 2>/dev/null)))
+    if [ "$CACHE_AGE" -lt "$CACHE_TTL" ]; then
+        # Cache is fresh, read from it
+        source "$CACHE_FILE"
     fi
-    
-    # Get ISP name (Org)
-    ISP=$(curl -s --connect-timeout 2 https://ipapi.co/org/ 2>/dev/null)
-    
-    # Map ISP to Icon
-    case "$ISP" in
-        *Comcast*|*Xfinity*)     ISP_ICON="$ICON_COMCAST" ;;
-        *Verizon*)               ISP_ICON="$ICON_VERIZON" ;;
-        *AT\&T*|*ATT*)           ISP_ICON="$ICON_ATT" ;;
-        *Spectrum*|*Charter*)    ISP_ICON="$ICON_WAN" ;;
-        *Google*)                ISP_ICON="$ICON_GOOGLE" ;;
-        *T-Mobile*)              ISP_ICON="$ICON_TMOBILE" ;;
-        *Cox*)                   ISP_ICON="$ICON_COX" ;;
-    esac
-else
-    # If ping failed, we might still want to check if we have WAN IP causing the issue? 
-    # Usually NO, just mark offline.
-    WAN_IP="" 
-    ISP_ICON="$ICON_OFFLINE"
+fi
+
+# If cache is stale or doesn't exist, fetch new data
+if [ -z "$WAN_IP" ]; then
+    # Check connectivity with short timeout (1 second)
+    if ping -c 1 -W 1 8.8.8.8 &> /dev/null; then
+        WAN_IP=$(curl -s --max-time 2 ifconfig.me 2>/dev/null)
+        if [ -z "$WAN_IP" ]; then
+             WAN_IP=$(curl -s --max-time 2 icanhazip.com 2>/dev/null)
+        fi
+
+        # Get ISP name (Org)
+        ISP=$(curl -s --max-time 2 https://ipapi.co/org/ 2>/dev/null)
+
+        # Map ISP to Icon
+        case "$ISP" in
+            *Comcast*|*Xfinity*)     ISP_ICON="$ICON_COMCAST" ;;
+            *Verizon*)               ISP_ICON="$ICON_VERIZON" ;;
+            *AT\&T*|*ATT*)           ISP_ICON="$ICON_ATT" ;;
+            *Spectrum*|*Charter*)    ISP_ICON="$ICON_WAN" ;;
+            *Google*)                ISP_ICON="$ICON_GOOGLE" ;;
+            *T-Mobile*)              ISP_ICON="$ICON_TMOBILE" ;;
+            *Cox*)                   ISP_ICON="$ICON_COX" ;;
+        esac
+
+        # Save to cache
+        cat > "$CACHE_FILE" << EOF
+WAN_IP="$WAN_IP"
+ISP="$ISP"
+ISP_ICON="$ISP_ICON"
+EOF
+    else
+        # If ping failed, mark offline
+        WAN_IP=""
+        ISP_ICON="$ICON_OFFLINE"
+    fi
 fi
 
 # ------------------------------------------------------------------------------

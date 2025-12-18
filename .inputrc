@@ -1,0 +1,194 @@
+# ==============================================================================
+# .inputrc - GNU Readline Configuration
+# ==============================================================================
+# This file configures the behavior of readline, the library used by bash and
+# other CLI programs for line editing and history navigation.
+#
+# WHAT IS READLINE?
+#   Readline is the library that handles:
+#   - Command line editing (cursor movement, text editing)
+#   - History navigation (up/down arrows)
+#   - Tab completion
+#   - Keyboard shortcuts (Ctrl+A, Ctrl+E, etc.)
+#
+# USAGE:
+#   1. Symlink this file to ~/.inputrc (done automatically by install.sh)
+#   2. Restart your shell or run: bind -f ~/.inputrc
+#   3. Start typing commands and use shortcuts below
+#
+# EXAMPLES:
+#   - Type "cd /u" then press TAB → auto-completes to "cd /usr/"
+#   - Press Ctrl+R → search command history backwards
+#   - Press Alt+. → insert last argument from previous command
+#   - Press Up → cycle through history matching current input
+#   - Type "git st" and press Up → only shows "git st*" commands
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Vi Mode Configuration (Recommended for Vim users)
+# ------------------------------------------------------------------------------
+# Uncomment these lines if you prefer Vi-style editing
+# This gives you modal editing like in Vim (Normal/Insert mode)
+
+# set editing-mode vi
+# set keymap vi-command
+
+# ------------------------------------------------------------------------------
+# Emacs Mode (Default - Enabled)
+# ------------------------------------------------------------------------------
+# Emacs-style keybindings (Ctrl+A, Ctrl+E, etc.)
+# This is the default mode and works well for most users
+
+set editing-mode emacs
+
+# ------------------------------------------------------------------------------
+# General Behavior Settings
+# ------------------------------------------------------------------------------
+
+# Enable 8-bit input (allows international characters)
+set input-meta on
+set output-meta on
+set convert-meta off
+
+# Don't ring bell on completion errors
+set bell-style none
+
+# Show all completions immediately (no need to press tab twice)
+set show-all-if-ambiguous on
+
+# Ignore case when completing filenames
+set completion-ignore-case on
+
+# Treat hyphens and underscores as equivalent when completing
+set completion-map-case on
+
+# Show file type indicators in completion (/, @, *, =)
+set visible-stats on
+
+# Add slash to directory names when completing
+set mark-directories on
+set mark-symlinked-directories on
+
+# Append character to completion to indicate file type
+set colored-stats on
+
+# Enable colors in completion menu (requires bash 4.4+)
+set colored-completion-prefix on
+
+# Show common prefix in different color
+set menu-complete-display-prefix on
+
+# ------------------------------------------------------------------------------
+# History Configuration
+# ------------------------------------------------------------------------------
+
+# Enable incremental history search with up/down arrows
+# Start typing a command, then press Up/Down to find matching commands
+"\e[A": history-search-backward
+"\e[B": history-search-forward
+
+# Enable Ctrl+Up/Down for regular history navigation
+"\e[1;5A": previous-history
+"\e[1;5B": next-history
+
+# ------------------------------------------------------------------------------
+# Completion Enhancements
+# ------------------------------------------------------------------------------
+
+# Use TAB to cycle through completions
+TAB: menu-complete
+
+# Use Shift+TAB to cycle backwards through completions
+"\e[Z": menu-complete-backward
+
+# Show all completions on first TAB if ambiguous
+set show-all-if-ambiguous on
+
+# Don't paginate completion results (show them all at once)
+set page-completions off
+
+# First TAB suggests, second TAB shows all matches
+set menu-complete-display-prefix on
+
+# ------------------------------------------------------------------------------
+# Keyboard Shortcuts (Emacs Mode)
+# ------------------------------------------------------------------------------
+# Most common shortcuts (enabled by default with emacs mode):
+#
+# Ctrl+A    - Move to beginning of line
+# Ctrl+E    - Move to end of line
+# Ctrl+K    - Delete from cursor to end of line
+# Ctrl+U    - Delete from cursor to beginning of line
+# Ctrl+W    - Delete word before cursor
+# Ctrl+L    - Clear screen
+# Ctrl+R    - Search command history backwards
+# Ctrl+S    - Search command history forwards
+# Alt+B     - Move back one word
+# Alt+F     - Move forward one word
+# Alt+D     - Delete word after cursor
+# Alt+.     - Insert last argument from previous command
+# Ctrl+X Ctrl+E - Open current command in $EDITOR
+
+# Additional custom shortcuts
+
+# Alt+Left/Right to move by word (in addition to Alt+B/F)
+"\e[1;3D": backward-word
+"\e[1;3C": forward-word
+
+# Ctrl+Left/Right to move by word (alternative)
+"\e[1;5D": backward-word
+"\e[1;5C": forward-word
+
+# ------------------------------------------------------------------------------
+# Special Sequences
+# ------------------------------------------------------------------------------
+
+# Make Ctrl+W delete up to slash (useful for paths)
+# Example: /usr/local/bin → /usr/local → /usr
+"\C-w": unix-filename-rubout
+
+# Make Alt+Backspace delete word (alternative to Ctrl+W)
+"\e\C-h": backward-kill-word
+
+# ------------------------------------------------------------------------------
+# Vi Mode Shortcuts (if enabled)
+# ------------------------------------------------------------------------------
+# Uncomment if using Vi mode (set editing-mode vi above)
+#
+# Normal mode shortcuts:
+# - ESC or Ctrl+[ enters normal mode
+# - i enters insert mode at cursor
+# - a enters insert mode after cursor
+# - A enters insert mode at end of line
+# - 0 moves to beginning of line
+# - $ moves to end of line
+# - w/b moves forward/backward by word
+# - dd deletes line
+# - d$ deletes to end of line
+# - d0 deletes to beginning of line
+# - yy yanks (copies) line
+# - p pastes after cursor
+# - / searches history forward
+# - ? searches history backward
+# - n/N repeat search forward/backward
+# - v opens current line in $EDITOR
+
+# ------------------------------------------------------------------------------
+# Notes and Tips
+# ------------------------------------------------------------------------------
+#
+# 1. TEST CHANGES: After editing this file, reload with:
+#    bind -f ~/.inputrc
+#
+# 2. VIEW CURRENT BINDINGS: To see all active readline bindings:
+#    bind -P
+#
+# 3. VIEW KEY SEQUENCES: To see what sequence a key sends:
+#    Press Ctrl+V, then press the key
+#
+# 4. DEBUGGING: To see if readline is reading this file:
+#    bind -v | grep editing-mode
+#
+# 5. VI MODE INDICATOR: Add this to .bashrc to show mode in prompt:
+#    set show-mode-in-prompt on
+#    (Shows (ins) or (cmd) in Vi mode)

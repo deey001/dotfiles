@@ -1,0 +1,5 @@
+# Ignore local/private bash configuration
+.bash_local
+
+# Ignore backup directories created during installation
+dotfiles_backup_*/

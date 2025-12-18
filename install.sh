@@ -1,9 +1,10 @@
 #!/bin/bash
+set -euo pipefail
 
 # ==============================================================================
 # install.sh - Dotfiles Installation and Setup Script
 # ==============================================================================
-# This script handles the installation of dotfiles, system dependencies, and 
+# This script handles the installation of dotfiles, system dependencies, and
 # configuration for both online and air-gapped environments.
 #
 # Key Features:
@@ -12,7 +13,18 @@
 # - Installs core tools: Tmux, Neovim, Git, Starship, etc.
 # - Sets up correct symlinks for dotfiles
 # - Configures fonts (Nerd Fonts)
+# - Backs up existing configs before installation
 # ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Version Configuration
+# ------------------------------------------------------------------------------
+# Update these versions as needed for new releases
+
+NEOVIM_VERSION="0.11.0"
+STARSHIP_VERSION="latest"  # Uses latest from starship.rs installer
+LAZYGIT_VERSION="latest"   # Fetched dynamically from GitHub API
+GLOW_VERSION="latest"      # Fetched dynamically from GitHub API
 
 # ------------------------------------------------------------------------------
 # Configuration Definitions
@@ -21,6 +33,9 @@
 # Set the directory where the dotfiles are located (absolute path)
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "Dotfiles directory detected at: $DOTFILES_DIR"
+
+# Create backup directory with timestamp
+BACKUP_DIR="$HOME/dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
 
 # ------------------------------------------------------------------------------
 # Helper Functions
@@ -37,6 +52,18 @@ check_internet() {
     else
         echo "Status: OFFLINE (Air-gapped mode)"
         return 1
+    fi
+}
+
+# Function: backup_file
+# Description: Backs up a file or directory before symlinking.
+# Args: $1 - Path to backup
+backup_file() {
+    local file="$1"
+    if [ -e "$file" ] && [ ! -L "$file" ]; then
+        echo "Backing up existing file: $file"
+        mkdir -p "$BACKUP_DIR"
+        cp -r "$file" "$BACKUP_DIR/"
     fi
 }
 
@@ -79,26 +106,16 @@ if [ "$OS" = "Darwin" ]; then
             echo "Installing Homebrew..."
             /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
         fi
-        
-        echo "Installing tools via Homebrew..."
-        # Tmux: Terminal Multiplexer for session management
-        # Git: Distributed version control system
-        # Fzf: Command-line fuzzy finder suitable for scripts
-        # Neovim: Hyperextensible Vim-based text editor
-        # Starship: Customizable shell prompt
-        # Hstr: Bash history suggest box
-        # Bat: Cat clone with syntax highlighting
-        # Eza: Modern replacement for ls
-        # Fastfetch: System information fetching tool
-        # Cmatrix: Falling matrix code screensaver
-        # Btop: Resource monitor that shows usage and stats
-        # Lazygit: Simple terminal UI for git commands
-        # Glow: Terminal based markdown reader
-        # Tldr: Simplified man pages
-        brew install tmux git fzf neovim starship hstr bat eza fastfetch cmatrix btop lazygit glow tldr
-        
-        # Install Nerd Font for icons in terminal
-        brew install --cask font-ubuntu-nerd-font
+
+        echo "Installing packages via Homebrew Bundle..."
+        # Use Brewfile for declarative package management
+        if [ -f "$DOTFILES_DIR/Brewfile" ]; then
+            brew bundle --file="$DOTFILES_DIR/Brewfile"
+        else
+            echo "Warning: Brewfile not found. Installing packages individually..."
+            brew install tmux git fzf neovim starship hstr bat eza ripgrep fd zoxide fastfetch cmatrix btop lazygit glow tldr dust procs bottom
+            brew install --cask font-ubuntu-nerd-font
+        fi
     else
         echo "Skipping Homebrew packages (Offline Mode)"
     fi
@@ -123,9 +140,9 @@ elif [ "$OS" = "Linux" ]; then
             sudo apt install -y tmux git fzf xclip bash-completion hstr bat cmatrix btop tldr
             
             # Install Latest Neovim (AppImage/Tarball is better than apt usually)
-            echo "Installing latest Neovim..."
+            echo "Installing Neovim v${NEOVIM_VERSION}..."
             if [ ! -f /usr/local/bin/nvim ]; then
-                curl -LO https://github.com/neovim/neovim/releases/download/v0.11.0/nvim-linux-x86_64.tar.gz
+                curl -LO "https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim-linux-x86_64.tar.gz"
                 sudo tar -C /usr/local -xzf nvim-linux-x86_64.tar.gz
                 sudo ln -sf /usr/local/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim
                 rm nvim-linux-x86_64.tar.gz
@@ -147,10 +164,28 @@ elif [ "$OS" = "Linux" ]; then
             
             # Install glow (Markdown Viewer)
             echo "Installing glow..."
-            GLOW_VERSION=$(curl -s "https://api.github.com/repos/charmbracelet/glow/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-            curl -Lo glow.deb "https://github.com/charmbracelet/glow/releases/latest/download/glow_${GLOW_VERSION}_amd64.deb"
+            GLOW_RELEASE=$(curl -s "https://api.github.com/repos/charmbracelet/glow/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+            curl -Lo glow.deb "https://github.com/charmbracelet/glow/releases/latest/download/glow_${GLOW_RELEASE}_amd64.deb"
             sudo dpkg -i glow.deb
             rm glow.deb
+
+            # Install additional modern tools (ripgrep, dust, procs, bottom, zoxide, eza)
+            echo "Installing additional modern tools..."
+            # ripgrep (rg) - Better grep
+            sudo apt install -y ripgrep
+
+            # zoxide - Smarter cd
+            if ! command -v zoxide >/dev/null 2>&1; then
+                curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+            fi
+
+            # eza - Modern ls (from binary release)
+            if ! command -v eza >/dev/null 2>&1; then
+                EZA_VERSION=$(curl -s "https://api.github.com/repos/eza-community/eza/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+                curl -Lo eza.tar.gz "https://github.com/eza-community/eza/releases/latest/download/eza_x86_64-unknown-linux-gnu.tar.gz"
+                sudo tar -xzf eza.tar.gz -C /usr/local/bin
+                rm eza.tar.gz
+            fi
             
             # Clean up Snap (Ubuntu specific optimization for servers)
             if grep -qi "ubuntu" /etc/os-release; then
@@ -259,6 +294,18 @@ fi
 
 echo "Creating symlinks for dotfiles..."
 # Links the source files from the git repo to the home directory
+# Backup existing configs before creating symlinks
+backup_file "$HOME/.bash_aliases"
+backup_file "$HOME/.bash_exports"
+backup_file "$HOME/.bash_functions"
+backup_file "$HOME/.bash_profile"
+backup_file "$HOME/.bash_wrappers"
+backup_file "$HOME/.bashrc"
+backup_file "$HOME/.tmux.conf"
+backup_file "$HOME/.blerc"
+backup_file "$HOME/.inputrc"
+backup_file "$HOME/.gitconfig"
+
 # -f forces the link, -s makes it symbolic
 ln -sf "$DOTFILES_DIR/.bash_aliases" "$HOME/.bash_aliases"
 ln -sf "$DOTFILES_DIR/.bash_exports" "$HOME/.bash_exports"
@@ -268,6 +315,8 @@ ln -sf "$DOTFILES_DIR/.bash_wrappers" "$HOME/.bash_wrappers"
 ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
 ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 ln -sf "$DOTFILES_DIR/.blerc" "$HOME/.blerc"
+ln -sf "$DOTFILES_DIR/.inputrc" "$HOME/.inputrc"
+ln -sf "$DOTFILES_DIR/.gitconfig" "$HOME/.gitconfig"
 
 # Config directory setups
 mkdir -p "$HOME/.config"
@@ -294,6 +343,12 @@ mkdir -p "$HOME/.config/nvim"
 ln -sf "$DOTFILES_DIR/.config/nvim/init.lua" "$HOME/.config/nvim/init.lua"
 echo "Neovim configured with LazyVim. Plugins will auto-install on first run (Internet required)."
 
+# Run Neovim health check if online
+if [ "$IS_ONLINE" = true ] && command -v nvim >/dev/null 2>&1; then
+    echo "Running Neovim health check..."
+    nvim --headless "+checkhealth" +qa 2>/dev/null || echo "Health check completed (check output for any warnings)"
+fi
+
 # Fastfetch Config
 mkdir -p "$HOME/.config/fastfetch"
 ln -sf "$DOTFILES_DIR/.config/fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
@@ -301,6 +356,17 @@ ln -sf "$DOTFILES_DIR/.config/fastfetch/config.jsonc" "$HOME/.config/fastfetch/c
 # Alacritty Config
 mkdir -p "$HOME/.config/alacritty"
 ln -sf "$DOTFILES_DIR/.config/alacritty/alacritty.yml" "$HOME/.config/alacritty/alacritty.yml"
+
+# SSH Config Template
+if [ ! -d "$HOME/.ssh" ]; then
+    mkdir -p "$HOME/.ssh"
+    chmod 700 "$HOME/.ssh"
+fi
+if [ -f "$DOTFILES_DIR/.ssh/config" ]; then
+    backup_file "$HOME/.ssh/config"
+    ln -sf "$DOTFILES_DIR/.ssh/config" "$HOME/.ssh/config"
+    chmod 600 "$HOME/.ssh/config"
+fi
 
 # ------------------------------------------------------------------------------
 # SSH Key Installation
@@ -333,13 +399,17 @@ if ! grep -q "starship init bash" "$HOME/.bashrc" && [ -f /usr/local/bin/starshi
 fi
 
 # Reload Bash Profile
-source "$HOME/.bash_profile"
+source "$HOME/.bash_profile" 2>/dev/null || true
 
 echo "=============================================================================="
 echo "Installation Complete!"
 echo "Notes:"
 echo "1. Restart your terminal or run 'exec bash' to apply changes."
 echo "2. If using Tmux, press 'prefix + I' to install plugins."
+echo "3. For machine-specific settings, create ~/.bash_local (auto-sourced)"
+if [ -d "$BACKUP_DIR" ]; then
+    echo "4. Existing configs backed up to: $BACKUP_DIR"
+fi
 if [ "$IS_ONLINE" = false ]; then
     echo "Warning: Installation completed in OFFLINE mode. Some tools/fonts may be missing."
 fi

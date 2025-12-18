@@ -1,0 +1,180 @@
+# ==============================================================================
+# .editorconfig - Editor Configuration
+# ==============================================================================
+# This file defines coding styles for different file types to maintain
+# consistency across different editors and IDEs.
+#
+# WHAT IS EDITORCONFIG?
+#   - Defines coding style rules (indentation, line endings, charset, etc.)
+#   - Supported by most modern editors (VS Code, Vim, Sublime, Atom, etc.)
+#   - Ensures consistent formatting across team members and machines
+#
+# SUPPORTED EDITORS:
+#   - VS Code: Built-in support
+#   - Neovim/Vim: Install editorconfig plugin
+#   - Sublime Text: Install EditorConfig package
+#   - IntelliJ/PyCharm: Built-in support
+#   - Atom: Install editorconfig package
+#
+# USAGE:
+#   Just save this file as .editorconfig in project root.
+#   Editors will automatically apply these rules when editing matching files.
+#
+# PROPERTIES:
+#   indent_style: "space" or "tab"
+#   indent_size: number of spaces per indent
+#   end_of_line: "lf", "cr", or "crlf"
+#   charset: file encoding (usually "utf-8")
+#   trim_trailing_whitespace: remove whitespace at end of lines
+#   insert_final_newline: ensure file ends with newline
+#   max_line_length: maximum line length (soft limit)
+# ==============================================================================
+
+# Top-most EditorConfig file
+root = true
+
+# ------------------------------------------------------------------------------
+# Default Settings (All Files)
+# ------------------------------------------------------------------------------
+
+[*]
+# Use UTF-8 encoding for all files
+charset = utf-8
+
+# Use Unix-style line endings (LF)
+# This is important for cross-platform compatibility
+end_of_line = lf
+
+# Ensure file ends with a newline
+insert_final_newline = true
+
+# Remove trailing whitespace
+trim_trailing_whitespace = true
+
+# ------------------------------------------------------------------------------
+# Shell Scripts (Bash, Zsh, etc.)
+# ------------------------------------------------------------------------------
+
+[*.{sh,bash,zsh}]
+# Use spaces for indentation
+indent_style = space
+indent_size = 4
+
+# Maximum line length (soft limit)
+max_line_length = 100
+
+# ------------------------------------------------------------------------------
+# Configuration Files
+# ------------------------------------------------------------------------------
+
+# YAML files (commonly used for configs)
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# JSON files
+[*.json]
+indent_style = space
+indent_size = 2
+
+# TOML files (Starship, Cargo, etc.)
+[*.toml]
+indent_style = space
+indent_size = 2
+
+# INI files
+[*.ini]
+indent_style = space
+indent_size = 4
+
+# ------------------------------------------------------------------------------
+# Markdown Documentation
+# ------------------------------------------------------------------------------
+
+[*.md]
+indent_style = space
+indent_size = 2
+# Don't trim trailing whitespace in markdown (2 spaces = line break)
+trim_trailing_whitespace = false
+max_line_length = 80
+
+# ------------------------------------------------------------------------------
+# Makefiles
+# ------------------------------------------------------------------------------
+
+[Makefile]
+# Makefiles MUST use tabs (not spaces)
+indent_style = tab
+
+[*.mk]
+indent_style = tab
+
+# ------------------------------------------------------------------------------
+# Lua (Neovim config)
+# ------------------------------------------------------------------------------
+
+[*.lua]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+
+# ------------------------------------------------------------------------------
+# Python Scripts
+# ------------------------------------------------------------------------------
+
+[*.py]
+indent_style = space
+indent_size = 4
+max_line_length = 88
+
+# ------------------------------------------------------------------------------
+# JavaScript/TypeScript
+# ------------------------------------------------------------------------------
+
+[*.{js,jsx,ts,tsx}]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+
+# ------------------------------------------------------------------------------
+# Web Files
+# ------------------------------------------------------------------------------
+
+[*.{html,css,scss,sass}]
+indent_style = space
+indent_size = 2
+
+# ------------------------------------------------------------------------------
+# Git Config Files
+# ------------------------------------------------------------------------------
+
+[.gitconfig]
+indent_style = tab
+
+[.gitattributes]
+indent_style = tab
+
+# ------------------------------------------------------------------------------
+# Docker Files
+# ------------------------------------------------------------------------------
+
+[Dockerfile]
+indent_style = space
+indent_size = 4
+
+[docker-compose*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# ------------------------------------------------------------------------------
+# Special Files
+# ------------------------------------------------------------------------------
+
+# Don't enforce rules on auto-generated or binary files
+[*.{min.js,min.css,lock}]
+insert_final_newline = unset
+trim_trailing_whitespace = unset
+
+# Package manager files
+[{package.json,package-lock.json,yarn.lock,pnpm-lock.yaml}]
+indent_size = 2
