@@ -29,7 +29,57 @@ alias c='clear'
 alias q='exit'
 alias v='nvim'
 alias vim='nvim'
-alias fd='df'
+
+# ==============================================================================
+# Modern Tool Aliases (with fallbacks to original commands)
+# ==============================================================================
+# These override standard commands with modern alternatives if available
+
+# cat -> bat/batcat (syntax highlighting)
+if command -v bat >/dev/null 2>&1; then
+    alias cat='bat'
+    alias oldcat='/bin/cat'
+elif command -v batcat >/dev/null 2>&1; then
+    alias cat='batcat'
+    alias oldcat='/bin/cat'
+fi
+
+# ls -> eza (icons and git status) - already configured in .bashrc
+
+# cd -> zoxide (smarter navigation) - already configured in .bashrc
+
+# grep -> ripgrep would be 'rg', but we keep grep with colors
+
+# find -> fd (faster find)
+# Note: fd-find package installs as 'fdfind', symlink created in ~/.local/bin/fd
+if command -v fd >/dev/null 2>&1; then
+    alias find='fd'
+    alias oldfind='/usr/bin/find'
+fi
+
+# du -> dust (better disk usage)
+if command -v dust >/dev/null 2>&1; then
+    alias du='dust'
+    alias olddu='/usr/bin/du'
+fi
+
+# df -> duf (colorful df)
+if command -v duf >/dev/null 2>&1; then
+    alias df='duf'
+    alias olddf='/bin/df'
+fi
+
+# ps -> procs (modern process viewer)
+if command -v procs >/dev/null 2>&1; then
+    alias ps='procs'
+    alias oldps='/bin/ps'
+fi
+
+# top -> btop (beautiful resource monitor)
+if command -v btop >/dev/null 2>&1; then
+    alias top='btop'
+    alias oldtop='/usr/bin/top'
+fi
 
 # Quick directory navigation
 alias ..='cd ..'
