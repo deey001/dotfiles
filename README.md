@@ -86,7 +86,35 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
 
 ## Installation
 
-### Quick Install
+### Windows Users: Local Setup First! ⚠️
+
+**If you're connecting from Windows (PuTTY/Windows Terminal), run the local setup FIRST** to install Nerd Fonts and configure your terminal. Otherwise, icons won't display!
+
+#### Option 1: Automated Setup (Recommended)
+
+1.  **Download**: Clone or download this repo to your Windows machine
+2.  **Run**: Right-click `setup-windows.bat` → **Run as Administrator**
+3.  **Follow Prompts**: The script will:
+    - Install Ubuntu Nerd Font on Windows
+    - Configure Windows Terminal automatically
+    - Create PuTTY template session with Nerd Font
+    - Optionally SSH to server and run remote installation
+
+#### Option 2: Manual Setup
+
+1.  **Install Font Manually**:
+    - Download [UbuntuMono Nerd Font](https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuMono.zip)
+    - Extract and install all `.ttf` files (right-click → Install)
+
+2.  **Configure Terminal**:
+    - **Windows Terminal**: Settings → Profiles → Defaults → Font Face → "UbuntuMono Nerd Font"
+    - **PuTTY**: Window → Appearance → Font → "UbuntuMono Nerd Font"
+
+3.  **Connect and Install** (see Quick Install below)
+
+---
+
+### Quick Install (Server-Side)
 
 1.  **Clone**:
     ```bash
