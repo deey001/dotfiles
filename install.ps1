@@ -28,6 +28,8 @@ $FONT_NAME = "UbuntuMono Nerd Font"
 $FONT_DOWNLOAD_URL = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuMono.zip"
 $REPO_URL = "https://github.com/deey001/dotfiles.git"
 $TEMP_DIR = "$env:TEMP\nerd-fonts-install"
+$BACKUP_DIR = "$env:USERPROFILE\.dotfiles-backup"
+$BACKUP_TIMESTAMP = Get-Date -Format "yyyyMMdd_HHmmss"
 
 # Colors
 $colors = @{
@@ -92,6 +94,224 @@ function Get-ComponentStatus {
         WindowsTerminal = Test-WindowsTerminalInstalled
         PuTTY = Test-PuTTYInstalled
         IsAdmin = Test-AdminPrivileges
+    }
+}
+
+function Backup-Settings {
+    Write-Host ""
+    Write-ColorText "═══ Backing Up Current Settings ═══" "Cyan"
+    Write-Host ""
+
+    $backupPath = "$BACKUP_DIR\backup_$BACKUP_TIMESTAMP"
+
+    try {
+        # Create backup directory
+        if (-not (Test-Path $BACKUP_DIR)) {
+            New-Item -ItemType Directory -Path $BACKUP_DIR -Force | Out-Null
+        }
+        New-Item -ItemType Directory -Path $backupPath -Force | Out-Null
+
+        Write-Status "working" "Creating backup at: $backupPath"
+
+        # Backup Windows Terminal settings
+        $wtSettingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+        if (Test-Path $wtSettingsPath) {
+            Copy-Item -Path $wtSettingsPath -Destination "$backupPath\wt_settings.json" -Force
+            Write-Status "success" "Windows Terminal settings backed up"
+        }
+
+        # Backup PuTTY Default Settings (export registry)
+        $puttyRegPath = "HKCU:\Software\SimonTatham\PuTTY\Sessions\Default%20Settings"
+        if (Test-Path $puttyRegPath) {
+            $regBackup = "$backupPath\putty_default_settings.reg"
+            reg export "HKCU\Software\SimonTatham\PuTTY\Sessions\Default%20Settings" $regBackup /y | Out-Null
+            Write-Status "success" "PuTTY Default Settings backed up"
+        }
+
+        # Save backup metadata
+        $metadata = @{
+            Timestamp = $BACKUP_TIMESTAMP
+            Date = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+            FontInstalled = Test-FontInstalled
+            WindowsTerminalConfigured = (Test-Path $wtSettingsPath)
+            PuTTYConfigured = (Test-Path $puttyRegPath)
+        }
+        $metadata | ConvertTo-Json | Set-Content "$backupPath\metadata.json"
+
+        Write-Host ""
+        Write-Status "success" "Backup completed: $backupPath"
+        return $backupPath
+
+    } catch {
+        Write-Status "error" "Backup failed: $_"
+        return $null
+    }
+}
+
+function Restore-Settings {
+    Write-Host ""
+    Write-ColorText "═══ Restore Settings ═══" "Cyan"
+    Write-Host ""
+
+    # List available backups
+    if (-not (Test-Path $BACKUP_DIR)) {
+        Write-Status "warning" "No backups found"
+        Write-Status "info" "Backups are created automatically before making changes"
+        return
+    }
+
+    $backups = Get-ChildItem -Path $BACKUP_DIR -Directory | Sort-Object Name -Descending
+
+    if ($backups.Count -eq 0) {
+        Write-Status "warning" "No backups found"
+        return
+    }
+
+    Write-Host "Available backups:" -ForegroundColor Cyan
+    Write-Host ""
+
+    for ($i = 0; $i -lt $backups.Count; $i++) {
+        $backup = $backups[$i]
+        $metadataPath = Join-Path $backup.FullName "metadata.json"
+
+        if (Test-Path $metadataPath) {
+            $metadata = Get-Content $metadataPath | ConvertFrom-Json
+            Write-Host "  [$($i + 1)] $($metadata.Date)" -ForegroundColor Yellow
+            Write-Host "      Path: $($backup.FullName)" -ForegroundColor Gray
+        } else {
+            Write-Host "  [$($i + 1)] $($backup.Name)" -ForegroundColor Yellow
+            Write-Host "      Path: $($backup.FullName)" -ForegroundColor Gray
+        }
+        Write-Host ""
+    }
+
+    Write-Host "  [0] Cancel" -ForegroundColor Red
+    Write-Host ""
+
+    $choice = Read-Host "Select backup to restore (0-$($backups.Count))"
+
+    if ($choice -eq "0" -or [string]::IsNullOrWhiteSpace($choice)) {
+        Write-Status "info" "Restore cancelled"
+        return
+    }
+
+    $selectedIndex = [int]$choice - 1
+    if ($selectedIndex -lt 0 -or $selectedIndex -ge $backups.Count) {
+        Write-Status "error" "Invalid selection"
+        return
+    }
+
+    $selectedBackup = $backups[$selectedIndex]
+
+    Write-Host ""
+    Write-ColorText "═══ Restoring from: $($selectedBackup.Name) ═══" "Yellow"
+    Write-Host ""
+
+    $confirm = Read-Host "This will overwrite current settings. Continue? (y/N)"
+    if ($confirm -ne 'y' -and $confirm -ne 'Y') {
+        Write-Status "info" "Restore cancelled"
+        return
+    }
+
+    try {
+        # Restore Windows Terminal settings
+        $wtBackup = Join-Path $selectedBackup.FullName "wt_settings.json"
+        if (Test-Path $wtBackup) {
+            $wtSettingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+            Copy-Item -Path $wtBackup -Destination $wtSettingsPath -Force
+            Write-Status "success" "Windows Terminal settings restored"
+        }
+
+        # Restore PuTTY Default Settings
+        $puttyBackup = Join-Path $selectedBackup.FullName "putty_default_settings.reg"
+        if (Test-Path $puttyBackup) {
+            reg import $puttyBackup | Out-Null
+            Write-Status "success" "PuTTY Default Settings restored"
+        }
+
+        Write-Host ""
+        Write-Status "success" "Settings restored successfully!"
+        Write-Status "info" "Restart your terminals to apply changes"
+
+    } catch {
+        Write-Status "error" "Restore failed: $_"
+    }
+}
+
+function Remove-DotfilesConfiguration {
+    Write-Host ""
+    Write-ColorText "═══ Remove Dotfiles Configuration ═══" "Red"
+    Write-Host ""
+
+    Write-Host "This will:" -ForegroundColor Yellow
+    Write-Host "  • Remove Nerd Font configurations from terminals" -ForegroundColor Gray
+    Write-Host "  • Reset Windows Terminal to default font" -ForegroundColor Gray
+    Write-Host "  • Reset PuTTY Default Settings to system defaults" -ForegroundColor Gray
+    Write-Host "  • NOT uninstall fonts (keep for other apps)" -ForegroundColor Gray
+    Write-Host ""
+
+    Write-Status "warning" "A backup will be created before removing settings"
+    Write-Host ""
+
+    $confirm = Read-Host "Continue with removal? (y/N)"
+    if ($confirm -ne 'y' -and $confirm -ne 'Y') {
+        Write-Status "info" "Removal cancelled"
+        return
+    }
+
+    # Create backup first
+    $backupPath = Backup-Settings
+
+    if (-not $backupPath) {
+        Write-Status "error" "Backup failed. Aborting removal for safety."
+        return
+    }
+
+    try {
+        Write-Host ""
+        Write-ColorText "═══ Removing Configurations ═══" "Yellow"
+        Write-Host ""
+
+        # Reset Windows Terminal
+        $wtSettingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
+        if (Test-Path $wtSettingsPath) {
+            Write-Status "working" "Resetting Windows Terminal..."
+
+            $settings = Get-Content -Raw $wtSettingsPath | ConvertFrom-Json
+
+            if ($settings.profiles.defaults.font) {
+                $settings.profiles.defaults.PSObject.Properties.Remove('font')
+                $settings | ConvertTo-Json -Depth 10 | Set-Content $wtSettingsPath
+                Write-Status "success" "Windows Terminal reset to default font"
+            } else {
+                Write-Status "info" "Windows Terminal already using default font"
+            }
+        }
+
+        # Reset PuTTY Default Settings
+        $puttyRegPath = "HKCU:\Software\SimonTatham\PuTTY\Sessions\Default%20Settings"
+        if (Test-Path $puttyRegPath) {
+            Write-Status "working" "Resetting PuTTY Default Settings..."
+
+            # Remove our custom settings
+            Remove-ItemProperty -Path $puttyRegPath -Name "Font" -ErrorAction SilentlyContinue
+            Remove-ItemProperty -Path $puttyRegPath -Name "FontHeight" -ErrorAction SilentlyContinue
+            Remove-ItemProperty -Path $puttyRegPath -Name "LineCodePage" -ErrorAction SilentlyContinue
+            Remove-ItemProperty -Path $puttyRegPath -Name "AllowPasteControls" -ErrorAction SilentlyContinue
+            Remove-ItemProperty -Path $puttyRegPath -Name "TerminalType" -ErrorAction SilentlyContinue
+
+            Write-Status "success" "PuTTY Default Settings reset"
+        }
+
+        Write-Host ""
+        Write-Status "success" "Configuration removed successfully"
+        Write-Status "info" "Backup saved at: $backupPath"
+        Write-Status "info" "Fonts remain installed (can be used by other applications)"
+        Write-Status "info" "To restore: use option [8] and select the backup"
+
+    } catch {
+        Write-Status "error" "Removal failed: $_"
+        Write-Status "info" "You can restore from backup: $backupPath"
     }
 }
 
@@ -181,12 +401,39 @@ function Show-Menu {
     Write-Host "→ Does everything: local setup + server install" -ForegroundColor Gray
     Write-Host ""
 
+    Write-ColorText "[7]" "Magenta"
+    Write-Host " Remove Dotfiles Configuration (Reset to Default)"
+    Write-ColorText "    " "Gray"
+    Write-Host "→ Removes Nerd Font settings from terminals" -ForegroundColor Gray
+    Write-ColorText "    " "Gray"
+    Write-Host "→ Creates backup before removal" -ForegroundColor Gray
+    Write-ColorText "    " "Gray"
+    Write-Host "→ Keeps fonts installed (for other apps)" -ForegroundColor Gray
+    Write-Host ""
+
+    Write-ColorText "[8]" "Magenta"
+    Write-Host " Restore from Backup"
+    Write-ColorText "    " "Gray"
+    Write-Host "→ Lists available backups" -ForegroundColor Gray
+    Write-ColorText "    " "Gray"
+    Write-Host "→ Restores previous terminal configurations" -ForegroundColor Gray
+    Write-Host ""
+
     Write-ColorText "[X]" "Red"
     Write-Host " Exit"
     Write-Host ""
 
     Write-ColorText "═══════════════════════════════" "Cyan"
     Write-Host ""
+
+    # Check for existing backups
+    if (Test-Path $BACKUP_DIR) {
+        $backupCount = (Get-ChildItem -Path $BACKUP_DIR -Directory).Count
+        if ($backupCount -gt 0) {
+            Write-Status "info" "$backupCount backup(s) available (use option 8 to restore)"
+            Write-Host ""
+        }
+    }
 
     if (-not $status.IsAdmin) {
         Write-Status "warning" "Some options require Administrator privileges"
@@ -255,6 +502,8 @@ function Install-NerdFont {
 }
 
 function Configure-WindowsTerminal {
+    param([bool]$SkipBackup = $false)
+
     Write-Host ""
     Write-ColorText "═══ Configuring Windows Terminal ═══" "Cyan"
     Write-Host ""
@@ -270,6 +519,11 @@ function Configure-WindowsTerminal {
     if (-not (Test-Path $settingsPath)) {
         Write-Status "warning" "Windows Terminal settings.json not found (skipping)"
         return $false
+    }
+
+    # Create backup before modifying
+    if (-not $SkipBackup) {
+        Backup-Settings | Out-Null
     }
 
     try {
@@ -300,6 +554,8 @@ function Configure-WindowsTerminal {
 }
 
 function Configure-PuTTY {
+    param([bool]$SkipBackup = $false)
+
     Write-Host ""
     Write-ColorText "═══ Configuring PuTTY Default Settings ═══" "Cyan"
     Write-Host ""
@@ -308,6 +564,11 @@ function Configure-PuTTY {
         Write-Status "warning" "PuTTY not detected (skipping)"
         Write-Status "info" "Install from https://www.putty.org/"
         return $false
+    }
+
+    # Create backup before modifying
+    if (-not $SkipBackup) {
+        Backup-Settings | Out-Null
     }
 
     try {
@@ -450,10 +711,13 @@ function Main {
                 Read-Host "Press Enter to continue"
             }
             "4" {
+                # Create one backup for all operations
+                Backup-Settings | Out-Null
+
                 $fontOk = Install-NerdFont
                 if ($fontOk) {
-                    Configure-WindowsTerminal
-                    Configure-PuTTY
+                    Configure-WindowsTerminal -SkipBackup $true
+                    Configure-PuTTY -SkipBackup $true
                     Show-CompletionMessage
                 }
                 Read-Host "Press Enter to continue"
@@ -464,13 +728,26 @@ function Main {
                 Read-Host "Press Enter to continue"
             }
             "6" {
+                # Create one backup for all operations
+                Backup-Settings | Out-Null
+
                 $fontOk = Install-NerdFont
                 if ($fontOk) {
-                    Configure-WindowsTerminal
-                    Configure-PuTTY
+                    Configure-WindowsTerminal -SkipBackup $true
+                    Configure-PuTTY -SkipBackup $true
                     Install-RemoteDotfiles
                     Show-CompletionMessage
                 }
+                Read-Host "Press Enter to continue"
+            }
+            "7" {
+                Remove-DotfilesConfiguration
+                Write-Host ""
+                Read-Host "Press Enter to continue"
+            }
+            "8" {
+                Restore-Settings
+                Write-Host ""
                 Read-Host "Press Enter to continue"
             }
             "X" {
@@ -480,7 +757,7 @@ function Main {
                 return
             }
             default {
-                Write-Status "error" "Invalid option. Please select 1-6 or X"
+                Write-Status "error" "Invalid option. Please select 1-8 or X"
                 Start-Sleep -Seconds 1
             }
         }
