@@ -105,6 +105,8 @@ irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | ie
 - `[4]` Full Setup (fonts + all terminals)
 - `[5]` Install dotfiles on remote server
 - `[6]` Complete workflow (local + remote)
+- `[7]` Remove configuration (reset to default)
+- `[8]` Restore from backup
 
 **Features:**
 - ✅ Color-coded status indicators
@@ -112,6 +114,8 @@ irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | ie
 - ✅ Modifies PuTTY Default Settings (all KeePass connections inherit)
 - ✅ No individual session configuration needed
 - ✅ Idempotent (safe to run multiple times)
+- ✅ **Automatic backups before any changes**
+- ✅ **Restore previous settings anytime**
 
 #### Option 2: Download and Run
 
