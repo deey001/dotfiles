@@ -7,18 +7,51 @@
 # configuring Windows terminals (Windows Terminal & PuTTY).
 # ==============================================================================
 
-# Disable ANSI colors for PowerShell 5 (doesn't support Virtual Terminal sequences)
-# PowerShell 7+ and Windows Terminal support ANSI, but PS5 in cmd.exe does not
-if ($PSVersionTable.PSVersion.Major -ge 7) {
-    try {
-        # Enable Virtual Terminal Processing for colors in PS7+
-        $null = [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-        $script:UseColors = $true
-    } catch {
-        $script:UseColors = $false
+# Check PowerShell version and prompt upgrade if needed
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+    Write-Host ""
+    Write-Host "================================================================================" -ForegroundColor Yellow
+    Write-Host "  PowerShell 7+ Required for Best Experience" -ForegroundColor Yellow
+    Write-Host "================================================================================" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Current version: PowerShell $($PSVersionTable.PSVersion.Major)" -ForegroundColor Red
+    Write-Host "Recommended:     PowerShell 7+" -ForegroundColor Green
+    Write-Host ""
+    Write-Host "PowerShell 7 provides:" -ForegroundColor Cyan
+    Write-Host "  • Better color support and formatting" -ForegroundColor Gray
+    Write-Host "  • Improved performance and features" -ForegroundColor Gray
+    Write-Host "  • Cross-platform compatibility" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "To upgrade PowerShell 7:" -ForegroundColor Cyan
+    Write-Host "  1. Run: " -NoNewline -ForegroundColor Gray
+    Write-Host "winget install Microsoft.PowerShell" -ForegroundColor White
+    Write-Host "  2. Or visit: https://aka.ms/powershell" -ForegroundColor Gray
+    Write-Host "  3. Restart terminal after installation" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "================================================================================" -ForegroundColor Yellow
+    Write-Host ""
+
+    $choice = Read-Host "Continue with PowerShell $($PSVersionTable.PSVersion.Major) anyway? (y/N)"
+
+    if ($choice -ne 'y' -and $choice -ne 'Y') {
+        Write-Host ""
+        Write-Host "Installation cancelled. Please upgrade to PowerShell 7+ and try again." -ForegroundColor Yellow
+        Write-Host ""
+        exit 0
     }
-} else {
-    # PowerShell 5 and below: always use fallback (no ANSI support in cmd.exe)
+
+    Write-Host ""
+    Write-Host "Continuing with PowerShell $($PSVersionTable.PSVersion.Major)..." -ForegroundColor Yellow
+    Write-Host "Note: Some visual elements may not display correctly." -ForegroundColor Gray
+    Write-Host ""
+    Start-Sleep -Seconds 2
+}
+
+# Enable ANSI color support
+try {
+    $null = [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $script:UseColors = $true
+} catch {
     $script:UseColors = $false
 }
 
