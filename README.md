@@ -90,17 +90,36 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
 
 **If you're connecting from Windows (PuTTY/Windows Terminal), run the local setup FIRST** to install Nerd Fonts and configure your terminal. Otherwise, icons won't display!
 
-#### Option 1: Automated Setup (Recommended)
+#### One-Liner Install (Recommended) ⚡
+
+Open **PowerShell as Administrator** and run:
+
+```powershell
+irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | iex
+```
+
+**Interactive menu with options:**
+- `[1]` Install Nerd Fonts only
+- `[2]` Configure Windows Terminal only
+- `[3]` Configure PuTTY Default Settings (works with KeePass!)
+- `[4]` Full Setup (fonts + all terminals)
+- `[5]` Install dotfiles on remote server
+- `[6]` Complete workflow (local + remote)
+
+**Features:**
+- ✅ Color-coded status indicators
+- ✅ Detects installed components automatically
+- ✅ Modifies PuTTY Default Settings (all KeePass connections inherit)
+- ✅ No individual session configuration needed
+- ✅ Idempotent (safe to run multiple times)
+
+#### Option 2: Download and Run
 
 1.  **Download**: Clone or download this repo to your Windows machine
 2.  **Run**: Right-click `setup-windows.bat` → **Run as Administrator**
-3.  **Follow Prompts**: The script will:
-    - Install Ubuntu Nerd Font on Windows
-    - Configure Windows Terminal automatically
-    - Create PuTTY template session with Nerd Font
-    - Optionally SSH to server and run remote installation
+3.  **Follow Prompts**: Uses the same interactive menu
 
-#### Option 2: Manual Setup
+#### Option 3: Manual Setup
 
 1.  **Install Font Manually**:
     - Download [UbuntuMono Nerd Font](https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuMono.zip)

@@ -30,7 +30,7 @@ echo Starting PowerShell setup script...
 echo.
 
 REM Run PowerShell script with bypass execution policy
-powershell.exe -ExecutionPolicy Bypass -File "%~dp0local-setup.ps1"
+powershell.exe -ExecutionPolicy Bypass -File "%~dp0install.ps1"
 
 echo.
 echo ===============================================================================
