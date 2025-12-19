@@ -1,51 +1,172 @@
 # ==============================================================================
-# Dotfiles Windows Installer - Interactive Menu
+# DOTFILES WINDOWS INSTALLER - INTERACTIVE MENU
 # ==============================================================================
-# One-liner install: irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | iex
+# PURPOSE:
+#   This script installs Nerd Fonts on Windows and configures terminal emulators
+#   (Windows Terminal and PuTTY) to use them. It provides an interactive menu
+#   similar to Chris Titus's Windows Utility.
 #
-# This script provides an interactive menu for installing Nerd Fonts and
-# configuring Windows terminals (Windows Terminal & PuTTY).
+# ONE-LINER INSTALL:
+#   irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | iex
+#
+#   Breakdown of one-liner:
+#   - irm = Invoke-RestMethod (downloads the script from GitHub)
+#   - | = pipe operator (sends downloaded script to next command)
+#   - iex = Invoke-Expression (executes the downloaded script)
+#
+# WHAT THIS SCRIPT DOES:
+#   1. Checks PowerShell version (auto-upgrades to v7 if needed)
+#   2. Detects installed components (fonts, terminals, admin rights)
+#   3. Shows interactive menu with 8 options
+#   4. Installs fonts and configures terminals per user selection
+#   5. Creates automatic backups before any changes
+#   6. Logs all actions to Documents folder
+#   7. Shows detailed summary at exit
+#
+# SPECIAL FEATURES:
+#   - KeePass Compatible: Modifies PuTTY "Default Settings" so ALL connections
+#     from KeePass automatically inherit the Nerd Font configuration
+#   - Idiot-Proof: Automatic backups, admin checks, detailed logging
+#   - Rollback Support: Can restore previous configurations from backup
 # ==============================================================================
 
-# Check PowerShell version and auto-upgrade if needed
+# ==============================================================================
+# SECTION 1: POWERSHELL VERSION CHECK AND AUTO-UPGRADE
+# ==============================================================================
+# WHY THIS IS NEEDED:
+#   PowerShell 5 (built into Windows) doesn't support ANSI color codes properly.
+#   PowerShell 7 (separate download) has full ANSI support for colors and icons.
+#
+# WHAT THIS DOES:
+#   - Checks if running PowerShell version is less than 7
+#   - If yes: Automatically installs PowerShell 7 via winget (no user prompt)
+#   - After install: Exits and tells user to restart PowerShell
+#   - On failure: Shows manual installation instructions
+# ==============================================================================
 if ($PSVersionTable.PSVersion.Major -lt 7) {
+    # $PSVersionTable = Built-in PowerShell variable containing version info
+    # .PSVersion.Major = Gets major version number (5, 7, etc.)
+    # -lt = "less than" comparison operator
+    # Print blank line for spacing
     Write-Host ""
+
+    # Print header banner to notify user of auto-upgrade
+    # -ForegroundColor Yellow = Makes text yellow to grab attention
     Write-Host "================================================================================" -ForegroundColor Yellow
     Write-Host "  PowerShell 7 Required - Auto-Upgrading..." -ForegroundColor Yellow
     Write-Host "================================================================================" -ForegroundColor Yellow
     Write-Host ""
+
+    # Show current PowerShell version in red (bad/outdated)
+    # $(...) = Subexpression operator - evaluates code inside and inserts result
     Write-Host "Current version: PowerShell $($PSVersionTable.PSVersion.Major)" -ForegroundColor Red
+
+    # Show target version in green (good/desired)
     Write-Host "Installing:      PowerShell 7+" -ForegroundColor Green
     Write-Host ""
+
+    # Set expectations for installation time
     Write-Host "This will take about 1-2 minutes..." -ForegroundColor Cyan
     Write-Host ""
 
     try {
-        # Check if winget is available
+        # TRY BLOCK: Attempt automatic installation, catch errors if it fails
+
+        # Check if winget command exists on this system
+        # Get-Command = Searches for available commands/programs
+        # -ErrorAction SilentlyContinue = Don't show error if winget not found, just return $null
         $wingetAvailable = Get-Command winget -ErrorAction SilentlyContinue
 
         if ($wingetAvailable) {
+            # WINGET IS AVAILABLE - Proceed with automatic installation
+
             Write-Host "[→] Installing PowerShell 7 via winget..." -ForegroundColor Cyan
 
-            # Install PowerShell 7 using winget
+            # Execute winget command to install PowerShell 7
+            # winget = Windows Package Manager (like apt for Windows)
+            # install Microsoft.PowerShell = Official PowerShell 7 package ID
+            # --silent = No user prompts during installation
+            # --accept-package-agreements = Auto-accept license agreements
+            # --accept-source-agreements = Auto-accept source (repository) agreements
+            # 2>&1 = Redirect stderr (error stream) to stdout (standard output) so we capture all output
             $result = winget install Microsoft.PowerShell --silent --accept-package-agreements --accept-source-agreements 2>&1
 
+            # Check if installation succeeded
+            # $LASTEXITCODE = Automatic variable containing exit code of last external command (0 = success)
+            # -match = Regular expression match operator
             if ($LASTEXITCODE -eq 0 -or $result -match "successfully installed") {
+                # INSTALLATION SUCCESSFUL
                 Write-Host "[✓] PowerShell 7 installed successfully!" -ForegroundColor Green
                 Write-Host ""
                 Write-Host "================================================================================" -ForegroundColor Yellow
-                Write-Host "  Installation Complete - Please Restart" -ForegroundColor Yellow
+                Write-Host "  Auto-Launching PowerShell 7..." -ForegroundColor Yellow
                 Write-Host "================================================================================" -ForegroundColor Yellow
                 Write-Host ""
-                Write-Host "Next steps:" -ForegroundColor Cyan
-                Write-Host "  1. Close this PowerShell window" -ForegroundColor Gray
-                Write-Host "  2. Open a NEW PowerShell window (it will be PowerShell 7)" -ForegroundColor Gray
-                Write-Host "  3. Run the installer again:" -ForegroundColor Gray
-                Write-Host "     irm 'https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1' | iex" -ForegroundColor White
-                Write-Host ""
-                Write-Host "Press any key to exit..." -ForegroundColor Gray
-                $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
-                exit 0
+
+                # AUTO-LAUNCH POWERSHELL 7 AS ADMIN AND CONTINUE INSTALLATION
+                # PowerShell 7 is installed to: C:\Program Files\PowerShell\7\pwsh.exe
+
+                try {
+                    # Find PowerShell 7 executable
+                    # Common install locations for PowerShell 7
+                    $pwsh7Paths = @(
+                        "C:\Program Files\PowerShell\7\pwsh.exe",
+                        "$env:ProgramFiles\PowerShell\7\pwsh.exe"
+                    )
+
+                    $pwsh7Path = $null
+                    foreach ($path in $pwsh7Paths) {
+                        if (Test-Path $path) {
+                            $pwsh7Path = $path
+                            break
+                        }
+                    }
+
+                    if ($pwsh7Path) {
+                        Write-Host "[→] Launching PowerShell 7 as Administrator..." -ForegroundColor Cyan
+                        Write-Host "[i] The installer will continue automatically in the new window" -ForegroundColor Blue
+                        Write-Host ""
+
+                        # Build command to download and run the installer in PowerShell 7
+                        # -NoProfile = Don't load user profile (faster startup)
+                        # -ExecutionPolicy Bypass = Allow script execution
+                        # -Command = Execute the following command
+                        $installCommand = "irm 'https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1' | iex"
+
+                        # Launch PowerShell 7 as Administrator with the install command
+                        # Start-Process = Starts a new process (program)
+                        # -FilePath = Path to pwsh.exe (PowerShell 7)
+                        # -Verb RunAs = Run as Administrator (triggers UAC prompt)
+                        # -ArgumentList = Commands to pass to pwsh.exe
+                        Start-Process -FilePath $pwsh7Path -Verb RunAs -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $installCommand
+
+                        Write-Host "[✓] PowerShell 7 launched!" -ForegroundColor Green
+                        Write-Host "[i] This window will now close" -ForegroundColor Gray
+                        Write-Host "[i] Continue installation in the new PowerShell 7 window" -ForegroundColor Gray
+                        Write-Host ""
+
+                        # Wait 3 seconds so user can read the message
+                        Start-Sleep -Seconds 3
+                        exit 0
+                    } else {
+                        # PowerShell 7 was installed but we can't find it
+                        # Fall back to manual instructions
+                        throw "PowerShell 7 executable not found in expected locations"
+                    }
+                } catch {
+                    # AUTO-LAUNCH FAILED - Show manual instructions
+                    Write-Host "[!] Could not auto-launch PowerShell 7: $_" -ForegroundColor Yellow
+                    Write-Host ""
+                    Write-Host "Manual steps:" -ForegroundColor Cyan
+                    Write-Host "  1. Close this window" -ForegroundColor Gray
+                    Write-Host "  2. Search for 'PowerShell 7' in Start Menu" -ForegroundColor Gray
+                    Write-Host "  3. Right-click → Run as Administrator" -ForegroundColor Gray
+                    Write-Host "  4. Run: irm 'https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1' | iex" -ForegroundColor White
+                    Write-Host ""
+                    Write-Host "Press any key to exit..." -ForegroundColor Gray
+                    $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+                    exit 0
+                }
             } else {
                 throw "Installation failed or was skipped"
             }
