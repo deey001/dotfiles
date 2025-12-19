@@ -7,6 +7,23 @@
 # configuring Windows terminals (Windows Terminal & PuTTY).
 # ==============================================================================
 
+# Enable ANSI color support in PowerShell
+if ($PSVersionTable.PSVersion.Major -ge 5) {
+    try {
+        # Enable Virtual Terminal Processing for colors
+        $null = [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+        if ($Host.UI.SupportsVirtualTerminal) {
+            $script:UseColors = $true
+        } else {
+            $script:UseColors = $false
+        }
+    } catch {
+        $script:UseColors = $false
+    }
+} else {
+    $script:UseColors = $false
+}
+
 # ASCII Art Banner
 $banner = @"
 ╔══════════════════════════════════════════════════════════════════════════════╗
