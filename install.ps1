@@ -78,6 +78,9 @@ $REPO_URL = "https://github.com/deey001/dotfiles.git"
 $TEMP_DIR = "$env:TEMP\nerd-fonts-install"
 $BACKUP_DIR = "$env:USERPROFILE\.dotfiles-backup"
 $BACKUP_TIMESTAMP = Get-Date -Format "yyyyMMdd_HHmmss"
+$LOG_FILE = "$env:USERPROFILE\Documents\dotfiles-install-log-$BACKUP_TIMESTAMP.txt"
+$script:InstallationLog = @()
+$script:ActionsPerformed = @()
 
 # Colors
 $colors = @{
@@ -94,6 +97,24 @@ $colors = @{
 }
 
 # Helper Functions
+function Write-Log {
+    param(
+        [string]$Message,
+        [string]$Level = "INFO"
+    )
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $logEntry = "[$timestamp] [$Level] $Message"
+    $script:InstallationLog += $logEntry
+}
+
+function Add-Action {
+    param(
+        [string]$Action
+    )
+    $script:ActionsPerformed += $Action
+    Write-Log $Action "ACTION"
+}
+
 function Write-ColorText {
     param(
         [string]$Text,
@@ -122,6 +143,10 @@ function Write-Status {
         [string]$Status,
         [string]$Message
     )
+
+    # Log all status messages
+    Write-Log $Message $Status.ToUpper()
+
     if ($script:UseColors) {
         switch ($Status) {
             "info"    { Write-Host "$($colors.Blue)[i]$($colors.Reset) $Message" }
@@ -567,10 +592,12 @@ function Install-NerdFont {
         Remove-Item -Recurse -Force $TEMP_DIR
 
         Write-Status "success" "Nerd Fonts installed successfully"
+        Add-Action "Installed UbuntuMono Nerd Font ($($fonts.Count) font files)"
         return $true
 
     } catch {
         Write-Status "error" "Failed to install fonts: $_"
+        Write-Log "Font installation failed: $_" "ERROR"
         return $false
     }
 }
@@ -619,10 +646,12 @@ function Configure-WindowsTerminal {
         Write-Status "success" "Windows Terminal configured"
         Write-Status "info" "Font: UbuntuMono Nerd Font, Size: 11"
         Write-Status "info" "Restart Windows Terminal to apply changes"
+        Add-Action "Configured Windows Terminal (Font: UbuntuMono Nerd Font, Size: 11)"
         return $true
 
     } catch {
         Write-Status "error" "Failed to configure Windows Terminal: $_"
+        Write-Log "Windows Terminal configuration failed: $_" "ERROR"
         return $false
     }
 }
@@ -680,11 +709,166 @@ function Configure-PuTTY {
         Write-Status "info" "Font: UbuntuMono Nerd Font, Size: 11"
         Write-Status "info" "UTF-8: Enabled | OSC 52: Enabled | Terminal: xterm-256color"
         Write-Status "info" "All connections (including from KeePass) will inherit these settings"
+        Add-Action "Configured PuTTY Default Settings (Font, UTF-8, OSC 52, xterm-256color)"
         return $true
 
     } catch {
         Write-Status "error" "Failed to configure PuTTY: $_"
+        Write-Log "PuTTY configuration failed: $_" "ERROR"
         return $false
+    }
+}
+
+function Save-InstallationSummary {
+    Write-Host ""
+    Write-ColorText "═══ Generating Installation Summary ═══" "Cyan"
+    Write-Host ""
+
+    try {
+        # Gather system information
+        $summary = @"
+================================================================================
+DOTFILES INSTALLATION SUMMARY
+================================================================================
+
+Date: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")
+Computer: $env:COMPUTERNAME
+User: $env:USERNAME
+PowerShell Version: $($PSVersionTable.PSVersion.Major).$($PSVersionTable.PSVersion.Minor)
+
+================================================================================
+ACTIONS PERFORMED
+================================================================================
+
+"@
+
+        if ($script:ActionsPerformed.Count -gt 0) {
+            foreach ($action in $script:ActionsPerformed) {
+                $summary += "✓ $action`n"
+            }
+        } else {
+            $summary += "(No actions performed)`n"
+        }
+
+        $summary += @"
+
+================================================================================
+CURRENT CONFIGURATION
+================================================================================
+
+Nerd Font Installed: $(if (Test-FontInstalled) { "YES" } else { "NO" })
+Windows Terminal: $(if (Test-WindowsTerminalInstalled) { "Detected" } else { "Not Found" })
+PuTTY: $(if (Test-PuTTYInstalled) { "Detected" } else { "Not Found" })
+
+================================================================================
+BACKUPS CREATED
+================================================================================
+
+Backup Directory: $BACKUP_DIR
+
+"@
+
+        if (Test-Path $BACKUP_DIR) {
+            $backups = Get-ChildItem -Path $BACKUP_DIR -Directory | Sort-Object Name -Descending
+            if ($backups.Count -gt 0) {
+                foreach ($backup in $backups) {
+                    $summary += "• $($backup.Name)`n"
+                    $summary += "  Path: $($backup.FullName)`n"
+                }
+            } else {
+                $summary += "(No backups yet)`n"
+            }
+        } else {
+            $summary += "(No backup directory created)`n"
+        }
+
+        $summary += @"
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+"@
+
+        if ($script:ActionsPerformed.Count -gt 0) {
+            $summary += @"
+1. RESTART YOUR TERMINAL
+   - Close all instances of Windows Terminal / PuTTY
+   - Reopen to apply the new font settings
+
+2. CONNECT TO YOUR SERVER
+   - SSH to your Linux server
+   - Icons and formatting should now display correctly
+
+3. KEEPASS USERS (PuTTY)
+   - All existing connections in KeePass will automatically use the new font
+   - No need to reconfigure individual sessions
+   - Just launch any connection from KeePass
+
+4. IF SOMETHING GOES WRONG
+   - Backup location: $BACKUP_DIR
+   - Run this installer again and select option [8] to restore
+   - All settings can be rolled back safely
+
+"@
+        } else {
+            $summary += "• No changes were made during this session`n"
+        }
+
+        $summary += @"
+
+================================================================================
+INSTALLATION LOG
+================================================================================
+
+"@
+
+        foreach ($logEntry in $script:InstallationLog) {
+            $summary += "$logEntry`n"
+        }
+
+        $summary += @"
+
+================================================================================
+SUPPORT & DOCUMENTATION
+================================================================================
+
+GitHub Repository: https://github.com/deey001/dotfiles
+Documentation: See README.md and WINDOWS-SETUP-GUIDE.md
+Issues: https://github.com/deey001/dotfiles/issues
+
+================================================================================
+END OF SUMMARY
+================================================================================
+"@
+
+        # Save to Documents folder
+        $summary | Out-File -FilePath $LOG_FILE -Encoding UTF8
+        Write-Status "success" "Installation summary saved to:"
+        Write-Host "  $LOG_FILE" -ForegroundColor Cyan
+        Write-Host ""
+
+        # Display abbreviated summary to console
+        Write-ColorText "═══ INSTALLATION COMPLETE ═══" "Green"
+        Write-Host ""
+
+        if ($script:ActionsPerformed.Count -gt 0) {
+            Write-Host "Actions completed:" -ForegroundColor Cyan
+            foreach ($action in $script:ActionsPerformed) {
+                Write-Host "  ✓ $action" -ForegroundColor Green
+            }
+            Write-Host ""
+
+            Write-Host "IMPORTANT: Restart your terminals to apply changes!" -ForegroundColor Yellow
+            Write-Host ""
+            Write-Host "Full details saved to:" -ForegroundColor Gray
+            Write-Host "  $LOG_FILE" -ForegroundColor Cyan
+        } else {
+            Write-Host "No changes were made during this session." -ForegroundColor Gray
+        }
+
+    } catch {
+        Write-Status "warning" "Could not save summary: $_"
     }
 }
 
@@ -825,6 +1009,15 @@ function Main {
                 Read-Host "Press Enter to continue"
             }
             "X" {
+                Write-Host ""
+
+                # Save summary if any actions were performed
+                if ($script:ActionsPerformed.Count -gt 0) {
+                    Save-InstallationSummary
+                } else {
+                    Write-Status "info" "No changes were made during this session"
+                }
+
                 Write-Host ""
                 Write-Status "info" "Exiting... Goodbye!"
                 Write-Host ""
