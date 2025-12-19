@@ -189,15 +189,46 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
     }
 }
 
-# Enable ANSI color support
+# ==============================================================================
+# SECTION 2: ENABLE ANSI COLOR SUPPORT
+# ==============================================================================
+# WHY THIS IS NEEDED:
+#   ANSI escape codes are special character sequences that produce colors and
+#   formatting in terminals. Example: `e[91m = red text, `e[0m = reset
+#
+# WHAT THIS DOES:
+#   - Sets console encoding to UTF-8 (required for Unicode characters like ✓ ✗ →)
+#   - Sets $script:UseColors flag to true if ANSI is supported
+#   - If encoding fails, falls back to $script:UseColors = false
+#   - This flag is checked by Write-ColorText and Write-Status functions
+# ==============================================================================
 try {
+    # TRY BLOCK: Attempt to enable UTF-8 encoding for console output
+
+    # Set console output encoding to UTF-8
+    # [System.Console]::OutputEncoding = Accesses the .NET Console class
+    # [System.Text.Encoding]::UTF8 = Gets UTF-8 encoding object
+    # $null = Suppresses output (assignment returns value, we don't need to see it)
     $null = [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+    # Set script-level variable to indicate ANSI colors are supported
+    # $script:UseColors = Creates/modifies variable at script scope (accessible by all functions)
+    # PowerShell 7 supports ANSI, so this should succeed
     $script:UseColors = $true
+
 } catch {
+    # CATCH BLOCK: If UTF-8 encoding fails (rare), disable color support
+    # This ensures script doesn't crash if console doesn't support UTF-8
     $script:UseColors = $false
 }
 
-# ASCII Art Banner
+# ==============================================================================
+# SECTION 3: ASCII ART BANNER
+# ==============================================================================
+# This ASCII art banner displays "DOTFILES" in large block letters
+# Uses box-drawing characters (╔ ═ ╗ ║ ╚ ╝) to create a border
+# The @ symbol creates a "here-string" which preserves all formatting/spacing
+# ==============================================================================
 $banner = @"
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                                                                              ║
@@ -212,48 +243,127 @@ $banner = @"
 ║                                                                              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 "@
+# @" = End marker for here-string
 
-# Configuration
+# ==============================================================================
+# SECTION 4: CONFIGURATION VARIABLES
+# ==============================================================================
+# These variables define URLs, paths, and settings used throughout the script
+# ==============================================================================
+
+# Font name to install (used for detection and messaging)
 $FONT_NAME = "UbuntuMono Nerd Font"
+
+# Direct download URL for the latest UbuntuMono Nerd Font ZIP file
+# https://github.com/ryanoasis/nerd-fonts = Nerd Fonts repository
+# /releases/latest/download/ = GitHub's latest release download URL
+# UbuntuMono.zip = The specific font package
 $FONT_DOWNLOAD_URL = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuMono.zip"
+
+# Git repository URL for the dotfiles (used in remote server installation)
 $REPO_URL = "https://github.com/deey001/dotfiles.git"
+
+# Temporary directory for downloading and extracting fonts
+# $env:TEMP = Windows TEMP folder (typically C:\Users\{username}\AppData\Local\Temp)
+# Example result: C:\Users\Danny\AppData\Local\Temp\nerd-fonts-install
 $TEMP_DIR = "$env:TEMP\nerd-fonts-install"
+
+# Directory where backups of terminal configurations are stored
+# $env:USERPROFILE = User's home directory (C:\Users\{username})
+# Example result: C:\Users\Danny\.dotfiles-backup
 $BACKUP_DIR = "$env:USERPROFILE\.dotfiles-backup"
+
+# Timestamp for unique backup folder and log file names
+# Get-Date -Format "yyyyMMdd_HHmmss" = Current date/time formatted as: 20250115_143022
 $BACKUP_TIMESTAMP = Get-Date -Format "yyyyMMdd_HHmmss"
+
+# Path to installation log file saved in user's Documents folder
+# Example result: C:\Users\Danny\Documents\dotfiles-install-log-20250115_143022.txt
 $LOG_FILE = "$env:USERPROFILE\Documents\dotfiles-install-log-$BACKUP_TIMESTAMP.txt"
+
+# Array to store all log entries (timestamped messages)
+# @() = Empty array literal
+# $script: scope = Variable accessible by all functions in this script
 $script:InstallationLog = @()
+
+# Array to store high-level actions performed (for summary)
+# Example contents: "Installed UbuntuMono Nerd Font", "Configured PuTTY"
 $script:ActionsPerformed = @()
 
-# Colors
+# ==============================================================================
+# SECTION 5: ANSI COLOR CODE DEFINITIONS
+# ==============================================================================
+# ANSI escape codes for terminal colors
+# `e = Escape character in PowerShell (equivalent to \e or \033 in other languages)
+# [91m = ANSI code for bright red, [0m = reset to default color
+# These codes work in PowerShell 7 and modern terminals that support ANSI
+# ==============================================================================
 $colors = @{
-    Reset = "`e[0m"
-    Bold = "`e[1m"
-    Red = "`e[91m"
-    Green = "`e[92m"
-    Yellow = "`e[93m"
-    Blue = "`e[94m"
-    Magenta = "`e[95m"
-    Cyan = "`e[96m"
-    White = "`e[97m"
-    Gray = "`e[90m"
+    # @{} = Hash table (dictionary/map) literal
+    Reset = "`e[0m"      # Reset all formatting to default
+    Bold = "`e[1m"       # Bold/bright text
+    Red = "`e[91m"       # Bright red foreground
+    Green = "`e[92m"     # Bright green foreground
+    Yellow = "`e[93m"    # Bright yellow foreground
+    Blue = "`e[94m"      # Bright blue foreground
+    Magenta = "`e[95m"   # Bright magenta foreground
+    Cyan = "`e[96m"      # Bright cyan foreground
+    White = "`e[97m"     # Bright white foreground
+    Gray = "`e[90m"      # Dark gray foreground
 }
 
-# Helper Functions
+# ==============================================================================
+# SECTION 6: HELPER FUNCTIONS
+# ==============================================================================
+# These functions are used throughout the script to provide logging, colored
+# output, and action tracking functionality
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# FUNCTION: Write-Log
+# PURPOSE: Adds a timestamped entry to the installation log
+# PARAMETERS:
+#   $Message = The log message text
+#   $Level = Log level (INFO, WARNING, ERROR, ACTION, etc.)
+# EXAMPLE OUTPUT: "[2025-01-15 14:30:22] [INFO] Starting installation..."
+# ------------------------------------------------------------------------------
 function Write-Log {
     param(
+        # [string] = Parameter type constraint (ensures value is a string)
         [string]$Message,
+        # = "INFO" = Default value if not provided
         [string]$Level = "INFO"
     )
+
+    # Get current timestamp formatted as: 2025-01-15 14:30:22
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+
+    # Build log entry string with timestamp and level
+    # Example: "[2025-01-15 14:30:22] [INFO] Font installation started"
     $logEntry = "[$timestamp] [$Level] $Message"
+
+    # Add log entry to the script-level array
+    # += operator appends to array
     $script:InstallationLog += $logEntry
 }
 
+# ------------------------------------------------------------------------------
+# FUNCTION: Add-Action
+# PURPOSE: Records a high-level action and logs it
+# PARAMETERS:
+#   $Action = Description of action performed
+# EXAMPLE USAGE: Add-Action "Installed UbuntuMono Nerd Font (4 files)"
+# RESULT: Adds to both $ActionsPerformed array and installation log
+# ------------------------------------------------------------------------------
 function Add-Action {
     param(
         [string]$Action
     )
+
+    # Add action to the actions array (used in summary)
     $script:ActionsPerformed += $Action
+
+    # Also log the action with ACTION level
     Write-Log $Action "ACTION"
 }
 
