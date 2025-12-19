@@ -7,44 +7,65 @@
 # configuring Windows terminals (Windows Terminal & PuTTY).
 # ==============================================================================
 
-# Check PowerShell version and prompt upgrade if needed
+# Check PowerShell version and auto-upgrade if needed
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     Write-Host ""
     Write-Host "================================================================================" -ForegroundColor Yellow
-    Write-Host "  PowerShell 7+ Required for Best Experience" -ForegroundColor Yellow
+    Write-Host "  PowerShell 7 Required - Auto-Upgrading..." -ForegroundColor Yellow
     Write-Host "================================================================================" -ForegroundColor Yellow
     Write-Host ""
     Write-Host "Current version: PowerShell $($PSVersionTable.PSVersion.Major)" -ForegroundColor Red
-    Write-Host "Recommended:     PowerShell 7+" -ForegroundColor Green
+    Write-Host "Installing:      PowerShell 7+" -ForegroundColor Green
     Write-Host ""
-    Write-Host "PowerShell 7 provides:" -ForegroundColor Cyan
-    Write-Host "  • Better color support and formatting" -ForegroundColor Gray
-    Write-Host "  • Improved performance and features" -ForegroundColor Gray
-    Write-Host "  • Cross-platform compatibility" -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "To upgrade PowerShell 7:" -ForegroundColor Cyan
-    Write-Host "  1. Run: " -NoNewline -ForegroundColor Gray
-    Write-Host "winget install Microsoft.PowerShell" -ForegroundColor White
-    Write-Host "  2. Or visit: https://aka.ms/powershell" -ForegroundColor Gray
-    Write-Host "  3. Restart terminal after installation" -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "================================================================================" -ForegroundColor Yellow
+    Write-Host "This will take about 1-2 minutes..." -ForegroundColor Cyan
     Write-Host ""
 
-    $choice = Read-Host "Continue with PowerShell $($PSVersionTable.PSVersion.Major) anyway? (y/N)"
+    try {
+        # Check if winget is available
+        $wingetAvailable = Get-Command winget -ErrorAction SilentlyContinue
 
-    if ($choice -ne 'y' -and $choice -ne 'Y') {
+        if ($wingetAvailable) {
+            Write-Host "[→] Installing PowerShell 7 via winget..." -ForegroundColor Cyan
+
+            # Install PowerShell 7 using winget
+            $result = winget install Microsoft.PowerShell --silent --accept-package-agreements --accept-source-agreements 2>&1
+
+            if ($LASTEXITCODE -eq 0 -or $result -match "successfully installed") {
+                Write-Host "[✓] PowerShell 7 installed successfully!" -ForegroundColor Green
+                Write-Host ""
+                Write-Host "================================================================================" -ForegroundColor Yellow
+                Write-Host "  Installation Complete - Please Restart" -ForegroundColor Yellow
+                Write-Host "================================================================================" -ForegroundColor Yellow
+                Write-Host ""
+                Write-Host "Next steps:" -ForegroundColor Cyan
+                Write-Host "  1. Close this PowerShell window" -ForegroundColor Gray
+                Write-Host "  2. Open a NEW PowerShell window (it will be PowerShell 7)" -ForegroundColor Gray
+                Write-Host "  3. Run the installer again:" -ForegroundColor Gray
+                Write-Host "     irm 'https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1' | iex" -ForegroundColor White
+                Write-Host ""
+                Write-Host "Press any key to exit..." -ForegroundColor Gray
+                $null = $Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+                exit 0
+            } else {
+                throw "Installation failed or was skipped"
+            }
+        } else {
+            throw "winget not available"
+        }
+
+    } catch {
+        Write-Host "[!] Automatic installation failed: $_" -ForegroundColor Yellow
         Write-Host ""
-        Write-Host "Installation cancelled. Please upgrade to PowerShell 7+ and try again." -ForegroundColor Yellow
+        Write-Host "Manual installation required:" -ForegroundColor Cyan
+        Write-Host "  1. Visit: https://aka.ms/powershell" -ForegroundColor Gray
+        Write-Host "  2. Download and install PowerShell 7" -ForegroundColor Gray
+        Write-Host "  3. Restart your terminal" -ForegroundColor Gray
+        Write-Host "  4. Run this installer again" -ForegroundColor Gray
         Write-Host ""
-        exit 0
+        Write-Host "Installation cancelled." -ForegroundColor Red
+        Write-Host ""
+        exit 1
     }
-
-    Write-Host ""
-    Write-Host "Continuing with PowerShell $($PSVersionTable.PSVersion.Major)..." -ForegroundColor Yellow
-    Write-Host "Note: Some visual elements may not display correctly." -ForegroundColor Gray
-    Write-Host ""
-    Start-Sleep -Seconds 2
 }
 
 # Enable ANSI color support
