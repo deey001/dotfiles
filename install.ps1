@@ -68,7 +68,22 @@ function Write-ColorText {
         [string]$Text,
         [string]$Color = "White"
     )
-    Write-Host "$($colors[$Color])$Text$($colors.Reset)"
+    if ($script:UseColors) {
+        Write-Host "$($colors[$Color])$Text$($colors.Reset)"
+    } else {
+        # Fallback to Write-Host -ForegroundColor for terminals without ANSI support
+        $fgColor = switch ($Color) {
+            "Red"     { "Red" }
+            "Green"   { "Green" }
+            "Yellow"  { "Yellow" }
+            "Blue"    { "Blue" }
+            "Magenta" { "Magenta" }
+            "Cyan"    { "Cyan" }
+            "Gray"    { "Gray" }
+            default   { "White" }
+        }
+        Write-Host $Text -ForegroundColor $fgColor
+    }
 }
 
 function Write-Status {
@@ -76,12 +91,23 @@ function Write-Status {
         [string]$Status,
         [string]$Message
     )
-    switch ($Status) {
-        "info"    { Write-Host "$($colors.Blue)[i]$($colors.Reset) $Message" }
-        "success" { Write-Host "$($colors.Green)[✓]$($colors.Reset) $Message" }
-        "warning" { Write-Host "$($colors.Yellow)[!]$($colors.Reset) $Message" }
-        "error"   { Write-Host "$($colors.Red)[✗]$($colors.Reset) $Message" }
-        "working" { Write-Host "$($colors.Cyan)[→]$($colors.Reset) $Message" }
+    if ($script:UseColors) {
+        switch ($Status) {
+            "info"    { Write-Host "$($colors.Blue)[i]$($colors.Reset) $Message" }
+            "success" { Write-Host "$($colors.Green)[✓]$($colors.Reset) $Message" }
+            "warning" { Write-Host "$($colors.Yellow)[!]$($colors.Reset) $Message" }
+            "error"   { Write-Host "$($colors.Red)[✗]$($colors.Reset) $Message" }
+            "working" { Write-Host "$($colors.Cyan)[→]$($colors.Reset) $Message" }
+        }
+    } else {
+        # Fallback for terminals without ANSI support
+        switch ($Status) {
+            "info"    { Write-Host "[i] $Message" -ForegroundColor Blue }
+            "success" { Write-Host "[OK] $Message" -ForegroundColor Green }
+            "warning" { Write-Host "[!] $Message" -ForegroundColor Yellow }
+            "error"   { Write-Host "[X] $Message" -ForegroundColor Red }
+            "working" { Write-Host "[>] $Message" -ForegroundColor Cyan }
+        }
     }
 }
 
