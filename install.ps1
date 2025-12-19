@@ -7,20 +7,18 @@
 # configuring Windows terminals (Windows Terminal & PuTTY).
 # ==============================================================================
 
-# Enable ANSI color support in PowerShell
-if ($PSVersionTable.PSVersion.Major -ge 5) {
+# Disable ANSI colors for PowerShell 5 (doesn't support Virtual Terminal sequences)
+# PowerShell 7+ and Windows Terminal support ANSI, but PS5 in cmd.exe does not
+if ($PSVersionTable.PSVersion.Major -ge 7) {
     try {
-        # Enable Virtual Terminal Processing for colors
+        # Enable Virtual Terminal Processing for colors in PS7+
         $null = [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-        if ($Host.UI.SupportsVirtualTerminal) {
-            $script:UseColors = $true
-        } else {
-            $script:UseColors = $false
-        }
+        $script:UseColors = $true
     } catch {
         $script:UseColors = $false
     }
 } else {
+    # PowerShell 5 and below: always use fallback (no ANSI support in cmd.exe)
     $script:UseColors = $false
 }
 
