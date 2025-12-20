@@ -90,12 +90,18 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
             $InstallScript = "https://aka.ms/install-powershell.ps1"
             Invoke-Expression "& { $(Invoke-RestMethod $InstallScript) } -UseMSI -Quiet"
             
-            # Wait for MSI to finish (simple sleep as the script usually returns after launch)
-            Write-Host "Waiting for installer..." -ForegroundColor Cyan
-            Start-Sleep -Seconds 30
+            # Wait for MSI to finish (Checking file existence loop)
+            Write-Host "Waiting for installer to complete (this may take a few minutes)..." -ForegroundColor Cyan
+            $maxRetries = 60 # 60 * 5s = 5 minutes
+            $retryCount = 0
             
-            # Recheck path
-            $pwsh7Path = $pwsh7Paths | Where-Object { Test-Path $_ } | Select-Object -First 1
+            do {
+                Start-Sleep -Seconds 5
+                $pwsh7Path = $pwsh7Paths | Where-Object { Test-Path $_ } | Select-Object -First 1
+                $retryCount++
+                if ($retryCount % 6 -eq 0) { Write-Host "." -NoNewline }
+            } until ($pwsh7Path -or $retryCount -ge $maxRetries)
+            Write-Host "" # Newline
         } catch {
             Write-Host "Fallback failed: $_" -ForegroundColor Red
         }
