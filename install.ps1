@@ -56,6 +56,7 @@ if (-not (Test-AdminPrivileges)) {
     } catch {
         Write-Host "`n[ERROR] Failed to auto-elevate. Please right-click PowerShell and 'Run as Administrator'." -ForegroundColor Red
     }
+    Read-Host "DEBUG: Auto-elevation triggered. Press Enter to exit this bootstrapping window..."
     exit
 }
 
@@ -86,6 +87,7 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
         Start-Process -FilePath $pwsh7Path -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-EncodedCommand", $EncodedCommand
 
         Start-Sleep -Seconds 3
+        Read-Host "DEBUG: Switching to PowerShell 7. Press Enter to close this window..."
         exit 0
     } else {
         Write-Host "Failed to install PowerShell 7. Install manually and rerun." -ForegroundColor Red
