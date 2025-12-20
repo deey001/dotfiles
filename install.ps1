@@ -50,7 +50,9 @@ if (-not (Test-AdminPrivileges)) {
     # Relaunch the same one-liner in a new elevated PowerShell window
     try {
         $ElevatedCommand = "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $RepoParams"
-        Start-Process powershell -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $ElevatedCommand
+        $EncodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($ElevatedCommand))
+        
+        Start-Process powershell -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-EncodedCommand", $EncodedCommand
     } catch {
         Write-Host "`n[ERROR] Failed to auto-elevate. Please right-click PowerShell and 'Run as Administrator'." -ForegroundColor Red
     }
@@ -79,7 +81,9 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
         Write-Host "PowerShell 7 installed. Relaunching in new elevated window..." -ForegroundColor Green
 
         $ElevatedCommand = "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $RepoParams"
-        Start-Process -FilePath $pwsh7Path -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $ElevatedCommand
+        $EncodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($ElevatedCommand))
+        
+        Start-Process -FilePath $pwsh7Path -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-EncodedCommand", $EncodedCommand
 
         Start-Sleep -Seconds 3
         exit 0
