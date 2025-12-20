@@ -150,7 +150,7 @@ function Write-ColorText {
     if ($script:UseColors) {
         $colorCode = $colors[$Color]
         if (-not $colorCode) { $colorCode = "" }
-        Write-Host "$colorCode$Message$($colors.Reset)" -NoNewline
+        Write-Host "$colorCode$Message$($colors.Reset)"
     } else {
         $fallback = @{ Red="Red"; Green="Green"; Yellow="Yellow"; Cyan="Cyan"; Magenta="Magenta"; Gray="Gray"; White="White" }
         if ($fallback.ContainsKey($Color)) {
@@ -158,7 +158,7 @@ function Write-ColorText {
         } else {
             $fg = "White"
         }
-        Write-Host $Message -ForegroundColor $fg -NoNewline
+        Write-Host $Message -ForegroundColor $fg
     }
 }
 
@@ -181,7 +181,6 @@ function Write-Status {
     }
     $formatted = "[$($status.Icon)] $Message"
     Write-ColorText $formatted $status.Color
-    Write-Host ""
 }
 
 function Test-FontInstalled {
