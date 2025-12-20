@@ -348,20 +348,25 @@ function Install-NerdFont {
         $fontsFolder = $shell.Namespace(0x14)  # Special Fonts folder
         
         foreach ($font in $fontFiles) {
-            Write-Host "Installing: $($font.Name)" -ForegroundColor Cyan
-            $fontsFolder.CopyHere($font.FullName, 0x10)  # 0x10 = silent
+            $destPath = "$env:SystemRoot\Fonts\$($font.Name)"
             
-            # Method 2: Manual Registry Fallback (System-Wide)
-            # Sometimes CopyHere fails silently or puts it in a user path that Admin apps don't see.
-            # We add it to HKLM just to be robust.
-            try {
-                $destPath = "$env:SystemRoot\Fonts\$($font.Name)"
-                if (-not (Test-Path $destPath)) {
-                    Copy-Item -Path $font.FullName -Destination $destPath -Force
-                    New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" -Name "$($font.Name) (TrueType)" -Value "$($font.Name)" -PropertyType String -Force | Out-Null
+            if (Test-Path $destPath) {
+                Write-Host "Skipping installed: $($font.Name)" -ForegroundColor Gray
+            } else {
+                Write-Host "Installing: $($font.Name)" -ForegroundColor Cyan
+                $fontsFolder.CopyHere($font.FullName, 0x10)  # 0x10 = silent
+                
+                # Method 2: Manual Registry Fallback (System-Wide)
+                # Sometimes CopyHere fails silently or puts it in a user path that Admin apps don't see.
+                # We add it to HKLM just to be robust.
+                try {
+                    if (-not (Test-Path $destPath)) {
+                        Copy-Item -Path $font.FullName -Destination $destPath -Force
+                        New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" -Name "$($font.Name) (TrueType)" -Value "$($font.Name)" -PropertyType String -Force | Out-Null
+                    }
+                } catch {
+                    Write-Log "Registry method failed (ignoring if CopyHere worked): $_" "WARNING"
                 }
-            } catch {
-                Write-Log "Registry method failed (ignoring if CopyHere worked): $_" "WARNING"
             }
         }
 
