@@ -69,17 +69,39 @@ if (-not (Test-AdminPrivileges)) {
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     Write-Host "Detected PowerShell $($PSVersionTable.PSVersion.Major). Installing PowerShell 7 automatically..." -ForegroundColor Yellow
 
-    # Silent install via winget
+    # Attempt 1: Winget
+    Write-Host "Attempting install via Winget..." -ForegroundColor Cyan
     $result = winget install --id Microsoft.PowerShell --silent --accept-package-agreements --accept-source-agreements 2>&1
-
-    # Common paths for pwsh.exe
+    
+    # Check if Winget worked
     $pwsh7Paths = @(
         "$env:ProgramFiles\PowerShell\7\pwsh.exe",
         "C:\Program Files\PowerShell\7\pwsh.exe"
     )
     $pwsh7Path = $pwsh7Paths | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-    if ($pwsh7Path -and ($LASTEXITCODE -eq 0 -or $result -match "successfully installed")) {
+    # Attempt 2: Official Install Script (Fallback)
+    if (-not $pwsh7Path) {
+        Write-Host "Winget failed or not found. Output:`n$result" -ForegroundColor Yellow
+        Write-Host "Attempting fallback via official MSI script..." -ForegroundColor Cyan
+        
+        try {
+            # Use the official Microsoft install script
+            $InstallScript = "https://aka.ms/install-powershell.ps1"
+            Invoke-Expression "& { $(Invoke-RestMethod $InstallScript) } -UseMSI -Quiet"
+            
+            # Wait for MSI to finish (simple sleep as the script usually returns after launch)
+            Write-Host "Waiting for installer..." -ForegroundColor Cyan
+            Start-Sleep -Seconds 30
+            
+            # Recheck path
+            $pwsh7Path = $pwsh7Paths | Where-Object { Test-Path $_ } | Select-Object -First 1
+        } catch {
+            Write-Host "Fallback failed: $_" -ForegroundColor Red
+        }
+    }
+
+    if ($pwsh7Path) {
         Write-Host "PowerShell 7 installed. Relaunching in new elevated window..." -ForegroundColor Green
 
         # Use same temp file strategy for reliability
@@ -93,7 +115,9 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
         Start-Sleep -Seconds 3
         exit 0
     } else {
-        Write-Host "Failed to install PowerShell 7. Install manually and rerun." -ForegroundColor Red
+        Write-Host "Failed to install PowerShell 7." -ForegroundColor Red
+        Write-Host "Error details (Winget): $result" -ForegroundColor Gray
+        Write-Host "Please install manually from: https://github.com/PowerShell/PowerShell/releases" -ForegroundColor Yellow
         Read-Host "Press Enter to exit..."
         exit 1
     }
