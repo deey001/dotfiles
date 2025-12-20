@@ -153,7 +153,11 @@ function Write-ColorText {
         Write-Host "$colorCode$Message$($colors.Reset)" -NoNewline
     } else {
         $fallback = @{ Red="Red"; Green="Green"; Yellow="Yellow"; Cyan="Cyan"; Magenta="Magenta"; Gray="Gray"; White="White" }
-        $fg = $fallback[$Color] ? $fallback[$Color] : "White"
+        if ($fallback.ContainsKey($Color)) {
+            $fg = $fallback[$Color]
+        } else {
+            $fg = "White"
+        }
         Write-Host $Message -ForegroundColor $fg -NoNewline
     }
 }
@@ -170,7 +174,11 @@ function Write-Status {
         Warning  = @{ Icon = "!"; Color = "Yellow" }
         Info     = @{ Icon = "i"; Color = "Gray" }
     }
-    $status = $statusMap[$StatusType] ? $statusMap[$StatusType] : $statusMap["Info"]
+    if ($statusMap.ContainsKey($StatusType)) {
+        $status = $statusMap[$StatusType]
+    } else {
+        $status = $statusMap["Info"]
+    }
     $formatted = "[$($status.Icon)] $Message"
     Write-ColorText $formatted $status.Color
     Write-Host ""
