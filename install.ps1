@@ -8,9 +8,10 @@
     when colleagues connect (via Windows Terminal, PuTTY, or KeePass) to Linux servers running your dotfiles.
 
     Key Features:
+    - [FIX] Enforces TLS 1.2 for GitHub connectivity
+    - [FIX] Auto-Elevates to Administrator if run as standard user
     - Automatically upgrades PowerShell 5 → PowerShell 7 with no prompts
-    - Auto-relaunches as Administrator in PowerShell 7 to continue installation
-    - Installs UbuntuMono Nerd Font
+    - Installs UbuntuMono Nerd Font (System-wide)
     - Configures Windows Terminal and PuTTY **Default Settings** (critical for KeePass compatibility)
     - Creates timestamped backups before any changes
     - Chris Titus-style interactive menu with descriptions
@@ -20,6 +21,40 @@
 
     Philosophy: KISS — everything via one simple one-liner.
 #>
+
+# ========================================================================================
+# Section 0: Critical Pre-flight Checks (TLS & Admin)
+# ========================================================================================
+
+# 1. Force TLS 1.2 (Fixes "Could not create SSL/TLS secure channel" on older Windows)
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+# 2. Define the exact command used to run this script (for auto-elevation reliability)
+$RepoParams = "irm 'https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1' | iex"
+
+# 3. Helper Function: Check for Admin Privileges
+function Test-AdminPrivileges {
+    $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+    return $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+# 4. Auto-Elevate if not Admin
+if (-not (Test-AdminPrivileges)) {
+    Write-Host "█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█" -ForegroundColor Red
+    Write-Host "█  ADMINISTRATOR PRIVILEGES REQUIRED - AUTO-ELEVATING    █" -ForegroundColor Yellow
+    Write-Host "█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█" -ForegroundColor Red
+    Write-Host "`nPlease accept the UAC prompt to continue..." -ForegroundColor Gray
+    
+    Start-Sleep -Seconds 2
+    
+    # Relaunch the same one-liner in a new elevated PowerShell window
+    try {
+        Start-Process powershell -Verb RunAs -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $RepoParams
+    } catch {
+        Write-Host "`n[ERROR] Failed to auto-elevate. Please right-click PowerShell and 'Run as Administrator'." -ForegroundColor Red
+    }
+    exit
+}
 
 # ========================================================================================
 # Section 1: PowerShell Version Check and Auto-Upgrade
@@ -42,9 +77,7 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
     if ($pwsh7Path -and ($LASTEXITCODE -eq 0 -or $result -match "successfully installed")) {
         Write-Host "PowerShell 7 installed. Relaunching in new elevated window..." -ForegroundColor Green
 
-        $installCommand = "irm 'https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1' | iex"
-
-        Start-Process -FilePath $pwsh7Path -Verb RunAs -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $installCommand
+        Start-Process -FilePath $pwsh7Path -Verb RunAs -ArgumentList "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $RepoParams
 
         Start-Sleep -Seconds 3
         exit 0
@@ -143,22 +176,26 @@ function Write-Status {
     Write-Host ""
 }
 
-function Test-AdminPrivileges {
-    try {
-        $principal = New-Object System.Security.Principal.WindowsPrincipal([System.Security.Principal.WindowsIdentity]::GetCurrent())
-        return $principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
-    } catch {
-        Write-Log "Admin check failed: $_" "ERROR"
-        return $false
-    }
-}
-
 function Test-FontInstalled {
     param([string]$FontName = "UbuntuMono Nerd Font")
+    # Check Registry for standard install
     $fontRegPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
-    if (-not (Test-Path $fontRegPath)) { return $false }
-    $installed = Get-ItemProperty -Path $fontRegPath
-    return ($installed.PSObject.Properties | Where-Object { $_.Value -like "*$FontName*" }).Count -gt 0
+    if (Test-Path $fontRegPath) {
+        $installed = Get-ItemProperty -Path $fontRegPath
+        if (($installed.PSObject.Properties | Where-Object { $_.Value -like "*$FontName*" }).Count -gt 0) {
+            return $true
+        }
+    }
+    
+    # Check User local font path (common with manual installs)
+    $userFontPath = "$env:LOCALAPPDATA\Microsoft\Windows\Fonts"
+    if (Test-Path $userFontPath) {
+         if (Get-ChildItem -Path $userFontPath -Filter "*UbuntuMonoNerdFont*" -ErrorAction SilentlyContinue) {
+             return $true
+         }
+    }
+
+    return $false
 }
 
 # ========================================================================================
@@ -173,7 +210,7 @@ function Backup-Settings {
         # PuTTY Default Settings
         $puttyRegPath = "HKCU\Software\SimonTatham\PuTTY\Sessions\Default%20Settings"
         $puttyBackup = Join-Path $timestampDir "putty-default-settings.reg"
-        if (Test-Path $puttyRegPath) {
+        if (Test-Path "HKCU:\Software\SimonTatham\PuTTY\Sessions\Default%20Settings") {
             reg export "$puttyRegPath" $puttyBackup /y | Out-Null
             Write-Log "Backed up PuTTY Default Settings"
         }
@@ -247,11 +284,8 @@ function Restore-Settings {
 
 function Install-NerdFont {
     try {
-        if (Test-FontInstalled) {
-            Write-Status "UbuntuMono Nerd Font already installed" "Info"
-            return
-        }
-
+        Write-Host "Downloading UbuntuMono Nerd Font..." -ForegroundColor Cyan
+        
         New-Item -Path $TEMP_DIR -ItemType Directory -Force | Out-Null
         $zipFile = Join-Path $TEMP_DIR "UbuntuMono.zip"
 
@@ -259,11 +293,27 @@ function Install-NerdFont {
         Expand-Archive -Path $zipFile -DestinationPath $TEMP_DIR -Force
 
         $fontFiles = Get-ChildItem -Path $TEMP_DIR -Filter "*.ttf" -Recurse
+        
+        # Method 1: Shell.Application (Silent and Standard)
         $shell = New-Object -ComObject Shell.Application
         $fontsFolder = $shell.Namespace(0x14)  # Special Fonts folder
-
+        
         foreach ($font in $fontFiles) {
+            Write-Host "Installing: $($font.Name)" -ForegroundColor Cyan
             $fontsFolder.CopyHere($font.FullName, 0x10)  # 0x10 = silent
+            
+            # Method 2: Manual Registry Fallback (System-Wide)
+            # Sometimes CopyHere fails silently or puts it in a user path that Admin apps don't see.
+            # We add it to HKLM just to be robust.
+            try {
+                $destPath = "$env:SystemRoot\Fonts\$($font.Name)"
+                if (-not (Test-Path $destPath)) {
+                    Copy-Item -Path $font.FullName -Destination $destPath -Force
+                    New-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts" -Name "$($font.Name) (TrueType)" -Value "$($font.Name)" -PropertyType String -Force | Out-Null
+                }
+            } catch {
+                Write-Log "Registry method failed (ignoring if CopyHere worked): $_" "WARNING"
+            }
         }
 
         Remove-Item -Path $TEMP_DIR -Recurse -Force
@@ -281,6 +331,7 @@ function Configure-WindowsTerminal {
         $settingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
         if (-not (Test-Path $settingsPath)) {
             Write-Status "Windows Terminal not detected" "Warning"
+            Write-Host "Is Windows Terminal installed?" -ForegroundColor Yellow
             return
         }
 
@@ -291,6 +342,7 @@ function Configure-WindowsTerminal {
         }
         $settings.profiles.defaults | Add-Member -MemberType NoteProperty -Name font -Value @{ face = "UbuntuMono Nerd Font" } -Force
 
+        # Set depth to 100 to avoid object truncation in large configs
         $settings | ConvertTo-Json -Depth 100 | Set-Content $settingsPath -Encoding UTF8
 
         Add-Action "Configured Windows Terminal font face"
@@ -304,11 +356,18 @@ function Configure-WindowsTerminal {
 function Configure-PuTTY {
     try {
         $regPath = "HKCU:\Software\SimonTatham\PuTTY\Sessions\Default%20Settings"
-        New-Item -Path $regPath -Force | Out-Null
+        
+        # Ensure Default Settings key exists
+        if (-not (Test-Path $regPath)) {
+            New-Item -Path $regPath -Force | Out-Null
+        }
 
         Set-ItemProperty -Path $regPath -Name "Font" -Value "UbuntuMono Nerd Font" -Type String
         Set-ItemProperty -Path $regPath -Name "FontHeight" -Value 12 -Type DWord
         Set-ItemProperty -Path $regPath -Name "FontIsBold" -Value 0 -Type DWord
+        
+        # Extra: Ensure ANSI colors are enabled in PuTTY if possible (handled by default usually, but good to check)
+        # Set-ItemProperty -Path $regPath -Name "UseSystemColours" -Value 0 -Type DWord
 
         Add-Action "Configured PuTTY Default Settings (KeePass compatible)"
         Write-Status "PuTTY Default Settings configured" "Success"
@@ -344,12 +403,14 @@ NEXT STEPS:
         Write-ColorText "          INSTALLATION COMPLETE" "Green"
         Write-ColorText "══════════════════════════════════════════════" "Cyan"
         Write-Host $summary
-
+        Write-Host ""
+        
+        # Output log locations
         $script:InstallationLog | Set-Content $LOG_FILE
         $summary | Set-Content "$env:USERPROFILE\Documents\dotfiles-summary-$BACKUP_TIMESTAMP.txt"
 
-        Write-ColorText "`nLog: $LOG_FILE" "Gray"
-        Write-ColorText "Summary saved to Documents folder" "Gray"
+        Write-ColorText "Log Saved: $LOG_FILE" "Gray"
+        Write-ColorText "Summary Saved: Documents\dotfiles-summary-$BACKUP_TIMESTAMP.txt" "Gray"
     } catch {
         Write-Status "Failed to save summary" "Warning"
     }
@@ -381,7 +442,9 @@ function Show-Menu {
     Write-ColorText " [1] Install Nerd Fonts only" "Yellow"
     Write-ColorText " [2] Configure Windows Terminal only" "Yellow"
     Write-ColorText " [3] Configure PuTTY Default Settings (KeePass!)" "Yellow"
-    Write-ColorText " [4] Full Local Setup (Fonts + Both Terminals)" "Yellow"
+    Write-ColorText " [4] Full Local Setup (Recommended)" "Green"
+    Write-Host "     (Installs Fonts + Configures WT & PuTTY)" -ForegroundColor Gray
+    Write-Host ""
     Write-ColorText " [5] Install dotfiles on remote server (guide)" "Yellow"
     Write-ColorText " [6] Complete Workflow (Local + Remote)" "Yellow"
     Write-ColorText " [7] Reset / Remove Configuration" "Yellow"
@@ -392,49 +455,48 @@ function Show-Menu {
 }
 
 function Main {
-    if (-not (Test-AdminPrivileges)) {
-        Write-Status "Administrator privileges required" "Error"
+    try {
+        Backup-Settings
+        
+        do {
+            Show-Menu
+            $choice = Read-Host
+
+            switch ($choice) {
+                "1" { Install-NerdFont }
+                "2" { Configure-WindowsTerminal }
+                "3" { Configure-PuTTY }
+                "4" {
+                    Install-NerdFont
+                    Configure-WindowsTerminal
+                    Configure-PuTTY
+                }
+                "5" { Install-RemoteDotfiles }
+                "6" {
+                    Install-NerdFont
+                    Configure-WindowsTerminal
+                    Configure-PuTTY
+                    Install-RemoteDotfiles
+                }
+                "7" {
+                    $confirm = Read-Host "Reset all settings? This will restore from latest backup (y/n)"
+                    if ($confirm -match "^[Yy]") { Restore-Settings }
+                }
+                "8" { Restore-Settings }
+                "0" { break }
+                default { Write-Status "Invalid choice" "Warning" }
+            }
+
+            if ($choice -ne "0") {
+                Read-Host "`nPress Enter to continue"
+            }
+        } while ($choice -ne "0")
+
+        Save-InstallationSummary
+    } catch {
+        Write-Error "An unexpected error occurred: $_"
         Read-Host "Press Enter to exit"
-        exit 1
     }
-
-    Backup-Settings
-
-    do {
-        Show-Menu
-        $choice = Read-Host
-
-        switch ($choice) {
-            "1" { Install-NerdFont }
-            "2" { Configure-WindowsTerminal }
-            "3" { Configure-PuTTY }
-            "4" {
-                Install-NerdFont
-                Configure-WindowsTerminal
-                Configure-PuTTY
-            }
-            "5" { Install-RemoteDotfiles }
-            "6" {
-                Install-NerdFont
-                Configure-WindowsTerminal
-                Configure-PuTTY
-                Install-RemoteDotfiles
-            }
-            "7" {
-                $confirm = Read-Host "Reset all settings? This will restore from latest backup (y/n)"
-                if ($confirm -match "^[Yy]") { Restore-Settings }
-            }
-            "8" { Restore-Settings }
-            "0" { break }
-            default { Write-Status "Invalid choice" "Warning" }
-        }
-
-        if ($choice -ne "0") {
-            Read-Host "`nPress Enter to continue"
-        }
-    } while ($choice -ne "0")
-
-    Save-InstallationSummary
 }
 
 Main

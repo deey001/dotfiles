@@ -86,56 +86,48 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
 
 ## Installation
 
-### Windows Users: Local Setup First! ⚠️
+### 🖥️ Windows Users: Local Setup First! ⚠️
 
-**If you're connecting from Windows (PuTTY/Windows Terminal), run the local setup FIRST** to install Nerd Fonts and configure your terminal. Otherwise, icons won't display!
+**STOP! Read this before connecting to your server.**
 
-#### One-Liner Install (Recommended) ⚡
+If you are using Windows, you **MUST** run this local setup script first. If you don't, your icons will look like broken squares `[]` and the terminal will look ugly.
 
-Open **PowerShell as Administrator** and run:
+This script does everything for you: calls the font police, installs the correct font, and forces your terminals (PuTTY & Windows Terminal) to use it.
 
-```powershell
-irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | iex
-```
+#### Option 1: The "I want it done now" Method (Recommended) ⚡
 
-**Interactive menu with options:**
-- `[1]` Install Nerd Fonts only
-- `[2]` Configure Windows Terminal only
-- `[3]` Configure PuTTY Default Settings (works with KeePass!)
-- `[4]` Full Setup (fonts + all terminals)
-- `[5]` Install dotfiles on remote server
-- `[6]` Complete workflow (local + remote)
-- `[7]` Remove configuration (reset to default)
-- `[8]` Restore from backup
+1.  Click the **Start Menu** and type `PowerShell`.
+2.  **Right-click** "Windows PowerShell" and choose **Run as Administrator**.
+    > *If you forget to run as Admin, the script will try to restart itself as Admin. Just say "Yes" to the blue/yellow popup.*
+3.  Copy and paste this exact command and press **Enter**:
 
-**Features:**
-- ✅ Color-coded status indicators
-- ✅ Detects installed components automatically
-- ✅ Modifies PuTTY Default Settings (all KeePass connections inherit)
-- ✅ No individual session configuration needed
-- ✅ Idempotent (safe to run multiple times)
-- ✅ **Automatic backups before any changes**
-- ✅ **Restore previous settings anytime**
+    ```powershell
+    irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | iex
+    ```
 
-#### Option 2: Download and Run
+4.  **The Menu**: You will see a menu. Type `4` and press **Enter** for the "Full Local Setup".
+    *   This installs the Nerd Font.
+    *   This configures Windows Terminal.
+    *   This configures PuTTY (so KeePass works too!).
 
-1.  **Download**: Clone or download this repo to your Windows machine
-2.  **Run**: Right-click `setup-windows.bat` → **Run as Administrator**
-3.  **Follow Prompts**: Uses the same interactive menu
+5.  **Done**: Close all your terminal windows and open them again. You are now ready to connect to your server.
 
-#### Option 3: Manual Setup
+#### Option 2: The "I like downloading files" Method
 
-1.  **Install Font Manually**:
-    - Download [UbuntuMono Nerd Font](https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuMono.zip)
-    - Extract and install all `.ttf` files (right-click → Install)
-
-2.  **Configure Terminal**:
-    - **Windows Terminal**: Settings → Profiles → Defaults → Font Face → "UbuntuMono Nerd Font"
-    - **PuTTY**: Window → Appearance → Font → "UbuntuMono Nerd Font"
-
-3.  **Connect and Install** (see Quick Install below)
+1.  **Download**: [Download this repository as a ZIP](https://github.com/deey001/dotfiles/archive/refs/heads/master.zip) and extract it.
+2.  **Run**: Find the `install.ps1` file within the `dotfiles` folder.
+3.  **Execute**: Right-click it and select **Run with PowerShell**.
 
 ---
+
+### 🆘 Troubleshooting Windows Install
+
+| Problem | Solution |
+| :--- | :--- |
+| **"Script is disabled" error** | Run this command first: `Set-ExecutionPolicy Bypass -Scope Process` |
+| **"Could not create SSL/TLS channel"** | You are on an old Windows. The new script fixes this automatically! Try running the command again. |
+| **Icons are still broken squares** | 1. Did you restart the terminal? <br> 2. Open PuTTY -> Window -> Appearance -> Check if "Font" is "UbuntuMono Nerd Font". |
+| **Permission Denied** | Use **Run as Administrator**. The font needs to go into the system folder. |
 
 ### Quick Install (Server-Side)
 
