@@ -30,7 +30,7 @@
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # 2. Define the exact command used to run this script (for auto-elevation reliability)
-$RepoParams = "irm 'https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1' | iex"
+# $RepoParams removed as it was unused in the new file-based approach
 
 # 3. Helper Function: Check for Admin Privileges
 function Test-AdminPrivileges {
@@ -377,25 +377,78 @@ function Install-NerdFont {
 
 function Configure-WindowsTerminal {
     try {
-        $settingsPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
-        if (-not (Test-Path $settingsPath)) {
-            Write-Status "Windows Terminal not detected" "Warning"
-            Write-Host "Is Windows Terminal installed?" -ForegroundColor Yellow
-            return
+        Write-Host "Configuring Windows Terminal..." -ForegroundColor Cyan
+        Write-Log "Configuring WT as user: $env:USERNAME" "INFO"
+
+        # Check for both Stable and Preview
+        $packages = @(
+            "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json",
+            "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe\LocalState\settings.json"
+        )
+
+        $found = $false
+        foreach ($settingsPath in $packages) {
+            if (Test-Path $settingsPath) {
+                Write-Host "Found settings at: $settingsPath" -ForegroundColor Gray
+                $found = $true
+                
+                try {
+                    $jsonContent = Get-Content $settingsPath -Raw
+                    if ([string]::IsNullOrWhiteSpace($jsonContent)) {
+                        Write-Status "Settings file empty: $settingsPath" "Warning"
+                        continue
+                    }
+
+                    $settings = $jsonContent | ConvertFrom-Json
+
+                    # Ensure structure exists
+                    if (-not $settings.profiles) {
+                        Write-Status "Invalid settings JSON (no profiles)" "Warning"
+                        continue
+                    }
+                    if (-not $settings.profiles.defaults) {
+                         $settings.profiles | Add-Member -MemberType NoteProperty -Name defaults -Value ([PSCustomObject]@{})
+                    }
+
+                    # 1. Modern: profiles.defaults.font.face
+                    if (-not $settings.profiles.defaults.font) {
+                        # Create font object if missing
+                        $settings.profiles.defaults | Add-Member -MemberType NoteProperty -Name font -Value ([PSCustomObject]@{ face = "UbuntuMono Nerd Font" })
+                    } else {
+                        # Update existing font object (preserve size/weight)
+                        if ($settings.profiles.defaults.font -is [PSCustomObject]) {
+                            if (-not $settings.profiles.defaults.font.PSObject.Properties.Match("face")) {
+                                $settings.profiles.defaults.font | Add-Member -MemberType NoteProperty -Name face -Value "UbuntuMono Nerd Font"
+                            } else {
+                                $settings.profiles.defaults.font.face = "UbuntuMono Nerd Font"
+                            }
+                        } elseif ($settings.profiles.defaults.font -is [System.Collections.IDictionary]) {
+                             $settings.profiles.defaults.font["face"] = "UbuntuMono Nerd Font"
+                        }
+                    }
+
+                    # 2. Legacy: profiles.defaults.fontFace (older versions)
+                    if (-not $settings.profiles.defaults.PSObject.Properties.Match("fontFace")) {
+                        $settings.profiles.defaults | Add-Member -MemberType NoteProperty -Name fontFace -Value "UbuntuMono Nerd Font"
+                    } else {
+                        $settings.profiles.defaults.fontFace = "UbuntuMono Nerd Font"
+                    }
+
+                    # Save
+                    $settings | ConvertTo-Json -Depth 100 | Set-Content $settingsPath -Encoding UTF8
+                    Write-Status "Updated: $settingsPath" "Success"
+                    Add-Action "Configured Windows Terminal ($settingsPath)"
+                } catch {
+                    Write-Status "Failed to update $settingsPath : $_" "Error"
+                }
+            }
         }
 
-        $settings = Get-Content $settingsPath -Raw | ConvertFrom-Json
-
-        if (-not $settings.profiles.defaults) {
-            $settings.profiles | Add-Member -MemberType NoteProperty -Name defaults -Value ([PSCustomObject]@{})
+        if (-not $found) {
+            Write-Status "Windows Terminal settings file not found" "Warning"
+            Write-Host "Searched in: $env:LOCALAPPDATA\Packages\..." -ForegroundColor Gray
         }
-        $settings.profiles.defaults | Add-Member -MemberType NoteProperty -Name font -Value @{ face = "UbuntuMono Nerd Font" } -Force
 
-        # Set depth to 100 to avoid object truncation in large configs
-        $settings | ConvertTo-Json -Depth 100 | Set-Content $settingsPath -Encoding UTF8
-
-        Add-Action "Configured Windows Terminal font face"
-        Write-Status "Windows Terminal configured" "Success"
     } catch {
         Write-Status "Windows Terminal config failed" "Error"
         Write-Log "WT config error: $_" "ERROR"
@@ -404,6 +457,9 @@ function Configure-WindowsTerminal {
 
 function Configure-PuTTY {
     try {
+        Write-Host "Configuring PuTTY Default Settings..." -ForegroundColor Cyan
+        Write-Log "Configuring PuTTY as user: $env:USERNAME" "INFO"
+
         $regPath = "HKCU:\Software\SimonTatham\PuTTY\Sessions\Default%20Settings"
         
         # Ensure Default Settings key exists
