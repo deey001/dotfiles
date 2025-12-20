@@ -45,26 +45,27 @@ if (-not (Test-AdminPrivileges)) {
     Write-Host "█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█" -ForegroundColor Red
     Write-Host "`nPlease accept the UAC prompt to continue..." -ForegroundColor Gray
     
-    Start-Sleep -Seconds 2
-    
-    # Relaunch the same one-liner in a new elevated PowerShell window
+    # Download script to temp file to avoid quoting/parsing hell in Start-Process
+    $TempScript = "$env:TEMP\DotfilesSetup.ps1"
     try {
-        $ElevatedCommand = "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $RepoParams"
-        $EncodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($ElevatedCommand))
+        Write-Host "Preparing setup file..." -ForegroundColor Cyan
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" -OutFile $TempScript -UseBasicParsing
         
-        Start-Process powershell -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-EncodedCommand", $EncodedCommand
+        # Launch the temp file as Admin
+        Start-Process powershell -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$TempScript`""
     } catch {
-        Write-Host "`n[ERROR] Failed to auto-elevate. Please right-click PowerShell and 'Run as Administrator'." -ForegroundColor Red
+        Write-Host "`n[ERROR] Failed to prepare auto-elevation: $_" -ForegroundColor Red
+        Write-Host "Please try running PowerShell as Administrator manually." -ForegroundColor Yellow
     }
-    Read-Host "DEBUG: Auto-elevation triggered. Press Enter to exit this bootstrapping window..."
+    
+    # Pause so user sees what happened
+    Read-Host "`n[INFO] Auto-elevation attempted. Check the new window.`nPress Enter to close this window..."
     exit
 }
 
 # ========================================================================================
 # Section 1: PowerShell Version Check and Auto-Upgrade
 # ========================================================================================
-# Why: PowerShell 5 does not support ANSI colors → raw escape codes show (your reported error)
-# Solution: Auto-install PowerShell 7 via winget and relaunch script seamlessly
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     Write-Host "Detected PowerShell $($PSVersionTable.PSVersion.Major). Installing PowerShell 7 automatically..." -ForegroundColor Yellow
 
@@ -81,16 +82,19 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
     if ($pwsh7Path -and ($LASTEXITCODE -eq 0 -or $result -match "successfully installed")) {
         Write-Host "PowerShell 7 installed. Relaunching in new elevated window..." -ForegroundColor Green
 
-        $ElevatedCommand = "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $RepoParams"
-        $EncodedCommand = [Convert]::ToBase64String([System.Text.Encoding]::Unicode.GetBytes($ElevatedCommand))
-        
-        Start-Process -FilePath $pwsh7Path -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-EncodedCommand", $EncodedCommand
+        # Use same temp file strategy for reliability
+        $TempScript = "$env:TEMP\DotfilesSetup.ps1"
+        if (-not (Test-Path $TempScript)) {
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" -OutFile $TempScript -UseBasicParsing
+        }
+
+        Start-Process -FilePath $pwsh7Path -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$TempScript`""
 
         Start-Sleep -Seconds 3
-        Read-Host "DEBUG: Switching to PowerShell 7. Press Enter to close this window..."
         exit 0
     } else {
         Write-Host "Failed to install PowerShell 7. Install manually and rerun." -ForegroundColor Red
+        Read-Host "Press Enter to exit..."
         exit 1
     }
 }
