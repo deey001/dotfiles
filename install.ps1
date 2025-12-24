@@ -433,10 +433,20 @@ function Configure-WindowsTerminal {
                     }
 
                     # 2. Legacy: profiles.defaults.fontFace (older versions)
-                    if (-not $settings.profiles.defaults.PSObject.Properties.Match("fontFace")) {
-                        $settings.profiles.defaults | Add-Member -MemberType NoteProperty -Name fontFace -Value "UbuntuMono Nerd Font"
-                    } else {
-                        $settings.profiles.defaults.fontFace = "UbuntuMono Nerd Font"
+                    # Only set if the object structure supports it
+                    try {
+                        if ($settings.profiles.defaults -is [PSCustomObject]) {
+                            if (-not $settings.profiles.defaults.PSObject.Properties.Match("fontFace")) {
+                                $settings.profiles.defaults | Add-Member -MemberType NoteProperty -Name fontFace -Value "UbuntuMono Nerd Font" -Force
+                            } else {
+                                $settings.profiles.defaults.fontFace = "UbuntuMono Nerd Font"
+                            }
+                        } elseif ($settings.profiles.defaults -is [System.Collections.IDictionary]) {
+                            $settings.profiles.defaults["fontFace"] = "UbuntuMono Nerd Font"
+                        }
+                    } catch {
+                        # Ignore fontFace errors - modern font.face is what matters
+                        Write-Log "Legacy fontFace property not supported (using modern font.face instead)" "INFO"
                     }
 
                     # Save
