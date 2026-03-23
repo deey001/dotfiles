@@ -529,7 +529,16 @@ echo "==========================================================================
 
 echo "INSTALLATION COMPLETE!"
 echo ""
-echo "To apply changes immediately, please RESTART your terminal or run:"
+if [ "$(uname)" = "Darwin" ]; then
+    echo "NOTICE FOR macOS USERS:"
+    echo "Terminal.app does not allow automatic font changes via scripts."
+    echo "To see icons, you MUST manually set the font:"
+    echo "  1. Open Terminal Settings (Cmd + ,)"
+    echo "  2. Go to Profiles -> Text -> Font"
+    echo "  3. Click 'Change' and select 'JetBrainsMono Nerd Font'"
+    echo ""
+fi
+echo "To apply shell changes immediately, please RESTART your terminal or run:"
 echo "  source ~/.bashrc  (if using Bash)"
 echo "  source ~/.zshrc   (if using Zsh)"
 echo ""
