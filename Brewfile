@@ -121,15 +121,9 @@ brew "cmatrix"
 # ------------------------------------------------------------------------------
 # Fonts (Nerd Fonts)
 # ------------------------------------------------------------------------------
-# Nerd Fonts include icons and glyphs for powerline, devicons, etc.
-
-# Ubuntu Nerd Font - Used by Starship prompt and terminal icons
-cask "font-ubuntu-nerd-font"
-
-# Additional recommended Nerd Fonts (uncomment if desired)
-# cask "font-jetbrains-mono-nerd-font"
-# cask "font-fira-code-nerd-font"
-# cask "font-meslo-lg-nerd-font"
+# Fonts (Nerd Fonts)
+# JetBrainsMono Nerd Font - Standardized across all platforms
+cask "font-jetbrains-mono-nerd-font"
 
 # ------------------------------------------------------------------------------
 # Optional Casks (GUI Applications)

@@ -30,10 +30,10 @@ rm -rf "$HOME/.config/tmux"
 echo "Removing ble.sh..."
 rm -rf "$HOME/.local/share/blesh"
 
-# Remove Ubuntu Nerd Font (Linux)
-if [ -f "$HOME/.local/share/fonts/UbuntuNerdFont-Regular.ttf" ]; then
-    echo "Removing Ubuntu Nerd Font..."
-    rm -f "$HOME/.local/share/fonts/UbuntuNerdFont-Regular.ttf"
+# Remove JetBrainsMono Nerd Font (Linux)
+if [ -d "$HOME/.local/share/fonts/JetBrainsMono" ]; then
+    echo "Removing JetBrainsMono Nerd Font..."
+    rm -rf "$HOME/.local/share/fonts/JetBrainsMono"
     if command -v fc-cache > /dev/null 2>&1; then
       fc-cache -f -v
     fi

@@ -17,7 +17,7 @@
     - Interactive menu with descriptions
     - Auto-upgrade PowerShell 5 → 7 without user choice
     - Auto-relaunch as Administrator in PowerShell 7 to continue seamlessly
-    - Install UbuntuMono Nerd Font
+    - Install JetBrainsMono Nerd Font
     - Configure Windows Terminal defaults
     - Configure PuTTY Default%20Settings registry (KeePass compatible)
     - Automatic timestamped backups before any changes
@@ -94,8 +94,8 @@ try {
 # Section 3: Global Configuration Variables
 # ========================================================================================
 # Why centralized: Easy to modify, single source of truth
-$FONT_DOWNLOAD_URL = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuMono.zip"
-$TEMP_DIR = "$env:TEMP\nerd-fonts-install"                         # Temporary working directory
+$FONT_DOWNLOAD_URL = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+$TEMP_DIR = "$env:TEMP\nerd-fonts-install"
 $BACKUP_DIR = "$env:USERPROFILE\.dotfiles-backup"                 # Hidden folder for backups
 $BACKUP_TIMESTAMP = Get-Date -Format "yyyyMMdd_HHmmss"            # Unique per run
 $LOG_FILE = "$env:USERPROFILE\Documents\dotfiles-install-log-$BACKUP_TIMESTAMP.txt"
@@ -217,10 +217,10 @@ function Test-AdminPrivileges {
 function Test-FontInstalled {
     <#
     .DESCRIPTION
-    Checks if UbuntuMono Nerd Font is already installed system-wide.
+    Checks if JetBrainsMono Nerd Font is already installed system-wide.
     Prevents unnecessary re-download/install.
     #>
-    param([string]$FontName = "UbuntuMono Nerd Font")
+    param([string]$FontName = "JetBrainsMono Nerd Font")
 
     $regPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
     if (-not (Test-Path $regPath)) { return $false }
@@ -326,19 +326,19 @@ function Restore-Settings {
 function Install-NerdFont {
     <#
     .DESCRIPTION
-    Downloads and installs UbuntuMono Nerd Font if not already present.
+    Downloads and installs JetBrainsMono Nerd Font if not already present.
     Uses shell.application COM object for silent font installation.
     #>
     try {
         if (Test-FontInstalled) {
-            Write-Status "UbuntuMono Nerd Font already installed" "Info"
+            Write-Status "JetBrainsMono Nerd Font already installed" "Info"
             return
         }
 
-        Write-Status "Downloading UbuntuMono Nerd Font..." "Progress"
+        Write-Status "Downloading JetBrainsMono Nerd Font..." "Progress"
 
         New-Item -Path $TEMP_DIR -ItemType Directory -Force | Out-Null
-        $zipPath = Join-Path $TEMP_DIR "UbuntuMono.zip"
+        $zipPath = Join-Path $TEMP_DIR "JetBrainsMono.zip"
 
         Invoke-WebRequest -Uri $FONT_DOWNLOAD_URL -OutFile $zipPath -UseBasicParsing
         Expand-Archive -Path $zipPath -DestinationPath $TEMP_DIR -Force
@@ -352,7 +352,7 @@ function Install-NerdFont {
         }
 
         Remove-Item -Path $TEMP_DIR -Recurse -Force
-        Add-Action "Installed UbuntuMono Nerd Font"
+        Add-Action "Installed JetBrainsMono Nerd Font"
         Write-Status "Nerd Font installed successfully" "Success"
     } catch {
         Write-Log "Font install failed: $_" "ERROR"
@@ -364,7 +364,7 @@ function Install-NerdFont {
 function Configure-WindowsTerminal {
     <#
     .DESCRIPTION
-    Sets default font face in Windows Terminal to UbuntuMono Nerd Font.
+    Sets default font face in Windows Terminal to JetBrainsMono Nerd Font.
     Modifies profiles.defaults for global effect.
     #>
     try {
@@ -380,7 +380,7 @@ function Configure-WindowsTerminal {
             $json.profiles | Add-Member -MemberType NoteProperty -Name defaults -Value ([PSCustomObject]@{})
         }
 
-        $json.profiles.defaults | Add-Member -MemberType NoteProperty -Name font -Value @{ face = "UbuntuMono Nerd Font" } -Force
+        $json.profiles.defaults | Add-Member -MemberType NoteProperty -Name font -Value @{ face = "JetBrainsMono Nerd Font" } -Force
 
         $json | ConvertTo-Json -Depth 100 | Set-Content $settingsPath -Encoding UTF8
 
@@ -402,7 +402,7 @@ function Configure-PuTTY {
         $regPath = "HKCU:\Software\SimonTatham\PuTTY\Sessions\Default%20Settings"
         New-Item -Path $regPath -Force | Out-Null
 
-        Set-ItemProperty -Path $regPath -Name "Font" -Value "UbuntuMono Nerd Font" -Type String
+        Set-ItemProperty -Path $regPath -Name "Font" -Value "JetBrainsMono Nerd Font" -Type String
         Set-ItemProperty -Path $regPath -Name "FontHeight" -Value 12 -Type DWord
         Set-ItemProperty -Path $regPath -Name "FontIsBold" -Value 0 -Type DWord
         Set-ItemProperty -Path $regPath -Name "UTF8" -Value 1 -Type DWord  # Ensure proper encoding

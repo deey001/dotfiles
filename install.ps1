@@ -11,7 +11,7 @@
     - [FIX] Enforces TLS 1.2 for GitHub connectivity
     - [FIX] Auto-Elevates to Administrator if run as standard user
     - Automatically upgrades PowerShell 5 → PowerShell 7 with no prompts
-    - Installs UbuntuMono Nerd Font (System-wide)
+    - Installs JetBrainsMono Nerd Font (System-wide)
     - Configures Windows Terminal and PuTTY **Default Settings** (critical for KeePass compatibility)
     - Creates timestamped backups before any changes
     - Chris Titus-style interactive menu with descriptions
@@ -142,7 +142,7 @@ try {
 # ========================================================================================
 # Section 3: Configuration Variables
 # ========================================================================================
-$FONT_DOWNLOAD_URL = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuMono.zip"
+$FONT_DOWNLOAD_URL = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
 $TEMP_DIR = "$env:TEMP\nerd-fonts-install"
 $BACKUP_DIR = "$env:USERPROFILE\.dotfiles-backup"
 $BACKUP_TIMESTAMP = Get-Date -Format "yyyyMMdd_HHmmss"
@@ -226,7 +226,7 @@ function Write-Status {
 }
 
 function Test-FontInstalled {
-    param([string]$FontName = "UbuntuMono Nerd Font")
+    param([string]$FontName = "JetBrainsMono Nerd Font")
     # Check Registry for standard install
     $fontRegPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
     if (Test-Path $fontRegPath) {
@@ -239,7 +239,7 @@ function Test-FontInstalled {
     # Check User local font path (common with manual installs)
     $userFontPath = "$env:LOCALAPPDATA\Microsoft\Windows\Fonts"
     if (Test-Path $userFontPath) {
-         if (Get-ChildItem -Path $userFontPath -Filter "*UbuntuMonoNerdFont*" -ErrorAction SilentlyContinue) {
+         if (Get-ChildItem -Path $userFontPath -Filter "*JetBrainsMonoNerdFont*" -ErrorAction SilentlyContinue) {
              return $true
          }
     }
@@ -333,10 +333,10 @@ function Restore-Settings {
 
 function Install-NerdFont {
     try {
-        Write-Host "Downloading UbuntuMono Nerd Font..." -ForegroundColor Cyan
+        Write-Host "Downloading JetBrainsMono Nerd Font..." -ForegroundColor Cyan
         
         New-Item -Path $TEMP_DIR -ItemType Directory -Force | Out-Null
-        $zipFile = Join-Path $TEMP_DIR "UbuntuMono.zip"
+        $zipFile = Join-Path $TEMP_DIR "JetBrainsMono.zip"
 
         Invoke-WebRequest -Uri $FONT_DOWNLOAD_URL -OutFile $zipFile
         Expand-Archive -Path $zipFile -DestinationPath $TEMP_DIR -Force
@@ -357,8 +357,6 @@ function Install-NerdFont {
                 $fontsFolder.CopyHere($font.FullName, 0x10)  # 0x10 = silent
                 
                 # Method 2: Manual Registry Fallback (System-Wide)
-                # Sometimes CopyHere fails silently or puts it in a user path that Admin apps don't see.
-                # We add it to HKLM just to be robust.
                 try {
                     if (-not (Test-Path $destPath)) {
                         Copy-Item -Path $font.FullName -Destination $destPath -Force
@@ -371,7 +369,7 @@ function Install-NerdFont {
         }
 
         Remove-Item -Path $TEMP_DIR -Recurse -Force
-        Add-Action "Installed UbuntuMono Nerd Font"
+        Add-Action "Installed JetBrainsMono Nerd Font"
         Write-Status "Nerd Font installed successfully" "Success"
     } catch {
         Write-Status "Font installation failed" "Error"
@@ -418,34 +416,32 @@ function Configure-WindowsTerminal {
                     # 1. Modern: profiles.defaults.font.face
                     if (-not $settings.profiles.defaults.font) {
                         # Create font object if missing
-                        $settings.profiles.defaults | Add-Member -MemberType NoteProperty -Name font -Value ([PSCustomObject]@{ face = "UbuntuMono Nerd Font" })
+                        $settings.profiles.defaults | Add-Member -MemberType NoteProperty -Name font -Value ([PSCustomObject]@{ face = "JetBrainsMono Nerd Font" })
                     } else {
                         # Update existing font object (preserve size/weight)
                         if ($settings.profiles.defaults.font -is [PSCustomObject]) {
                             if (-not $settings.profiles.defaults.font.PSObject.Properties.Match("face")) {
-                                $settings.profiles.defaults.font | Add-Member -MemberType NoteProperty -Name face -Value "UbuntuMono Nerd Font"
+                                $settings.profiles.defaults.font | Add-Member -MemberType NoteProperty -Name face -Value "JetBrainsMono Nerd Font"
                             } else {
-                                $settings.profiles.defaults.font.face = "UbuntuMono Nerd Font"
+                                $settings.profiles.defaults.font.face = "JetBrainsMono Nerd Font"
                             }
                         } elseif ($settings.profiles.defaults.font -is [System.Collections.IDictionary]) {
-                             $settings.profiles.defaults.font["face"] = "UbuntuMono Nerd Font"
+                             $settings.profiles.defaults.font["face"] = "JetBrainsMono Nerd Font"
                         }
                     }
 
                     # 2. Legacy: profiles.defaults.fontFace (older versions)
-                    # Only set if the object structure supports it
                     try {
                         if ($settings.profiles.defaults -is [PSCustomObject]) {
                             if (-not $settings.profiles.defaults.PSObject.Properties.Match("fontFace")) {
-                                $settings.profiles.defaults | Add-Member -MemberType NoteProperty -Name fontFace -Value "UbuntuMono Nerd Font" -Force
+                                $settings.profiles.defaults | Add-Member -MemberType NoteProperty -Name fontFace -Value "JetBrainsMono Nerd Font" -Force
                             } else {
-                                $settings.profiles.defaults.fontFace = "UbuntuMono Nerd Font"
+                                $settings.profiles.defaults.fontFace = "JetBrainsMono Nerd Font"
                             }
-                        } elseif ($settings.profiles.defaults -is [System.Collections.IDictionary]) {
-                            $settings.profiles.defaults["fontFace"] = "UbuntuMono Nerd Font"
+                        } elseif ($settings.profiles.defaults.font -is [System.Collections.IDictionary]) {
+                            $settings.profiles.defaults["fontFace"] = "JetBrainsMono Nerd Font"
                         }
                     } catch {
-                        # Ignore fontFace errors - modern font.face is what matters
                         Write-Log "Legacy fontFace property not supported (using modern font.face instead)" "INFO"
                     }
 
@@ -461,7 +457,6 @@ function Configure-WindowsTerminal {
 
         if (-not $found) {
             Write-Status "Windows Terminal settings file not found" "Warning"
-            Write-Host "Searched in: $env:LOCALAPPDATA\Packages\..." -ForegroundColor Gray
         }
 
     } catch {
@@ -482,18 +477,76 @@ function Configure-PuTTY {
             New-Item -Path $regPath -Force | Out-Null
         }
 
-        Set-ItemProperty -Path $regPath -Name "Font" -Value "UbuntuMono Nerd Font" -Type String
+        Set-ItemProperty -Path $regPath -Name "Font" -Value "JetBrainsMono Nerd Font" -Type String
         Set-ItemProperty -Path $regPath -Name "FontHeight" -Value 12 -Type DWord
         Set-ItemProperty -Path $regPath -Name "FontIsBold" -Value 0 -Type DWord
         
-        # Extra: Ensure ANSI colors are enabled in PuTTY if possible (handled by default usually, but good to check)
-        # Set-ItemProperty -Path $regPath -Name "UseSystemColours" -Value 0 -Type DWord
-
-        Add-Action "Configured PuTTY Default Settings (KeePass compatible)"
+        Add-Action "Configured PuTTY Default Settings"
         Write-Status "PuTTY Default Settings configured" "Success"
     } catch {
         Write-Status "PuTTY configuration failed" "Error"
         Write-Log "PuTTY config error: $_" "ERROR"
+    }
+}
+
+function Symlink-Dotfiles {
+    try {
+        Write-Host "Symlinking dotfiles to User Home..." -ForegroundColor Cyan
+        $dotfilesDir = Get-Location
+        $homeDir = $env:USERPROFILE
+
+        $filesToLink = @(
+            ".bashrc", ".bash_profile", ".bash_aliases", ".bash_exports", 
+            ".bash_functions", ".bash_wrappers", ".tmux.conf", ".gitconfig", 
+            ".inputrc", ".blerc"
+        )
+
+        foreach ($file in $filesToLink) {
+            $source = Join-Path $dotfilesDir $file
+            $target = Join-Path $homeDir $file
+
+            if (Test-Path $source) {
+                if (Test-Path $target) {
+                    Write-Host "Backing up existing $file..." -ForegroundColor Gray
+                    Move-Item $target "$target.bak" -Force -ErrorAction SilentlyContinue
+                }
+                
+                Write-Host "Creating symlink for $file..." -ForegroundColor Cyan
+                New-Item -Path $target -ItemType SymbolLink -Value $source -Force | Out-Null
+            }
+        }
+
+        # Symlink .config directory content
+        $configSource = Join-Path $dotfilesDir ".config"
+        $configTarget = Join-Path $homeDir ".config"
+        
+        if (Test-Path $configSource) {
+            if (-not (Test-Path $configTarget)) {
+                New-Item -Path $configTarget -ItemType Directory -Force | Out-Null
+            }
+            
+            Get-ChildItem $configSource | ForEach-Object {
+                $itemSource = $_.FullName
+                $itemTarget = Join-Path $configTarget $_.Name
+                
+                if (Test-Path $itemTarget) {
+                    Write-Host "Backing up existing config/$($_.Name)..." -ForegroundColor Gray
+                    if (Test-Path $itemTarget -PathType Container) {
+                        Rename-Item $itemTarget "$($_.Name).bak" -ErrorAction SilentlyContinue
+                    } else {
+                        Move-Item $itemTarget "$itemTarget.bak" -Force -ErrorAction SilentlyContinue
+                    }
+                }
+                
+                New-Item -Path $itemTarget -ItemType SymbolLink -Value $itemSource -Force | Out-Null
+            }
+        }
+
+        Add-Action "Symlinked dotfiles to $homeDir"
+        Write-Status "Dotfiles symlinked successfully" "Success"
+    } catch {
+        Write-Status "Symlinking failed" "Error"
+        Write-Log "Symlink error: $_" "ERROR"
     }
 }
 
@@ -559,16 +612,17 @@ function Show-Menu {
     Write-ColorText "║      Nerd Fonts + Terminal Configuration         ║" "Cyan"
     Write-ColorText "╚══════════════════════════════════════════════════╝" "Cyan"
     Write-Host ""
-    Write-ColorText " [1] Install Nerd Fonts only" "Yellow"
+    Write-ColorText " [1] Install JetBrainsMono Nerd Font only" "Yellow"
     Write-ColorText " [2] Configure Windows Terminal only" "Yellow"
     Write-ColorText " [3] Configure PuTTY Default Settings (KeePass!)" "Yellow"
-    Write-ColorText " [4] Full Local Setup (Recommended)" "Green"
-    Write-Host "     (Installs Fonts + Configures WT & PuTTY)" -ForegroundColor Gray
+    Write-ColorText " [4] Full Local Setup (Fonts + WT + PuTTY)" "Green"
+    Write-ColorText " [5] Symlink dotfiles to Windows User Home" "Green"
+    Write-Host "     (Required for Git Bash to see your settings)" -ForegroundColor Gray
     Write-Host ""
-    Write-ColorText " [5] Install dotfiles on remote server (guide)" "Yellow"
-    Write-ColorText " [6] Complete Workflow (Local + Remote)" "Yellow"
-    Write-ColorText " [7] Reset / Remove Configuration" "Yellow"
-    Write-ColorText " [8] Restore from Backup" "Yellow"
+    Write-ColorText " [6] Install dotfiles on remote server (guide)" "Yellow"
+    Write-ColorText " [7] Complete Workflow (Local + Remote + Symlink)" "Yellow"
+    Write-ColorText " [8] Reset / Remove Configuration" "Yellow"
+    Write-ColorText " [9] Restore from Backup" "Yellow"
     Write-ColorText " [0] Exit" "Red"
     Write-Host ""
     Write-Host "Enter choice: " -NoNewline
@@ -591,18 +645,20 @@ function Main {
                     Configure-WindowsTerminal
                     Configure-PuTTY
                 }
-                "5" { Install-RemoteDotfiles }
-                "6" {
+                "5" { Symlink-Dotfiles }
+                "6" { Install-RemoteDotfiles }
+                "7" {
                     Install-NerdFont
                     Configure-WindowsTerminal
                     Configure-PuTTY
+                    Symlink-Dotfiles
                     Install-RemoteDotfiles
                 }
-                "7" {
+                "8" {
                     $confirm = Read-Host "Reset all settings? This will restore from latest backup (y/n)"
                     if ($confirm -match "^[Yy]") { Restore-Settings }
                 }
-                "8" { Restore-Settings }
+                "9" { Restore-Settings }
                 "0" { break }
                 default { Write-Status "Invalid choice" "Warning" }
             }

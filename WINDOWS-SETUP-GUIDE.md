@@ -35,7 +35,7 @@ When you connect to a Linux server from Windows and install these dotfiles, you'
 
 3. **Follow the prompts**:
    ```
-   [1/4] Installing Ubuntu Nerd Font...
+   [1/4] Installing JetBrainsMono Nerd Font...
      → Downloading...
      → Installing...
      ✓ Font installed
@@ -66,7 +66,7 @@ When you connect to a Linux server from Windows and install these dotfiles, you'
 
 #### Step 1: Install Font
 
-1. Download [UbuntuMono Nerd Font](https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuMono.zip)
+1. Download [JetBrainsMono Nerd Font](https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip)
 2. Extract the ZIP file
 3. Select all `.ttf` files
 4. Right-click → **Install for all users**
@@ -78,7 +78,7 @@ When you connect to a Linux server from Windows and install these dotfiles, you'
 2. Press `Ctrl + ,` (opens Settings)
 3. Click **"Profiles"** → **"Defaults"**
 4. Scroll to **"Appearance"**
-5. Change **"Font face"** to: `UbuntuMono Nerd Font`
+5. Change **"Font face"** to: `JetBrainsMono Nerd Font`
 6. Set **"Font size"** to: `11`
 7. Click **"Save"**
 8. Restart Windows Terminal
@@ -88,7 +88,7 @@ When you connect to a Linux server from Windows and install these dotfiles, you'
 1. Open **PuTTY**
 2. In the left panel: **Window** → **Appearance**
 3. Click **"Change"** button next to Font settings
-4. Select **"UbuntuMono Nerd Font"**
+4. Select **"JetBrainsMono Nerd Font"**
 5. Set size to **11**
 6. Click **OK**
 7. Go back to **Session** in left panel
@@ -116,8 +116,8 @@ When you connect to a Linux server from Windows and install these dotfiles, you'
 
 **Check font installation:**
 1. Open Windows **Font Settings**
-2. Search for "Ubuntu"
-3. You should see "UbuntuMono Nerd Font" and variants
+2. Search for "JetBrains"
+3. You should see "JetBrainsMono Nerd Font" and variants
 
 **Check terminal settings:**
 - Windows Terminal: `Ctrl + ,` → Profiles → Defaults → Appearance → Font face
@@ -178,21 +178,21 @@ Just load, change host, save as new session!
 ## What Gets Installed (Windows Side)
 
 ### Fonts
-- UbuntuMono Nerd Font Regular
-- UbuntuMono Nerd Font Bold
-- UbuntuMono Nerd Font Italic
-- UbuntuMono Nerd Font Bold Italic
+- JetBrainsMono Nerd Font Regular
+- JetBrainsMono Nerd Font Bold
+- JetBrainsMono Nerd Font Italic
+- JetBrainsMono Nerd Font Bold Italic
 
 ### Terminal Configurations
 
 **Windows Terminal:**
-- Default font → UbuntuMono Nerd Font
+- Default font → JetBrainsMono Nerd Font
 - Font size → 11
 - Automatically applied to all profiles
 
 **PuTTY:**
 - Template session: "Dotfiles-Template"
-- Font: UbuntuMono Nerd Font, size 11
+- Font: JetBrainsMono Nerd Font, size 11
 - UTF-8 encoding enabled
 - OSC 52 clipboard support enabled
 - Terminal type: xterm-256color
@@ -240,7 +240,7 @@ Just load, change host, save as new session!
 ├─────────────────────────────────────────────┤
 │  Manual Font:                               │
 │  github.com/ryanoasis/nerd-fonts/releases  │
-│  → UbuntuMono.zip                           │
+│  → JetBrainsMono.zip                        │
 ├─────────────────────────────────────────────┤
 │  Need help? Check WINDOWS-SETUP-GUIDE.md   │
 └─────────────────────────────────────────────┘

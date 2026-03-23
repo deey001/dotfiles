@@ -63,7 +63,7 @@ A streamlined, modern dotfiles configuration designed for headless servers (Linu
 ### 🎨 Theming
 - **Starship**: Tokyo Night color scheme with custom icons and formatting
 - **Bat**: Visual Studio Dark+ theme for syntax highlighting
-- **Nerd Fonts**: Ubuntu Nerd Font for icon support
+- **Nerd Fonts**: JetBrainsMono Nerd Font for icon support
 
 ### 🔧 Cross-Platform Compatibility
 - **Distribution Detection**: Automatically detects OS and uses appropriate commands (`bat` vs `batcat`, etc.)
@@ -126,7 +126,7 @@ This script does everything for you: calls the font police, installs the correct
 | :--- | :--- |
 | **"Script is disabled" error** | Run this command first: `Set-ExecutionPolicy Bypass -Scope Process` |
 | **"Could not create SSL/TLS channel"** | You are on an old Windows. The new script fixes this automatically! Try running the command again. |
-| **Icons are still broken squares** | 1. Did you restart the terminal? <br> 2. Open PuTTY -> Window -> Appearance -> Check if "Font" is "UbuntuMono Nerd Font". |
+| **Icons are still broken squares** | 1. Did you restart the terminal? <br> 2. Open PuTTY -> Window -> Appearance -> Check if "Font" is "JetBrainsMono Nerd Font". |
 | **Permission Denied** | Use **Run as Administrator**. The font needs to go into the system folder. |
 
 ### Quick Install (Server-Side)
@@ -163,7 +163,7 @@ Run `./uninstall.sh` to perform a comprehensive cleanup, which supports a full *
 
 - **Remove Symlinks**: Cleans up all dotfile symlinks (`.bashrc`, `.config/*`, etc.).
 - **Remove Configurations**: Deletes config directories for `nvim`, `alacritty`, `bat`, `fastfetch`, and `base16-shell`.
-- **Remove Tools**: Deletes `ble.sh` and `Ubuntu Nerd Font`.
+- **Remove Tools**: Deletes `ble.sh` and `JetBrainsMono Nerd Font`.
 - **Remove SSH Key**: Safely removes the specific SSH key added by the installer from `~/.ssh/authorized_keys`.
 - **Interactive Package Removal**: Asks if you want to uninstall system packages (neovim, tmux, starship, etc.) to restore the system to its original state.
 
@@ -658,7 +658,7 @@ If the `y` key copy method fails (e.g., text copies inside tmux but doesn't reac
     *   If this script fails to copy text to your local clipboard, the issue is **Client-Side (Your Terminal)**, not the server setup.
 
 ### 📶 Network Icons Missing
-- Ensure you have installed a **Nerd Font** (e.g., Ubuntu Nerd Font) on your **local machine** (Windows/Mac) and set it as the terminal font.
+- Ensure you have installed a **Nerd Font** (e.g., JetBrainsMono Nerd Font) on your **local machine** (Windows/Mac) and set it as the terminal font.
 - The server installs the font for Linux desktop usage, but your Putty/Terminal needs the font installed locally to render icons.
 
 ## SSH Key Installation
@@ -675,7 +675,7 @@ All modern CLI tools are installed automatically by [install.sh](install.sh) wit
 #### macOS (Homebrew)
 - **Package Manager**: Uses [Brewfile](Brewfile) for declarative package management
 - **Tools**: All modern tools available via `brew install`
-- **Fonts**: Ubuntu Nerd Font via `brew install --cask font-ubuntu-nerd-font`
+- **Fonts**: JetBrainsMono Nerd Font via `brew install --cask font-jetbrains-mono-nerd-font`
 
 #### Debian/Ubuntu (apt)
 - **Core Tools**: Installed from official repositories (`ripgrep`, `fd-find`, `duf`)
@@ -683,7 +683,7 @@ All modern CLI tools are installed automatically by [install.sh](install.sh) wit
   - `zoxide` - From official install script
   - `eza` - Latest x86_64 Linux tarball
   - `dust` - Latest x86_64 musl tarball
-- **Font Fix**: Ubuntu Nerd Font downloaded as `.zip` and extracted to `~/.local/share/fonts/Ubuntu/`
+- **Font Fix**: JetBrainsMono Nerd Font downloaded as `.zip` and extracted to `~/.local/share/fonts/JetBrainsMono/`
 - **fd Symlink**: `fdfind` → `~/.local/bin/fd` (added to PATH in [.bash_exports:5](.bash_exports#L5))
 
 #### RHEL/CentOS/Fedora (dnf/yum)
@@ -731,7 +731,7 @@ export PATH="$PATH:$HOME/bin:$HOME/.local/bin"
 
 - **bat theme**: Set to "Visual Studio Dark+" in [.bash_exports:42](.bash_exports#L42)
 - **Starship theme**: Tokyo Night colors in [.config/starship.toml](.config/starship.toml)
-- **Nerd Font**: Ubuntu Nerd Font for icons (installed on all platforms)
+- **Nerd Font**: JetBrainsMono Nerd Font for icons (installed on all platforms)
 
 ### Auto-listing on `cd`
 

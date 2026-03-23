@@ -37,12 +37,12 @@ irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | ie
 ═══ INSTALLATION OPTIONS ═══
 
 [1] Install Nerd Fonts (Required for icons)
-    → Downloads UbuntuMono Nerd Font from GitHub
+    → Downloads JetBrainsMono Nerd Font from GitHub
     → Installs to Windows for all users
     → Enables icon rendering in terminals
 
 [2] Configure Windows Terminal
-    → Sets default font to UbuntuMono Nerd Font
+    → Sets default font to JetBrainsMono Nerd Font
     → Applies to all profiles automatically
 
 [3] Configure PuTTY Default Settings
@@ -76,27 +76,27 @@ Select an option: 4
 
 ═══ Installing Nerd Fonts ═══
 
-[→] Downloading UbuntuMono Nerd Font...
+[→] Downloading JetBrainsMono Nerd Font...
 [→] Extracting fonts...
 [→] Installing fonts to system...
-    Installing: UbuntuMono NF Regular.ttf
-    Installing: UbuntuMono NF Bold.ttf
-    Installing: UbuntuMono NF Italic.ttf
-    Installing: UbuntuMono NF Bold Italic.ttf
+    Installing: JetBrainsMono NF Regular.ttf
+    Installing: JetBrainsMono NF Bold.ttf
+    Installing: JetBrainsMono NF Italic.ttf
+    Installing: JetBrainsMono NF Bold Italic.ttf
 [✓] Nerd Fonts installed successfully
 
 ═══ Configuring Windows Terminal ═══
 
 [→] Updating settings.json...
 [✓] Windows Terminal configured
-[i] Font: UbuntuMono Nerd Font, Size: 11
+[i] Font: JetBrainsMono Nerd Font, Size: 11
 [i] Restart Windows Terminal to apply changes
 
 ═══ Configuring PuTTY Default Settings ═══
 
 [→] Modifying PuTTY Default Settings...
 [✓] PuTTY Default Settings configured
-[i] Font: UbuntuMono Nerd Font, Size: 11
+[i] Font: JetBrainsMono Nerd Font, Size: 11
 [i] UTF-8: Enabled | OSC 52: Enabled | Terminal: xterm-256color
 [i] All connections (including from KeePass) will inherit these settings
 
@@ -366,7 +366,7 @@ irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | ie
 **Check:**
 1. Did you run option [3] to configure PuTTY?
 2. Registry path: `HKCU:\Software\SimonTatham\PuTTY\Sessions\Default%20Settings`
-3. Verify "Font" = "UbuntuMono Nerd Font"
+3. Verify "Font" = "JetBrainsMono Nerd Font"
 
 ### "KeePass connections still use old font"
 

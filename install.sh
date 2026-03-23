@@ -114,7 +114,7 @@ if [ "$OS" = "Darwin" ]; then
         else
             echo "Warning: Brewfile not found. Installing packages individually..."
             brew install tmux git fzf neovim starship hstr bat eza ripgrep fd zoxide fastfetch cmatrix btop lazygit glow tldr dust duf procs bottom
-            brew install --cask font-ubuntu-nerd-font
+            brew install --cask font-jetbrains-mono-nerd-font
         fi
     else
         echo "Skipping Homebrew packages (Offline Mode)"
@@ -299,13 +299,13 @@ elif [ "$OS" = "Linux" ]; then
     # Only install fonts if online, otherwise assume they are pre-bundled or installed manually
     if [ "$IS_ONLINE" = true ]; then
         FONT_DIR="$HOME/.local/share/fonts"
-        if [ ! -d "$FONT_DIR/Ubuntu" ]; then
-            echo "Installing Ubuntu Nerd Font..."
+        if [ ! -d "$FONT_DIR/JetBrainsMono" ]; then
+            echo "Installing JetBrainsMono Nerd Font..."
             mkdir -p "$FONT_DIR"
             cd "$FONT_DIR"
-            curl -fLo Ubuntu.zip https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Ubuntu.zip
-            unzip -q -o Ubuntu.zip -d Ubuntu
-            rm Ubuntu.zip
+            curl -fLo JetBrainsMono.zip https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip
+            unzip -q -o JetBrainsMono.zip -d JetBrainsMono
+            rm JetBrainsMono.zip
             cd - > /dev/null
             if command -v fc-cache >/dev/null 2>&1; then
                 fc-cache -f -v

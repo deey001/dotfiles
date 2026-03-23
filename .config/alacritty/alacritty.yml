@@ -61,8 +61,8 @@ key_bindings:
 scrolling:
   history: 10000
 
-# Shell (uses your Bash setup)
-shell:
-  program: /bin/bash
-  args:
-    - --login
+# Shell (Defaults to system shell for portability)
+# shell:
+#   program: /bin/bash
+#   args:
+#     - --login
