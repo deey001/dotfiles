@@ -14,6 +14,9 @@ rm -f "$HOME/.bash_wrappers"
 rm -f "$HOME/.blerc"
 rm -f "$HOME/.bashrc"
 rm -f "$HOME/.tmux.conf"
+rm -f "$HOME/.gitconfig"
+rm -f "$HOME/.inputrc"
+rm -f "$HOME/.ssh/config"
 rm -f "$HOME/.config/starship.toml"
 rm -f "$HOME/.config/nvim/init.lua"
 rm -f "$HOME/.config/alacritty/alacritty.yml"
@@ -65,20 +68,24 @@ read -p "Do you want to remove installed packages (neovim, tmux, starship, etc)?
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     if [ "$(uname)" = "Darwin" ]; then
-        brew uninstall tmux git fzf neovim starship hstr bat eza fastfetch cmatrix btop lazygit glow tldr
+        brew uninstall tmux git fzf neovim starship hstr bat eza fastfetch cmatrix btop lazygit glow tldr ripgrep fd dust duf zoxide
     elif [ -f /etc/debian_version ]; then
-        sudo apt remove -y tmux fzf hstr bat cmatrix btop tldr fastfetch lazygit glow
+        sudo apt remove -y tmux fzf hstr bat cmatrix btop tldr fastfetch lazygit glow ripgrep fd-find duf zoxide
         # Remove manual neovim install
         sudo rm -f /usr/local/bin/nvim
         sudo rm -rf /usr/local/nvim-linux-x86_64
+        # Remove manual binary installs
+        sudo rm -f /usr/local/bin/eza /usr/local/bin/dust
     elif [ -f /etc/redhat-release ]; then
          if command -v dnf > /dev/null 2>&1; then
-            sudo dnf remove -y git tmux fzf neovim hstr bat fastfetch cmatrix btop lazygit glow tldr
+            sudo dnf remove -y git tmux fzf neovim hstr bat fastfetch cmatrix btop lazygit glow tldr ripgrep fd-find unzip duf zoxide
         else
-            sudo yum remove -y git tmux fzf neovim hstr bat fastfetch cmatrix btop lazygit glow tldr
+            sudo yum remove -y git tmux fzf neovim hstr bat fastfetch cmatrix btop lazygit glow tldr ripgrep fd-find unzip duf zoxide
         fi
+        # Remove manual binary installs
+        sudo rm -f /usr/local/bin/eza /usr/local/bin/dust
     elif [ -f /etc/arch-release ]; then
-        sudo pacman -Rns --noconfirm git tmux fzf neovim hstr bat eza fastfetch cmatrix btop lazygit glow tldr
+        sudo pacman -Rns --noconfirm base-devel git tmux fzf neovim hstr bat eza fastfetch cmatrix btop lazygit glow tldr ripgrep fd dust duf zoxide unzip
     fi
 
     # Uninstall Starship binary
@@ -86,6 +93,13 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo "Removing Starship binary..."
         sudo rm -f "$(command -v starship)"
     fi
+fi
+
+# Remove dotfiles directory itself (optional)
+read -p "Do you want to remove the $DOTFILES_DIR directory? [y/N] " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    rm -rf "$DOTFILES_DIR"
 fi
 
 echo "Uninstall complete. A system restart is recommended."
