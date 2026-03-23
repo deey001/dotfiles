@@ -21,6 +21,7 @@ rm -f "$HOME/.ssh/config"
 rm -f "$HOME/.config/starship.toml"
 rm -f "$HOME/.config/nvim/init.lua"
 rm -f "$HOME/.config/alacritty/alacritty.yml"
+rm -f "$HOME/.config/alacritty/alacritty.toml"
 
 # Remove configurations
 rm -rf "$HOME/.config/alacritty"
@@ -103,8 +104,6 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     rm -rf "$DOTFILES_DIR"
 fi
 
-echo "Uninstall complete. A system restart is recommended."
-
-# Reload the shell to apply changes
-echo "Reloading shell..."
-exec $SHELL -l
+echo "UNINSTALL COMPLETE."
+echo "Please RESTART your terminal to revert all changes."
+echo "=============================================================================="

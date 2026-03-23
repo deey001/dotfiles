@@ -38,8 +38,10 @@ if [ -z "${BASH_SOURCE[0]:-}" ]; then
     TARGET_DIR="$HOME/dotfiles"
     
     if [ -d "$TARGET_DIR" ]; then
-        echo "Target directory $TARGET_DIR already exists. Updating..."
-        cd "$TARGET_DIR" && git pull
+        echo "Target directory $TARGET_DIR already exists. Syncing with remote..."
+        cd "$TARGET_DIR"
+        git fetch --all
+        git reset --hard origin/master
     else
         echo "Cloning repository to $TARGET_DIR..."
         git clone "$REPO_URL" "$TARGET_DIR"
@@ -438,6 +440,7 @@ ln -sf "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
 # Alacritty Setup
 mkdir -p "$HOME/.config/alacritty"
 ln -sf "$DOTFILES_DIR/.config/alacritty/alacritty.yml" "$HOME/.config/alacritty/alacritty.yml"
+ln -sf "$DOTFILES_DIR/.config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml"
 
 # Symlink Tmux Config & Scripts
 # This puts the scripts in ~/.config/tmux/scripts/ which is cleaner than ~/.local/bin
@@ -524,6 +527,11 @@ if [ "$IS_ONLINE" = false ]; then
 fi
 echo "=============================================================================="
 
-# Reload the shell to apply changes immediately
-echo "Reloading shell..."
-exec $SHELL -l
+echo "INSTALLATION COMPLETE!"
+echo ""
+echo "To apply changes immediately, please RESTART your terminal or run:"
+echo "  source ~/.bashrc  (if using Bash)"
+echo "  source ~/.zshrc   (if using Zsh)"
+echo ""
+echo "If icons are not showing, ensure your Terminal is set to use 'JetBrainsMono Nerd Font'."
+echo "=============================================================================="

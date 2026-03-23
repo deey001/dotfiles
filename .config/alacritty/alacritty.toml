@@ -1,0 +1,60 @@
+# Alacritty configuration for riced terminal (TOML format for 0.13+)
+# See https://alacritty.org/config-alacritty.toml for full options
+
+[window]
+opacity = 0.95
+decorations = "none"
+
+[window.padding]
+x = 10
+y = 10
+
+[font]
+size = 12.0
+
+[font.normal]
+family = "JetBrainsMono Nerd Font"
+style = "Regular"
+
+[font.bold]
+family = "JetBrainsMono Nerd Font"
+style = "Bold"
+
+[font.italic]
+family = "JetBrainsMono Nerd Font"
+style = "Italic"
+
+[font.bold_italic]
+family = "JetBrainsMono Nerd Font"
+style = "Bold Italic"
+
+[colors.primary]
+background = "0x181818"
+foreground = "0xd8d8d8"
+
+[colors.cursor]
+text = "0x181818"
+cursor = "0xd8d8d8"
+
+[colors.normal]
+black = "0x181818"
+red = "0xab4642"
+green = "0xa1b56c"
+yellow = "0xf7ca88"
+blue = "0x7cafc2"
+magenta = "0xba8baf"
+cyan = "0x86c1b9"
+white = "0xd8d8d8"
+
+[colors.bright]
+black = "0x585858"
+red = "0xab4642"
+green = "0xa1b56c"
+yellow = "0xf7ca88"
+blue = "0x7cafc2"
+magenta = "0xba8baf"
+cyan = "0x86c1b9"
+white = "0xf8f8f8"
+
+[scrolling]
+history = 10000
