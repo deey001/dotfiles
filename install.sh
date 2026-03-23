@@ -375,7 +375,11 @@ fi
 # ble.sh (Bash Line Editor) - Highlighting and Auto-suggestions
 if [ "$IS_ONLINE" = true ] && [ ! -d "$HOME/.local/share/blesh/ble.sh" ]; then
     echo "Installing ble.sh (Bash Line Editor)..."
+    # Remove existing ble.sh dir if it exists from a failed attempt
+    rm -rf ble.sh
     git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git
+    # On macOS, brew installs gawk to /opt/homebrew/bin/gawk usually.
+    # We ensure it's in the path for the build.
     make -C ble.sh install PREFIX=~/.local
     rm -rf ble.sh
 fi
@@ -383,12 +387,15 @@ fi
 # Base16 Shell - Color Themes
 if [ "$IS_ONLINE" = true ] && [ ! -d "$HOME/.config/base16-shell" ]; then
     echo "Cloning base16-shell for color themes..."
+    rm -rf "$HOME/.config/base16-shell"
     git clone https://github.com/chriskempson/base16-shell.git ~/.config/base16-shell
 fi
 
 # Tmux Plugin Manager (TPM)
 if [ "$IS_ONLINE" = true ] && [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
     echo "Cloning Tmux Plugin Manager..."
+    rm -rf "$HOME/.tmux/plugins/tpm"
+    mkdir -p "$HOME/.tmux/plugins"
     git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 fi
 
