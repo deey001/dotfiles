@@ -104,3 +104,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 echo "Uninstall complete. A system restart is recommended."
+
+# Reload the shell to apply changes
+echo "Reloading shell..."
+exec $SHELL -l

@@ -523,3 +523,7 @@ if [ "$IS_ONLINE" = false ]; then
     echo "Warning: Installation completed in OFFLINE mode. Some tools/fonts may be missing."
 fi
 echo "=============================================================================="
+
+# Reload the shell to apply changes immediately
+echo "Reloading shell..."
+exec $SHELL -l
