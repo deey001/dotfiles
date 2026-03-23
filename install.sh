@@ -308,7 +308,17 @@ elif [ "$OS" = "Linux" ]; then
         if [ "$IS_ONLINE" = true ]; then
             # Arch has most modern tools in official repos or AUR
             # base-devel provides compilers (gcc, make, etc) for Treesitter
-            sudo pacman -Syu --noconfirm base-devel git tmux fzf neovim hstr bat eza fastfetch cmatrix btop lazygit glow tldr ripgrep fd dust duf zoxide unzip
+            sudo pacman -Syu --noconfirm base-devel git tmux fzf neovim eza fastfetch btop ripgrep fd dust duf zoxide unzip
+            
+            # These might be in AUR or newly moved to extra, so try them separately
+            echo "Attempting to install optional modern tools (hstr, lazygit, glow, tldr, etc)..."
+            OPTIONAL_TOOLS=(hstr lazygit glow tldr)
+            for tool in "${OPTIONAL_TOOLS[@]}"; do
+                if ! command -v "$tool" >/dev/null 2>&1; then
+                    echo "Installing $tool..."
+                    sudo pacman -S --noconfirm "$tool" || echo "Warning: $tool not found in official repositories. You may need an AUR helper (yay/paru) to install it."
+                fi
+            done
         else
             echo "Offline Mode: Updating skipped."
         fi
