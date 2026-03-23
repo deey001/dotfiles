@@ -111,6 +111,9 @@ brew "tldr"
 # Jq - Command-line JSON processor
 brew "jq"
 
+# Gawk - Required for ble.sh build
+brew "gawk"
+
 # GCC & Make - Required for Neovim Treesitter parsers
 brew "gcc"
 brew "make"
