@@ -30,6 +30,25 @@ GLOW_VERSION="latest"      # Fetched dynamically from GitHub API
 # Configuration Definitions
 # ------------------------------------------------------------------------------
 
+# Bootstrap: If run via curl | bash, BASH_SOURCE[0] is unbound.
+# We need to clone the repo first because this script relies on local files for symlinking.
+if [ -z "${BASH_SOURCE[0]:-}" ]; then
+    echo "Running in one-liner mode (piped). Bootstrapping repository..."
+    REPO_URL="https://github.com/deey001/dotfiles.git"
+    TARGET_DIR="$HOME/dotfiles"
+    
+    if [ -d "$TARGET_DIR" ]; then
+        echo "Target directory $TARGET_DIR already exists. Updating..."
+        cd "$TARGET_DIR" && git pull
+    else
+        echo "Cloning repository to $TARGET_DIR..."
+        git clone "$REPO_URL" "$TARGET_DIR"
+        cd "$TARGET_DIR"
+    fi
+    # Relaunch the script from the cloned directory to ensure all paths are correct
+    exec bash "$TARGET_DIR/install.sh" "$@"
+fi
+
 # Set the directory where the dotfiles are located (absolute path)
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "Dotfiles directory detected at: $DOTFILES_DIR"
