@@ -1,161 +1,84 @@
+# Starship configuration - Cross-terminal compatible version
+# Optimized for Terminal.app, iTerm2, and Alacritty
+
 format = """
-[](#3B4252)\
+[](fg:238)\
 $os\
 $username\
 $hostname\
-[](bg:#434C5E fg:#3B4252)\
+[](fg:238 bg:240)\
 $directory\
-[](fg:#434C5E bg:#4C566A)\
+[](fg:240 bg:235)\
 $git_branch\
 $git_status\
-[](fg:#4C566A bg:#86BBD8)\
+[](fg:235 bg:33)\
 $c\
-$elixir\
-$elm\
-$golang\
-$haskell\
-$java\
-$julia\
 $nodejs\
-$nim\
 $rust\
-[](fg:#86BBD8 bg:#06969A)\
 $docker_context\
-[](fg:#06969A bg:#33658A)\
+[](fg:33 bg:237)\
 $time\
-[ ](fg:#33658A)\
+[ ](fg:237)\
 """
-command_timeout = 5000
-# Disable the blank line at the start of the prompt
-# add_newline = false
 
-# You can also replace your username with a neat symbol like  to save some space
+command_timeout = 5000
+
 [username]
 show_always = true
-style_user = "bg:#3B4252"
-style_root = "bg:#3B4252 fg:#BF616A"
+style_user = "bg:238 fg:250"
+style_root = "bg:238 fg:160"
 format = '[$user]($style)'
 
 [hostname]
 ssh_only = false
-style = "bg:#3B4252"
+style = "bg:238 fg:250"
 format = '[@$hostname ]($style)'
 
 [os]
 disabled = false
-style = "bg:#3B4252 fg:#ffffff"
+style = "bg:238 fg:255"
 format = '[$symbol]($style)'
 
 [os.symbols]
 Windows = "󰍲 "
-Ubuntu = "\uf31b "
-Debian = "\uf306 "
-Raspbian = "\uf315 "
-Mint = "󰣭 "
-Macos = "\uf179 "
-Manjaro = "\uf312 "
-Linux = "\uf17c "
-Gentoo = "󰣨 "
-Fedora = "\uf30a "
-Alpine = "\uf300 "
-Amazon = "\uf270 "
-Android = "\uf17b "
-Arch = "\uf303 "
-Artix = "\uf31f "
-CentOS = "\uf304 "
-NixOS = "\uf313 "
-Redhat = "󱄛 "
-SUSE = "\uf314 "
+Ubuntu = " "
+Debian = " "
+Macos = " "
+Arch = " "
+Linux = " "
+
 [directory]
-style = "bg:#434C5E"
+style = "bg:240 fg:255"
 format = "[ $path ]($style)"
 truncation_length = 3
 truncation_symbol = "…/"
 
-# Here is how you can shorten some long paths by text replacement
-# similar to mapped_locations in Oh My Posh:
-[directory.substitutions]
-"Documents" = "󰈙 "
-"Downloads" = " "
-"Music" = " "
-"Pictures" = " "
-# Keep in mind that the order matters. For example:
-# "Important Documents" = "  "
-# will not be replaced, because "Documents" was already substituted before.
-# So either put "Important Documents" before "Documents" or use the substituted version:
-# "Important  " = "  "
-
-[c]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
-[docker_context]
-symbol = " "
-style = "bg:#06969A"
-format = '[ $symbol $context ]($style)$path'
-
-[elixir]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
-[elm]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
 [git_branch]
 symbol = " "
-style = "bg:#4C566A"
+style = "bg:235 fg:255"
 format = '[ $symbol$branch ]($style)'
 
 [git_status]
-style = "bg:#4C566A"
+style = "bg:235 fg:255"
 format = '[$all_status$ahead_behind ]($style)'
 
-[golang]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
-[haskell]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
-[java]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
-[julia]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
+[c]
+symbol = " "
+style = "bg:33 fg:255"
+format = '[ $symbol ]($style)'
 
 [nodejs]
 symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
-[nim]
-symbol = "󰆥 "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
-[python]
-symbol = " "
-style = "bg:#3B4252"
-format = '[ $symbol(\($virtualenv\) )]($style)'
+style = "bg:33 fg:255"
+format = '[ $symbol ]($style)'
 
 [rust]
 symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
+style = "bg:33 fg:255"
+format = '[ $symbol ]($style)'
 
 [time]
 disabled = false
-time_format = "%R" # Hour:Minute Format
-style = "bg:#33658A"
+time_format = "%R"
+style = "bg:237 fg:255"
 format = '[ $time ]($style)'
