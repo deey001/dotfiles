@@ -111,6 +111,10 @@ brew "tldr"
 # Jq - Command-line JSON processor
 brew "jq"
 
+# GCC & Make - Required for Neovim Treesitter parsers
+brew "gcc"
+brew "make"
+
 # ------------------------------------------------------------------------------
 # Fun Stuff
 # ------------------------------------------------------------------------------

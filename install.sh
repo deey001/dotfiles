@@ -236,8 +236,8 @@ elif [ "$OS" = "Linux" ]; then
                 sudo $PKG_MANAGER install -y epel-release
             fi
 
-            # Core tools (most available in EPEL or standard repos)
-            sudo $PKG_MANAGER install -y git tmux fzf neovim hstr bat fastfetch cmatrix btop lazygit glow tldr ripgrep fd-find unzip
+            # Core tools + Build tools for Treesitter
+            sudo $PKG_MANAGER install -y git tmux fzf neovim hstr bat fastfetch cmatrix btop lazygit glow tldr ripgrep fd-find unzip gcc gcc-c++ make
 
             # Modern tools that may need manual installation
             # zoxide
@@ -287,7 +287,8 @@ elif [ "$OS" = "Linux" ]; then
         echo "Installing tools via pacman..."
         if [ "$IS_ONLINE" = true ]; then
             # Arch has most modern tools in official repos or AUR
-            sudo pacman -Syu --noconfirm git tmux fzf neovim hstr bat eza fastfetch cmatrix btop lazygit glow tldr ripgrep fd dust duf zoxide unzip
+            # base-devel provides compilers (gcc, make, etc) for Treesitter
+            sudo pacman -Syu --noconfirm base-devel git tmux fzf neovim hstr bat eza fastfetch cmatrix btop lazygit glow tldr ripgrep fd dust duf zoxide unzip
         else
             echo "Offline Mode: Updating skipped."
         fi
@@ -409,8 +410,10 @@ echo "Neovim configured with LazyVim. Plugins will auto-install on first run (In
 
 # Run Neovim health check if online
 if [ "$IS_ONLINE" = true ] && command -v nvim >/dev/null 2>&1; then
-    echo "Running Neovim health check..."
-    nvim --headless "+checkhealth" +qa 2>/dev/null || echo "Health check completed (check output for any warnings)"
+    echo "Syncing Neovim plugins (Internet required)..."
+    # --headless "+Lazy! sync" +qa
+    # Using 'sync' instead of 'checkhealth' to pre-install everything
+    nvim --headless "+Lazy! sync" +qa 2>/dev/null || echo "Plugin sync completed."
 fi
 
 # Fastfetch Config

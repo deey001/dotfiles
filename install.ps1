@@ -489,6 +489,32 @@ function Configure-PuTTY {
     }
 }
 
+function Install-CoreTools {
+    try {
+        Write-Host "Installing Core Developer Tools via Winget..." -ForegroundColor Cyan
+        
+        $tools = @(
+            "Neovim.Neovim",
+            "Git.Git",
+            "BurntSushi.Ripgrep",
+            "sharkdp.fd",
+            "starship.starship",
+            "eza-community.eza"
+        )
+
+        foreach ($tool in $tools) {
+            Write-Status "Installing $tool..." "Progress"
+            winget install --id $tool --silent --accept-package-agreements --accept-source-agreements | Out-Null
+        }
+
+        Add-Action "Installed Core Tools: $($tools -join ', ')"
+        Write-Status "Core Tools installed successfully" "Success"
+    } catch {
+        Write-Status "Core Tools installation failed" "Error"
+        Write-Log "Winget install error: $_" "ERROR"
+    }
+}
+
 function Symlink-Dotfiles {
     try {
         Write-Host "Symlinking dotfiles to User Home..." -ForegroundColor Cyan
@@ -615,14 +641,16 @@ function Show-Menu {
     Write-ColorText " [1] Install JetBrainsMono Nerd Font only" "Yellow"
     Write-ColorText " [2] Configure Windows Terminal only" "Yellow"
     Write-ColorText " [3] Configure PuTTY Default Settings (KeePass!)" "Yellow"
-    Write-ColorText " [4] Full Local Setup (Fonts + WT + PuTTY)" "Green"
-    Write-ColorText " [5] Symlink dotfiles to Windows User Home" "Green"
+    Write-ColorText " [4] Install Core Developer Tools (Neovim, Git, etc)" "Yellow"
+    Write-Host "     (Uses Winget to install essential CLI tools)" -ForegroundColor Gray
+    Write-ColorText " [5] Full Local Setup (Fonts + WT + Tools + PuTTY)" "Green"
+    Write-ColorText " [6] Symlink dotfiles to Windows User Home" "Green"
     Write-Host "     (Required for Git Bash to see your settings)" -ForegroundColor Gray
     Write-Host ""
-    Write-ColorText " [6] Install dotfiles on remote server (guide)" "Yellow"
-    Write-ColorText " [7] Complete Workflow (Local + Remote + Symlink)" "Yellow"
-    Write-ColorText " [8] Reset / Remove Configuration" "Yellow"
-    Write-ColorText " [9] Restore from Backup" "Yellow"
+    Write-ColorText " [7] Install dotfiles on remote server (guide)" "Yellow"
+    Write-ColorText " [8] Complete Workflow (Local + Remote + Symlink)" "Yellow"
+    Write-ColorText " [9] Reset / Remove Configuration" "Yellow"
+    Write-ColorText " [10] Restore from Backup" "Yellow"
     Write-ColorText " [0] Exit" "Red"
     Write-Host ""
     Write-Host "Enter choice: " -NoNewline
@@ -640,25 +668,28 @@ function Main {
                 "1" { Install-NerdFont }
                 "2" { Configure-WindowsTerminal }
                 "3" { Configure-PuTTY }
-                "4" {
+                "4" { Install-CoreTools }
+                "5" {
                     Install-NerdFont
                     Configure-WindowsTerminal
                     Configure-PuTTY
+                    Install-CoreTools
                 }
-                "5" { Symlink-Dotfiles }
-                "6" { Install-RemoteDotfiles }
-                "7" {
+                "6" { Symlink-Dotfiles }
+                "7" { Install-RemoteDotfiles }
+                "8" {
                     Install-NerdFont
                     Configure-WindowsTerminal
                     Configure-PuTTY
+                    Install-CoreTools
                     Symlink-Dotfiles
                     Install-RemoteDotfiles
                 }
-                "8" {
+                "9" {
                     $confirm = Read-Host "Reset all settings? This will restore from latest backup (y/n)"
                     if ($confirm -match "^[Yy]") { Restore-Settings }
                 }
-                "9" { Restore-Settings }
+                "10" { Restore-Settings }
                 "0" { break }
                 default { Write-Status "Invalid choice" "Warning" }
             }
