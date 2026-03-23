@@ -1,8 +1,16 @@
 # Headless Server Dotfiles
 
 ### ⚡ Quick Install
-- **Any Linux/Mac:** `curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/install.sh | bash`
-- **Windows:** `irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | iex`
+
+**Any Linux/Mac:**
+```bash
+curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/install.sh | bash
+```
+
+**Windows:**
+```powershell
+irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | iex
+```
 
 A streamlined, modern dotfiles configuration designed for headless servers (Linux/macOS/Windows). Optimized for performance, ease of use, and remote development.
 
