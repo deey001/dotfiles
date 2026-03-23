@@ -313,10 +313,19 @@ elif [ "$OS" = "Linux" ]; then
             # These might be in AUR or newly moved to extra, so try them separately
             echo "Attempting to install optional modern tools (hstr, lazygit, glow, tldr, etc)..."
             OPTIONAL_TOOLS=(hstr lazygit glow tldr)
+            
+            # Detect AUR helper
+            AUR_HELPER=""
+            if command -v yay >/dev/null 2>&1; then AUR_HELPER="yay"; elif command -v paru >/dev/null 2>&1; then AUR_HELPER="paru"; fi
+
             for tool in "${OPTIONAL_TOOLS[@]}"; do
                 if ! command -v "$tool" >/dev/null 2>&1; then
                     echo "Installing $tool..."
-                    sudo pacman -S --noconfirm "$tool" || echo "Warning: $tool not found in official repositories. You may need an AUR helper (yay/paru) to install it."
+                    if [ -n "$AUR_HELPER" ]; then
+                        $AUR_HELPER -S --noconfirm "$tool"
+                    else
+                        sudo pacman -S --noconfirm "$tool" || echo "Warning: $tool not found in official repositories and no AUR helper (yay/paru) detected."
+                    fi
                 fi
             done
         else
