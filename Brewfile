@@ -118,6 +118,10 @@ brew "gawk"
 brew "gcc"
 brew "make"
 
+# Zsh Plugins - Provide ble.sh features for Zsh
+brew "zsh-syntax-highlighting"
+brew "zsh-autosuggestions"
+
 # ------------------------------------------------------------------------------
 # Fun Stuff
 # ------------------------------------------------------------------------------

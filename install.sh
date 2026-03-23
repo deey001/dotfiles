@@ -157,7 +157,7 @@ elif [ "$OS" = "Linux" ]; then
             echo "Installing tools via apt..."
             # Core tools from repositories
             # xclip/wl-clipboard: Used for clipboard integration (copy/paste)
-            sudo apt install -y tmux git fzf xclip bash-completion hstr bat cmatrix btop tldr
+            sudo apt install -y tmux git fzf xclip bash-completion hstr bat cmatrix btop tldr zsh zsh-syntax-highlighting zsh-autosuggestions
             
             # Install Latest Neovim (AppImage/Tarball is better than apt usually)
             echo "Installing Neovim v${NEOVIM_VERSION}..."
@@ -257,7 +257,7 @@ elif [ "$OS" = "Linux" ]; then
             fi
 
             # Core tools + Build tools for Treesitter
-            sudo $PKG_MANAGER install -y git tmux fzf neovim hstr bat fastfetch cmatrix btop lazygit glow tldr ripgrep fd-find unzip gcc gcc-c++ make gawk
+            sudo $PKG_MANAGER install -y git tmux fzf neovim hstr bat fastfetch cmatrix btop lazygit glow tldr ripgrep fd-find unzip gcc gcc-c++ make gawk zsh zsh-syntax-highlighting zsh-autosuggestions
 
             # Modern tools that may need manual installation
             # zoxide
@@ -308,7 +308,7 @@ elif [ "$OS" = "Linux" ]; then
         if [ "$IS_ONLINE" = true ]; then
             # Arch has most modern tools in official repos or AUR
             # base-devel provides compilers (gcc, make, etc) for Treesitter
-            sudo pacman -Syu --noconfirm base-devel git tmux fzf neovim eza fastfetch btop ripgrep fd dust duf zoxide unzip gawk
+            sudo pacman -Syu --noconfirm base-devel git tmux fzf neovim eza fastfetch btop ripgrep fd dust duf zoxide unzip gawk zsh zsh-syntax-highlighting zsh-autosuggestions
             
             # These might be in AUR or newly moved to extra, so try them separately
             echo "Attempting to install optional modern tools (hstr, lazygit, glow, tldr, etc)..."
@@ -412,6 +412,7 @@ backup_file "$HOME/.bash_functions"
 backup_file "$HOME/.bash_profile"
 backup_file "$HOME/.bash_wrappers"
 backup_file "$HOME/.bashrc"
+backup_file "$HOME/.zshrc"
 backup_file "$HOME/.tmux.conf"
 backup_file "$HOME/.blerc"
 backup_file "$HOME/.inputrc"
@@ -424,6 +425,7 @@ ln -sf "$DOTFILES_DIR/.bash_functions" "$HOME/.bash_functions"
 ln -sf "$DOTFILES_DIR/.bash_profile" "$HOME/.bash_profile"
 ln -sf "$DOTFILES_DIR/.bash_wrappers" "$HOME/.bash_wrappers"
 ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
+ln -sf "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
 ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
 ln -sf "$DOTFILES_DIR/.blerc" "$HOME/.blerc"
 ln -sf "$DOTFILES_DIR/.inputrc" "$HOME/.inputrc"
