@@ -499,7 +499,8 @@ function Install-CoreTools {
             "BurntSushi.Ripgrep",
             "sharkdp.fd",
             "starship.starship",
-            "eza-community.eza"
+            "eza-community.eza",
+            "fastfetch-cli.fastfetch"
         )
 
         foreach ($tool in $tools) {
@@ -566,6 +567,18 @@ function Symlink-Dotfiles {
                 
                 New-Item -Path $itemTarget -ItemType SymbolLink -Value $itemSource -Force | Out-Null
             }
+        }
+
+        # Neovim Windows Path (AppData/Local/nvim)
+        $nvimSource = Join-Path $dotfilesDir ".config\nvim"
+        $nvimTarget = Join-Path $env:LOCALAPPDATA "nvim"
+        if (Test-Path $nvimSource) {
+            Write-Host "Symlinking Neovim config to AppData..." -ForegroundColor Cyan
+            if (Test-Path $nvimTarget) {
+                Write-Host "Backing up existing AppData nvim..." -ForegroundColor Gray
+                Rename-Item $nvimTarget "nvim.bak" -ErrorAction SilentlyContinue
+            }
+            New-Item -Path $nvimTarget -ItemType SymbolLink -Value $nvimSource -Force | Out-Null
         }
 
         Add-Action "Symlinked dotfiles to $homeDir"

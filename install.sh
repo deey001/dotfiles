@@ -63,7 +63,8 @@ backup_file() {
     if [ -e "$file" ] && [ ! -L "$file" ]; then
         echo "Backing up existing file: $file"
         mkdir -p "$BACKUP_DIR"
-        cp -r "$file" "$BACKUP_DIR/"
+        # Use -P to preserve attributes, and create parent dirs in backup
+        cp -rP "$file" "$BACKUP_DIR/"
     fi
 }
 
@@ -387,6 +388,10 @@ ln -sf "$DOTFILES_DIR/.gitconfig" "$HOME/.gitconfig"
 mkdir -p "$HOME/.config"
 ln -sf "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
 
+# Alacritty Setup
+mkdir -p "$HOME/.config/alacritty"
+ln -sf "$DOTFILES_DIR/.config/alacritty/alacritty.yml" "$HOME/.config/alacritty/alacritty.yml"
+
 # Symlink Tmux Config & Scripts
 # This puts the scripts in ~/.config/tmux/scripts/ which is cleaner than ~/.local/bin
 mkdir -p "$HOME/.config/tmux"
@@ -419,10 +424,6 @@ fi
 # Fastfetch Config
 mkdir -p "$HOME/.config/fastfetch"
 ln -sf "$DOTFILES_DIR/.config/fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
-
-# Alacritty Config
-mkdir -p "$HOME/.config/alacritty"
-ln -sf "$DOTFILES_DIR/.config/alacritty/alacritty.yml" "$HOME/.config/alacritty/alacritty.yml"
 
 # SSH Config Template
 if [ ! -d "$HOME/.ssh" ]; then
@@ -458,12 +459,6 @@ fi
 # ------------------------------------------------------------------------------
 # Final Initialization
 # ------------------------------------------------------------------------------
-
-# Ensure Starship init is in .bashrc (Redundancy check)
-if ! grep -q "starship init bash" "$HOME/.bashrc" && [ -f /usr/local/bin/starship ]; then
-    echo '# Initialize Starship prompt' >> "$HOME/.bashrc"
-    echo 'eval "$(starship init bash)"' >> "$HOME/.bashrc"
-fi
 
 # Reload Bash Profile
 source "$HOME/.bash_profile" 2>/dev/null || true
