@@ -65,6 +65,12 @@ if [ -f "$SSH_KEY_SOURCE" ] && [ -f "$HOME/.ssh/authorized_keys" ]; then
     fi
 fi
 
+# Clean up SSH sockets
+if [ -d "$HOME/.ssh/sockets" ]; then
+    echo "Cleaning up SSH sockets..."
+    rm -rf "$HOME/.ssh/sockets"
+fi
+
 # Interactive Package Removal
 read -p "Do you want to remove installed packages (neovim, tmux, starship, etc)? [y/N] " -n 1 -r
 echo

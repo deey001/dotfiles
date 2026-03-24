@@ -482,6 +482,13 @@ if [ ! -d "$HOME/.ssh" ]; then
     mkdir -p "$HOME/.ssh"
     chmod 700 "$HOME/.ssh"
 fi
+
+# Create sockets directory for SSH multiplexing
+if [ ! -d "$HOME/.ssh/sockets" ]; then
+    mkdir -p "$HOME/.ssh/sockets"
+    chmod 700 "$HOME/.ssh/sockets"
+fi
+
 if [ -f "$DOTFILES_DIR/.ssh/config" ]; then
     backup_file "$HOME/.ssh/config"
     ln -sf "$DOTFILES_DIR/.ssh/config" "$HOME/.ssh/config"
