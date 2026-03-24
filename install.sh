@@ -42,6 +42,7 @@ if [ -z "${BASH_SOURCE[0]:-}" ]; then
         cd "$TARGET_DIR"
         git fetch --all
         git reset --hard origin/master
+        git clean -fd
     else
         echo "Cloning repository to $TARGET_DIR..."
         git clone "$REPO_URL" "$TARGET_DIR"
@@ -198,8 +199,9 @@ elif [ "$OS" = "Linux" ]; then
             sudo apt update
             
             # Install build prerequisites individually to avoid total failure
-            # Moving bzip2 to the front as it is a critical dependency for dpkg-dev/build-essential
-            PREREQS=(bzip2 curl xz-utils tar unzip build-essential gawk)
+            # We list make, gcc, and g++ explicitly because the meta-package 'build-essential' 
+            # often fails on minimal images due to bzip2 dependency conflicts.
+            PREREQS=(curl xz-utils tar unzip gawk make gcc g++ bzip2 build-essential)
             for pkg in "${PREREQS[@]}"; do
                 if dpkg -s "$pkg" >/dev/null 2>&1; then
                     echo "Prerequisite $pkg is already installed."
