@@ -231,8 +231,21 @@ elif [ "$OS" = "Linux" ]; then
             sudo apt install -y tmux git fzf xclip bash-completion hstr bat cmatrix btop tldr zsh zsh-syntax-highlighting zsh-autosuggestions
             
             # Install Latest Neovim (AppImage/Tarball is better than apt usually)
-            echo "Installing Neovim v${NEOVIM_VERSION}..."
+            echo "Installing Neovim v${NEOVIM_VERSION} for ${NVIM_ARCH}..."
+            # Force clean up existing binary if it's the wrong architecture
+            if [ -f /usr/local/bin/nvim ]; then
+                if ! file /usr/local/bin/nvim | grep -qi "$ARCH" && ! file /usr/local/bin/nvim | grep -qi "ARM64" ; then
+                    echo "Existing Neovim binary is wrong architecture. Removing..."
+                    sudo rm -f /usr/local/bin/nvim
+                    sudo rm -rf /usr/local/nvim-linux-*
+                fi
+            fi
+
             if [ ! -f /usr/local/bin/nvim ]; then
+                # Ensure we are starting fresh in the current dir
+                rm -f "nvim-linux-${NVIM_ARCH}.tar.gz"
+                rm -rf "nvim-linux-${NVIM_ARCH}"
+                
                 curl -LO "https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim-linux-${NVIM_ARCH}.tar.gz"
                 sudo tar -C /usr/local -xzf "nvim-linux-${NVIM_ARCH}.tar.gz"
                 sudo ln -sf "/usr/local/nvim-linux-${NVIM_ARCH}/bin/nvim" /usr/local/bin/nvim
