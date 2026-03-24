@@ -19,6 +19,14 @@ bleopt history_share=
 # 0 means accept immediately.
 bleopt accept_line_threshold=0
 
+# Suppress the "-- MULTILINE --" and mode markers
+bleopt edit_marker_multiline=
+bleopt edit_marker_vi_imap=
+bleopt edit_marker_vi_nmap=
+
+# Ensure pastes don't get stuck in "editor mode"
+bleopt term_bracketed_paste_mode=1
+
 # ------------------------------------------------------------------------------
 # Key Bindings
 # ------------------------------------------------------------------------------
