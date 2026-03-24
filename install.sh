@@ -152,9 +152,26 @@ elif [ "$OS" = "Linux" ]; then
     # --------------------------------------------------------------------------
     if [ -f /etc/debian_version ]; then
         if [ "$IS_ONLINE" = true ]; then
+            echo "Updating apt and enabling universe repository..."
+            # Enable universe repository (often needed for build-essential/bzip2 on minimal images)
+            if command -v add-apt-repository >/dev/null 2>&1; then
+                sudo add-apt-repository -y universe
+            elif grep -qi "ubuntu" /etc/os-release; then
+                # Fallback for minimal images without add-apt-repository
+                sudo sed -i 's/main$/main universe/' /etc/apt/sources.list || true
+            fi
+            
             sudo apt update
-            # Install build prerequisites
-            sudo apt install -y curl xz-utils tar unzip build-essential gawk
+            
+            # Install build prerequisites individually to avoid total failure
+            PREREQS=(curl xz-utils tar unzip build-essential gawk bzip2)
+            for pkg in "${PREREQS[@]}"; do
+                echo "Installing prerequisite: $pkg..."
+                sudo apt install -y "$pkg" || echo "Warning: Failed to install $pkg. Proceeding anyway..."
+            done
+            
+            # Attempt to fix broken dependencies if any occurred
+            sudo apt install -f -y
             
             echo "Installing tools via apt..."
             # Core tools from repositories
