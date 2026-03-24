@@ -7,7 +7,8 @@ This file serves as a persistent memory of the dotfiles overhaul session to ensu
 2.  **Unified Font Strategy:** Standardized to `JetBrainsMono Nerd Font` globally. Updated all installers (`install.sh`, `install.ps1`, `local-setup.ps1`) and terminal configs.
 3.  **One-Liner Bootstrap (NEW):** Fixed the `unbound variable` error in `install.sh`. The script now automatically clones the repository to `~/dotfiles` if run via `curl | bash`, making it truly a "one-liner" installer.
 4.  **Dual-Shell Support (Bash & Zsh):** Created a robust `.zshrc` that sources your existing aliases/functions. Standardized the terminal experience (Starship, syntax highlighting, autosuggestions) across both shells. No shell switch required on macOS!
-5.  **Portable Alacritty:** Removed hardcoded shell paths to make `alacritty.yml` work out-of-the-box on Windows/macOS/Linux.
+5.  **Architecture Awareness (NEW):** Made `install.sh` architecture-aware. It now detects if the system is **x86_64** or **ARM64** (Apple Silicon, Ubuntu ARM) and downloads the correct binaries for Neovim, Lazygit, Glow, etc.
+6.  **Portable Alacritty:** Removed hardcoded shell paths to make `alacritty.yml` work out-of-the-box on Windows/macOS/Linux.
 4.  **Windows Integration:** Added a robust `Symlink-Dotfiles` function to `install.ps1`. It now links `.bashrc`, `.tmux.conf`, and `.config/nvim` to the correct Windows user profile paths.
 5.  **Neovim Reliability:**
     - Added `gcc`, `make`, and `unzip` to all Linux/macOS installers for Treesitter support.

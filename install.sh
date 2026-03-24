@@ -55,6 +55,40 @@ fi
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "Dotfiles directory detected at: $DOTFILES_DIR"
 
+# Architecture Detection
+ARCH=$(uname -m)
+OS_TYPE=$(uname -s)
+echo "Detected Architecture: $ARCH ($OS_TYPE)"
+
+# Map common architectures to tool-specific strings
+case "$ARCH" in
+    x86_64)
+        NVIM_ARCH="x86_64"
+        LAZYGIT_ARCH="x86_64"
+        GLOW_ARCH="amd64"
+        EZA_ARCH="x86_64-unknown-linux-gnu"
+        DUST_ARCH="x86_64-unknown-linux-musl"
+        DUF_ARCH="x86_64"
+        ;;
+    aarch64|arm64)
+        NVIM_ARCH="arm64"
+        LAZYGIT_ARCH="arm64"
+        GLOW_ARCH="arm64"
+        EZA_ARCH="aarch64-unknown-linux-gnu"
+        DUST_ARCH="aarch64-unknown-linux-musl"
+        DUF_ARCH="arm64"
+        ;;
+    *)
+        echo "Warning: Unsupported architecture $ARCH. Tool installations may fail."
+        NVIM_ARCH="x86_64"
+        LAZYGIT_ARCH="x86_64"
+        GLOW_ARCH="amd64"
+        EZA_ARCH="x86_64-unknown-linux-gnu"
+        DUST_ARCH="x86_64-unknown-linux-musl"
+        DUF_ARCH="x86_64"
+        ;;
+esac
+
 # Create backup directory with timestamp
 BACKUP_DIR="$HOME/dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
 
@@ -181,10 +215,10 @@ elif [ "$OS" = "Linux" ]; then
             # Install Latest Neovim (AppImage/Tarball is better than apt usually)
             echo "Installing Neovim v${NEOVIM_VERSION}..."
             if [ ! -f /usr/local/bin/nvim ]; then
-                curl -LO "https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim-linux-x86_64.tar.gz"
-                sudo tar -C /usr/local -xzf nvim-linux-x86_64.tar.gz
-                sudo ln -sf /usr/local/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim
-                rm nvim-linux-x86_64.tar.gz
+                curl -LO "https://github.com/neovim/neovim/releases/download/v${NEOVIM_VERSION}/nvim-linux-${NVIM_ARCH}.tar.gz"
+                sudo tar -C /usr/local -xzf "nvim-linux-${NVIM_ARCH}.tar.gz"
+                sudo ln -sf "/usr/local/nvim-linux-${NVIM_ARCH}/bin/nvim" /usr/local/bin/nvim
+                rm "nvim-linux-${NVIM_ARCH}.tar.gz"
             fi
             
             # Install fastfetch from PPA (Better formatting than neofetch)
@@ -196,7 +230,7 @@ elif [ "$OS" = "Linux" ]; then
             # Install lazygit (Git TUI)
             echo "Installing lazygit..."
             LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-            curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
+            curl -Lo lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/latest/download/lazygit_${LAZYGIT_VERSION}_Linux_${LAZYGIT_ARCH}.tar.gz"
             tar xf lazygit.tar.gz lazygit
             sudo install lazygit /usr/local/bin
             rm lazygit lazygit.tar.gz
@@ -204,7 +238,7 @@ elif [ "$OS" = "Linux" ]; then
             # Install glow (Markdown Viewer)
             echo "Installing glow..."
             GLOW_RELEASE=$(curl -s "https://api.github.com/repos/charmbracelet/glow/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-            curl -Lo glow.deb "https://github.com/charmbracelet/glow/releases/latest/download/glow_${GLOW_RELEASE}_amd64.deb"
+            curl -Lo glow.deb "https://github.com/charmbracelet/glow/releases/latest/download/glow_${GLOW_RELEASE}_${GLOW_ARCH}.deb"
             sudo dpkg -i glow.deb
             rm glow.deb
 
@@ -221,7 +255,7 @@ elif [ "$OS" = "Linux" ]; then
             # eza - Modern ls (from binary release)
             if ! command -v eza >/dev/null 2>&1; then
                 EZA_VERSION=$(curl -s "https://api.github.com/repos/eza-community/eza/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-                curl -Lo eza.tar.gz "https://github.com/eza-community/eza/releases/latest/download/eza_x86_64-unknown-linux-gnu.tar.gz"
+                curl -Lo eza.tar.gz "https://github.com/eza-community/eza/releases/latest/download/eza_${EZA_ARCH}.tar.gz"
                 sudo tar -xzf eza.tar.gz -C /usr/local/bin
                 rm eza.tar.gz
             fi
@@ -230,10 +264,10 @@ elif [ "$OS" = "Linux" ]; then
             if ! command -v dust >/dev/null 2>&1; then
                 echo "Installing dust..."
                 DUST_VERSION=$(curl -s "https://api.github.com/repos/bootandy/dust/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-                curl -Lo dust.tar.gz "https://github.com/bootandy/dust/releases/latest/download/dust-v${DUST_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+                curl -Lo dust.tar.gz "https://github.com/bootandy/dust/releases/latest/download/dust-v${DUST_VERSION}-${DUST_ARCH}.tar.gz"
                 tar -xzf dust.tar.gz
-                sudo install dust-v${DUST_VERSION}-x86_64-unknown-linux-musl/dust /usr/local/bin/
-                rm -rf dust.tar.gz dust-v${DUST_VERSION}-x86_64-unknown-linux-musl
+                sudo install "dust-v${DUST_VERSION}-${DUST_ARCH}/dust" /usr/local/bin/
+                rm -rf dust.tar.gz "dust-v${DUST_VERSION}-${DUST_ARCH}"
             fi
 
             # Create fd symlink (Debian/Ubuntu installs fd-find as 'fdfind')
@@ -287,7 +321,7 @@ elif [ "$OS" = "Linux" ]; then
             # eza (from binary release)
             if ! command -v eza >/dev/null 2>&1; then
                 EZA_VERSION=$(curl -s "https://api.github.com/repos/eza-community/eza/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-                curl -Lo eza.tar.gz "https://github.com/eza-community/eza/releases/latest/download/eza_x86_64-unknown-linux-gnu.tar.gz"
+                curl -Lo eza.tar.gz "https://github.com/eza-community/eza/releases/latest/download/eza_${EZA_ARCH}.tar.gz"
                 sudo tar -xzf eza.tar.gz -C /usr/local/bin
                 rm eza.tar.gz
             fi
@@ -295,16 +329,16 @@ elif [ "$OS" = "Linux" ]; then
             # dust (from binary release)
             if ! command -v dust >/dev/null 2>&1; then
                 DUST_VERSION=$(curl -s "https://api.github.com/repos/bootandy/dust/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-                curl -Lo dust.tar.gz "https://github.com/bootandy/dust/releases/latest/download/dust-v${DUST_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+                curl -Lo dust.tar.gz "https://github.com/bootandy/dust/releases/latest/download/dust-v${DUST_VERSION}-${DUST_ARCH}.tar.gz"
                 tar -xzf dust.tar.gz
-                sudo install dust-v${DUST_VERSION}-x86_64-unknown-linux-musl/dust /usr/local/bin/
-                rm -rf dust.tar.gz dust-v${DUST_VERSION}-x86_64-unknown-linux-musl
+                sudo install "dust-v${DUST_VERSION}-${DUST_ARCH}/dust" /usr/local/bin/
+                rm -rf dust.tar.gz "dust-v${DUST_VERSION}-${DUST_ARCH}"
             fi
 
             # duf (from binary release - not in RHEL repos)
             if ! command -v duf >/dev/null 2>&1; then
                 DUF_VERSION=$(curl -s "https://api.github.com/repos/muesli/duf/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
-                curl -Lo duf.rpm "https://github.com/muesli/duf/releases/latest/download/duf_${DUF_VERSION}_linux_x86_64.rpm"
+                curl -Lo duf.rpm "https://github.com/muesli/duf/releases/latest/download/duf_${DUF_VERSION}_linux_${DUF_ARCH}.rpm"
                 sudo rpm -i duf.rpm || sudo $PKG_MANAGER install -y duf.rpm
                 rm duf.rpm
             fi
