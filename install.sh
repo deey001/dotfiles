@@ -198,16 +198,27 @@ elif [ "$OS" = "Linux" ]; then
             
             sudo apt update
             
-            # Install build prerequisites individually to avoid total failure
-            # We list make, gcc, and g++ explicitly because the meta-package 'build-essential' 
-            # often fails on minimal images due to bzip2 dependency conflicts.
-            PREREQS=(curl xz-utils tar unzip gawk make gcc g++ bzip2 build-essential)
-            for pkg in "${PREREQS[@]}"; do
+            # 1. Install individual compiler tools first (these usually don't have dependency issues)
+            echo "Installing individual compiler tools..."
+            CORE_TOOLS=(make gcc g++ gawk curl xz-utils tar unzip)
+            for pkg in "${CORE_TOOLS[@]}"; do
                 if dpkg -s "$pkg" >/dev/null 2>&1; then
                     echo "Prerequisite $pkg is already installed."
                 else
-                    echo "Installing prerequisite: $pkg..."
-                    sudo apt install -y "$pkg" || echo "Warning: Failed to install $pkg. Proceeding anyway..."
+                    echo "Installing $pkg..."
+                    sudo apt install -y "$pkg" || echo "Warning: Failed to install $pkg."
+                fi
+            done
+
+            # 2. Try to install the meta-packages (may fail on minimal images, but we have the tools now)
+            echo "Attempting to install meta-packages..."
+            META_PKGS=(bzip2 build-essential)
+            for pkg in "${META_PKGS[@]}"; do
+                if dpkg -s "$pkg" >/dev/null 2>&1; then
+                    echo "$pkg is already installed."
+                else
+                    echo "Installing $pkg..."
+                    sudo apt install -y "$pkg" || echo "Warning: Optional $pkg failed (continuing as core tools are present)."
                 fi
             done
             
