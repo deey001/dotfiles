@@ -201,8 +201,12 @@ elif [ "$OS" = "Linux" ]; then
             # Moving bzip2 to the front as it is a critical dependency for dpkg-dev/build-essential
             PREREQS=(bzip2 curl xz-utils tar unzip build-essential gawk)
             for pkg in "${PREREQS[@]}"; do
-                echo "Installing prerequisite: $pkg..."
-                sudo apt install -y "$pkg" || echo "Warning: Failed to install $pkg. Proceeding anyway..."
+                if dpkg -s "$pkg" >/dev/null 2>&1; then
+                    echo "Prerequisite $pkg is already installed."
+                else
+                    echo "Installing prerequisite: $pkg..."
+                    sudo apt install -y "$pkg" || echo "Warning: Failed to install $pkg. Proceeding anyway..."
+                fi
             done
             
             # Attempt to fix broken dependencies if any occurred
