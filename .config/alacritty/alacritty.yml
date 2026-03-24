@@ -23,7 +23,7 @@ font:
   bold_italic:
     family: "JetBrainsMono Nerd Font Mono"
     style: Bold Italic
-  size: 12.0
+  size: 14.0
 
 # Colors (base16-default-dark theme for consistency)
 colors:
