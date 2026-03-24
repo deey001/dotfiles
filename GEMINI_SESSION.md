@@ -4,26 +4,24 @@ This file serves as a persistent memory of the dotfiles overhaul session to ensu
 
 ## 🛠 Session Objectives Achieved
 1.  **Cross-Platform Consistency:** Ensured a "same look and feel" across macOS, Linux (multiple distros), and Windows.
-2.  **Unified Font Strategy:** Standardized to `JetBrainsMono Nerd Font` globally. Updated all installers (`install.sh`, `install.ps1`, `local-setup.ps1`) and terminal configs.
-3.  **One-Liner Bootstrap (NEW):** Fixed the `unbound variable` error in `install.sh`. The script now automatically clones the repository to `~/dotfiles` if run via `curl | bash`, making it truly a "one-liner" installer.
-4.  **Dual-Shell Support (Bash & Zsh):** Created a robust `.zshrc` that sources your existing aliases/functions. Standardized the terminal experience (Starship, syntax highlighting, autosuggestions) across both shells. No shell switch required on macOS!
-5.  **Architecture Awareness:** Made `install.sh` architecture-aware. It now detects if the system is **x86_64** or **ARM64** (Apple Silicon, Ubuntu ARM) and downloads the correct binaries for Neovim, Lazygit, Glow, etc.
-6.  **Ubuntu Robustness Pass (NEW):** Handled "broken" `bzip2` and `build-essential` dependencies on minimal ARM images by decoupling core compilers (`make`, `gcc`) from meta-packages. The script now bypasses OS-level dependency conflicts to ensure your tools always install.
-7.  **Portable Alacritty:** Removed hardcoded shell paths and added support for both `.yml` and `.toml` (v0.13+) configuration formats.
-4.  **Windows Integration:** Added a robust `Symlink-Dotfiles` function to `install.ps1`. It now links `.bashrc`, `.tmux.conf`, and `.config/nvim` to the correct Windows user profile paths.
-5.  **Neovim Reliability:**
-    - Added `gcc`, `make`, and `unzip` to all Linux/macOS installers for Treesitter support.
-    - Added `Install-CoreTools` to Windows (`winget`) to install Neovim, Git, Ripgrep, etc.
-    - Added automatic Neovim plugin syncing (`Lazy! sync`) to the installation process.
-6.  **Quick Install:** Added one-liner commands to the top of `README.md` for both Linux/Mac and Windows.
+2.  **Unified Font Strategy:** Standardized to `JetBrainsMono Nerd Font` globally. Updated all installers and terminal configs (Alacritty `.yml` and `.toml`).
+3.  **One-Liner Bootstrap:** Fixed the `unbound variable` error in `install.sh`. The script now automatically clones to `~/dotfiles` if run via `curl | bash`.
+4.  **Dual-Shell Support (Bash & Zsh):** Created a robust `.zshrc` that sources shared aliases/functions. Standardized syntax highlighting and autosuggestions across both shells.
+5.  **Architecture Awareness:** `install.sh` now detects **x86_64** vs **ARM64** and downloads correct binaries.
+6.  **Neovim ARM Fix:** Implemented automatic architecture verification for Neovim. The script now detects and removes "Exec format error" binaries, swapping them for the correct ARM64 version.
+7.  **Ubuntu Robustness:** Bypassed "broken" `bzip2` and `build-essential` dependencies on minimal images by installing compilers (`make`, `gcc`) individually first.
+8.  **ble.sh UI Cleanup:** Completely suppressed the `-- MULTILINE --` marker and status line in `.blerc` for a cleaner pasting experience.
+9.  **SSH Multiplexing:** Added automatic creation of `~/.ssh/sockets` to enable faster connection reuse.
+10. **Windows Integration:** Added `Symlink-Dotfiles` and `Install-CoreTools` (winget) to `install.ps1`.
+11. **Robust Uninstall:** Updated `uninstall.sh` to cleanly revert all symlinks, configurations, and packages added during this session.
 
 ## 📁 Key File Changes
-- **`install.sh`**: Robust distro detection (Arch, Debian, RedHat), standardized font paths, added build tools, and Neovim sync.
-- **`install.ps1`**: Added winget tool installation, AppData symlinking, and interactive menu options.
-- **`alacritty.yml`**: Standardized font family and removed `/bin/bash` dependency.
-- **`Brewfile`**: Updated to `font-jetbrains-mono-nerd-font` and added `gcc/make`.
-- **`.tmux.conf`**: Improved portability by removing `/bin/bash` from status scripts.
-- **`.bash_local.template`**: Created for machine-specific overrides.
+- **`install.sh`**: Added architecture detection, bootstrap cloning, individual compiler loops, and Neovim arch-fix.
+- **`.zshrc`**: Created native Zsh support with Starship and shared aliases.
+- **`.blerc`**: Suppressed status line and multiline markers.
+- **`.config/alacritty/`**: Standardized font family and size (14.0) across both `.yml` and `.toml` formats.
+- **`uninstall.sh`**: Completed with full cleanup logic for all new components.
+- **`Brewfile`**: Added `gawk`, `gcc`, `make`, and Zsh plugins.
 
 ## 🚀 Commands for Next Time
 - **To Sync Changes:**
@@ -31,15 +29,14 @@ This file serves as a persistent memory of the dotfiles overhaul session to ensu
     - `git commit -m "Your message"`
     - `git push origin master` (Requires your Personal Access Token)
 - **To Install Newest Changes:**
-    - **Linux/Mac:** `bash install.sh` or `make update`
-    - **Windows:** `powershell ./install.ps1` (Choose Option 8 for full setup)
+    - **Linux/Mac:** `curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/install.sh | bash`
+    - **Windows:** `irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | iex`
 
 ## ⚠️ Potential Issues to Watch
-- **Windows Admin:** `install.ps1` needs to be run as Administrator to install fonts and create symlinks.
-- **GitHub PAT:** Pushing changes via HTTPS requires a Personal Access Token instead of a password.
-- **SSH Keys:** `MDC_public.pub` is present, but the matching private key is not in `~/.ssh`. Authentication currently relies on HTTPS + PAT.
+- **Ubuntu ARM:** The `bzip2` dependency warning is safely handled/ignored by the script.
+- **Windows Admin:** `install.ps1` requires Administrator for fonts and symlinks.
+- **Terminal Font:** On macOS Terminal.app, you must manually select "JetBrainsMono Nerd Font" in Settings once.
 
 ## 📝 User Notes
 - User is `deey001` on GitHub.
-- Environment: Darwin (macOS).
 - Goal: Maintain the same look/feel for terminal across all environments.
