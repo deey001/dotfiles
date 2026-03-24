@@ -20,6 +20,8 @@ bleopt history_share=
 bleopt accept_line_threshold=0
 
 # Suppress the "-- MULTILINE --" and mode markers
+bleopt edit_marker=
+bleopt prompt_status_line=
 bleopt edit_marker_multiline=
 bleopt edit_marker_vi_imap=
 bleopt edit_marker_vi_nmap=
