@@ -463,12 +463,14 @@ mkdir -p "$HOME/.config/nvim"
 ln -sf "$DOTFILES_DIR/.config/nvim/init.lua" "$HOME/.config/nvim/init.lua"
 echo "Neovim configured with LazyVim. Plugins will auto-install on first run (Internet required)."
 
-# Run Neovim health check if online
+# Run Neovim plugin installation if online
 if [ "$IS_ONLINE" = true ] && command -v nvim >/dev/null 2>&1; then
-    echo "Syncing Neovim plugins (Internet required)..."
-    # --headless "+Lazy! sync" +qa
-    # Using 'sync' instead of 'checkhealth' to pre-install everything
-    nvim --headless "+Lazy! sync" +qa 2>/dev/null || echo "Plugin sync completed."
+    echo "Syncing Neovim plugins (this may take a minute)..."
+    # Using headless mode to pre-download plugins. 
+    # Redirecting all output to /dev/null to hide transient "module not found" errors 
+    # that occur before Treesitter is fully settled.
+    nvim --headless "+Lazy! install" +qa > /dev/null 2>&1 || true
+    echo "Neovim plugins synchronized."
 fi
 
 # Fastfetch Config

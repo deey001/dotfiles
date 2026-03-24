@@ -76,7 +76,10 @@ require("lazy").setup({
       indent = { enable = true },
     },
     config = function(_, opts)
-      require("nvim-treesitter.configs").setup(opts)
+      local status_ok, configs = pcall(require, "nvim-treesitter.configs")
+      if status_ok then
+        configs.setup(opts)
+      end
     end,
   },
 
