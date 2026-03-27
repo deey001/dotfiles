@@ -21,7 +21,9 @@ alias egrep='egrep --color=auto'
 alias gti='git'
 #alias tmux='tmux -2'
 alias less='less -R'
-alias diff='colordiff'
+if command -v colordiff >/dev/null 2>&1; then
+    alias diff='colordiff'
+fi
 alias dc='cd'
 alias glog='git log --oneline --graph --color --all --decorate'
 alias vi='nvim'

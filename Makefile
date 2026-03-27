@@ -98,7 +98,8 @@ backup: ## Create a backup of current dotfiles
 	@echo "$(GREEN)Creating backup...$(NC)"
 	@backup_dir="$$HOME/dotfiles_backup_$$(date +%Y%m%d_%H%M%S)"; \
 	mkdir -p "$$backup_dir"; \
-	cp -r ~/.bashrc ~/.bash_aliases ~/.bash_exports ~/.bash_functions ~/.tmux.conf ~/.gitconfig "$$backup_dir" 2>/dev/null || true; \
+	cp -r ~/.bashrc ~/.bash_aliases ~/.bash_exports ~/.bash_functions ~/.bash_wrappers ~/.bash_profile ~/.tmux.conf ~/.gitconfig ~/.inputrc ~/.blerc "$$backup_dir" 2>/dev/null || true; \
+	cp -r ~/.config/starship.toml ~/.config/nvim ~/.config/alacritty ~/.config/bat ~/.config/fastfetch "$$backup_dir" 2>/dev/null || true; \
 	echo "$(GREEN)Backup created at: $$backup_dir$(NC)"
 
 clean: ## Remove temporary files and caches

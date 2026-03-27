@@ -157,11 +157,27 @@ check_symlink "$HOME/.bashrc" "dots/.bashrc"
 check_symlink "$HOME/.bash_aliases" "dots/.bash_aliases"
 check_symlink "$HOME/.bash_exports" "dots/.bash_exports"
 check_symlink "$HOME/.bash_functions" "dots/.bash_functions"
+check_symlink "$HOME/.bash_wrappers" "dots/.bash_wrappers"
+check_symlink "$HOME/.bash_profile" "dots/.bash_profile"
+check_symlink "$HOME/.blerc" "dots/.blerc"
 check_symlink "$HOME/.tmux.conf" "dots/.tmux.conf"
 check_symlink "$HOME/.gitconfig" "dots/.gitconfig"
 check_symlink "$HOME/.inputrc" "dots/.inputrc"
 check_symlink "$HOME/.config/starship.toml" "starship.toml"
 check_symlink "$HOME/.config/nvim/init.lua" "init.lua"
+
+# Check .zshrc symlink if zsh is installed
+if command -v zsh >/dev/null 2>&1; then
+    check_symlink "$HOME/.zshrc" "dots/.zshrc"
+fi
+
+# Check .config subdirectories
+if [ -d "$HOME/.config/bat" ]; then
+    check_symlink "$HOME/.config/bat/themes" "bat/themes" || true
+fi
+if [ -d "$HOME/.config/fastfetch" ]; then
+    check_symlink "$HOME/.config/fastfetch/config.jsonc" "fastfetch/config.jsonc" || true
+fi
 echo ""
 
 # Test 2: Check required commands
@@ -188,6 +204,9 @@ check_bash_syntax "$HOME/.bashrc"
 check_bash_syntax "$HOME/.bash_aliases"
 check_bash_syntax "$HOME/.bash_exports"
 check_bash_syntax "$HOME/.bash_functions"
+check_bash_syntax "$HOME/.bash_wrappers"
+check_bash_syntax "$HOME/.bash_profile"
+check_bash_syntax "$HOME/.blerc"
 
 # Check SSH permissions if exists
 if [ -f "$HOME/.ssh/config" ]; then

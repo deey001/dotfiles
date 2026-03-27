@@ -39,6 +39,7 @@ brew "tmux"
 brew "git"
 
 # Neovim - Modern, extensible text editor (Vim fork)
+# Note: install.sh pins Neovim to v0.11.0 on Linux; Homebrew manages the version on macOS
 brew "neovim"
 
 # Starship - Fast, customizable shell prompt written in Rust

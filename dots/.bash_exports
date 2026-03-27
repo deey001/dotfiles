@@ -9,9 +9,7 @@ export PATH="$PATH:$HOME/bin:$HOME/.local/bin"
 export LESS='-R'
 export LESSOPEN='|~/.lessfilter %s'
 
-# History configuration
-export HISTFILESIZE=10000
-export HISTSIZE=5000
+# History timestamp format (sizes defined in .bashrc)
 export HISTTIMEFORMAT="%F %T "  # Add timestamp to history
 
 # perl plenv
@@ -39,4 +37,4 @@ else
 fi
 
 # bat theme configuration
-export BAT_THEME="Visual Studio Dark+"
+export BAT_THEME="Catppuccin Mocha"

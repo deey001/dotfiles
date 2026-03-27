@@ -1,7 +1,9 @@
-if [ -n "$TMUX" ]; then
-    # called inside tmux session, do tmux things
+# Source .profile for login shell environment (PATH, etc.)
+if [ -f ~/.profile ]; then
     . ~/.profile
-
 fi
-# Trigger ~/.bashrc commands
-. ~/.bashrc
+
+# Trigger ~/.bashrc commands for interactive login shells
+if [ -f ~/.bashrc ]; then
+    . ~/.bashrc
+fi

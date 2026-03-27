@@ -54,15 +54,26 @@ vim.cmd([[cmap w!! w !sudo tee > /dev/null %]])
 
 -- Setup lazy.nvim
 require("lazy").setup({
-  -- Colorscheme
+  -- Colorscheme: Catppuccin Mocha
   {
-    "folke/tokyonight.nvim",
+    "catppuccin/nvim",
+    name = "catppuccin",
     lazy = false,
     priority = 1000,
-    config = function()
-      vim.cmd([[colorscheme tokyonight-night]])
-      -- Override comment color to bright green for better visibility in tmux
-      vim.api.nvim_set_hl(0, "Comment", { fg = "#00ff00", italic = true })
+    opts = {
+      flavour = "mocha",
+      transparent_background = false,
+      integrations = {
+        treesitter = true,
+        telescope = { enabled = true },
+        cmp = true,
+        native_lsp = { enabled = true },
+        markdown = true,
+      },
+    },
+    config = function(_, opts)
+      require("catppuccin").setup(opts)
+      vim.cmd([[colorscheme catppuccin]])
     end,
   },
 
@@ -71,7 +82,7 @@ require("lazy").setup({
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
     opts = {
-      ensure_installed = { "lua", "vim", "vimdoc", "bash", "python", "javascript", "markdown" },
+      ensure_installed = { "lua", "vim", "vimdoc", "bash", "python", "javascript", "markdown", "markdown_inline" },
       highlight = { enable = true },
       indent = { enable = true },
     },
@@ -81,6 +92,29 @@ require("lazy").setup({
         configs.setup(opts)
       end
     end,
+  },
+
+  -- Markdown rendering in-buffer
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    dependencies = {
+      "nvim-treesitter/nvim-treesitter",
+    },
+    ft = { "markdown" },
+    opts = {
+      heading = {
+        enabled = true,
+        icons = { "󰲡 ", "󰲣 ", "󰲥 ", "󰲧 ", "󰲩 ", "󰲫 " },
+      },
+      code = {
+        enabled = true,
+        style = "full",
+      },
+      bullet = {
+        enabled = true,
+        icons = { "●", "○", "◆", "◇" },
+      },
+    },
   },
 
   -- Telescope for fuzzy finding
