@@ -33,8 +33,12 @@ setopt share_history
 # ------------------------------------------------------------------------------
 autoload -Uz compinit && compinit
 
-# Menu-driven completion with arrow key navigation
-zstyle ':completion:*' menu select
+# fzf-tab: vertical dropdown completion powered by fzf
+FZF_TAB_DIR="${HOME}/.local/share/fzf-tab"
+if [[ ! -d "$FZF_TAB_DIR" ]] && command -v git >/dev/null 2>&1; then
+    git clone --depth 1 https://github.com/Aloxaf/fzf-tab "$FZF_TAB_DIR" 2>/dev/null
+fi
+[[ -f "$FZF_TAB_DIR/fzf-tab.plugin.zsh" ]] && source "$FZF_TAB_DIR/fzf-tab.plugin.zsh"
 
 # Case-insensitive and partial completion
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
@@ -44,17 +48,23 @@ zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 
 # Group completions by type with headers
 zstyle ':completion:*' group-name ''
-zstyle ':completion:*:descriptions' format '%F{cyan}── %d ──%f'
+zstyle ':completion:*:descriptions' format '[%d]'
 zstyle ':completion:*:warnings' format '%F{red}No matches found%f'
+
+# fzf-tab appearance
+zstyle ':fzf-tab:complete:*' fzf-preview ''
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color=always $realpath 2>/dev/null || ls $realpath'
+zstyle ':fzf-tab:*' fzf-flags --height=~40% --layout=reverse --border --color=bg+:#313244,fg+:#cdd6f4,hl:#f38ba8,hl+:#f38ba8,info:#cba6f7,prompt:#cba6f7,pointer:#f5e0dc,marker:#a6e3a1,spinner:#f5e0dc,header:#89b4fa
+zstyle ':fzf-tab:*' switch-group '<' '>'
 
 # Show completion menu immediately on ambiguous match
 setopt complete_in_word
 setopt always_to_end
-setopt auto_menu        # Show menu on second TAB
+setopt auto_menu
 setopt auto_cd
 
 # Key bindings for completion menu navigation
-bindkey '^I'   menu-complete              # TAB: open menu and cycle forward
+bindkey '^I'   complete-word              # TAB: trigger completion (fzf-tab intercepts)
 bindkey '^[[Z' reverse-menu-complete      # Shift-TAB: cycle backward
 
 # Accept autosuggestion with Right arrow
@@ -91,11 +101,17 @@ if command -v zoxide > /dev/null 2>&1; then
     eval "$(zoxide init zsh)"
 fi
 
-# FZF (Fuzzy Finder)
-if [ -f ~/.fzf.zsh ]; then
-    source ~/.fzf.zsh
-elif [ -f /usr/share/doc/fzf/examples/key-bindings.zsh ]; then
-    source /usr/share/doc/fzf/examples/key-bindings.zsh
+# FZF (Fuzzy Finder) - key bindings and completion
+if command -v fzf >/dev/null 2>&1; then
+    eval "$(fzf --zsh 2>/dev/null)" || {
+        [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+        [ -f /usr/share/doc/fzf/examples/key-bindings.zsh ] && source /usr/share/doc/fzf/examples/key-bindings.zsh
+    }
+    export FZF_DEFAULT_OPTS=" \
+        --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8 \
+        --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc \
+        --color=marker:#a6e3a1,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8 \
+        --layout=reverse --border --height=~40%"
 fi
 
 # ------------------------------------------------------------------------------
