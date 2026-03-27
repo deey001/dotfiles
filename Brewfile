@@ -86,6 +86,9 @@ brew "fzf"
 # Hstr - Better bash history search
 brew "hstr"
 
+# Carapace - Multi-shell completion engine with descriptions for 1000+ commands
+brew "carapace"
+
 # ------------------------------------------------------------------------------
 # System Information & Monitoring
 # ------------------------------------------------------------------------------

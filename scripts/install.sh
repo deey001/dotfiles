@@ -185,7 +185,7 @@ if [ "$OS" = "Darwin" ]; then
             brew bundle --file="$DOTFILES_DIR/Brewfile"
         else
             echo "Warning: Brewfile not found. Installing packages individually..."
-            brew install tmux git fzf neovim starship hstr bat eza ripgrep fd zoxide fastfetch cmatrix btop lazygit glow tldr dust duf procs bottom
+            brew install tmux git fzf neovim starship hstr carapace bat eza ripgrep fd zoxide fastfetch cmatrix btop lazygit glow tldr dust duf procs bottom
             brew install --cask font-jetbrains-mono-nerd-font
         fi
     else
@@ -489,6 +489,25 @@ elif [ "$OS" = "Linux" ]; then
         if ! command -v starship >/dev/null 2>&1; then
             echo "Installing Starship..."
             curl -sS https://starship.rs/install.sh | sh -s -- -y
+        fi
+    fi
+
+    # Carapace - Multi-shell completion engine
+    # --------------------------------------------------------------------------
+    if [ "$IS_ONLINE" = true ]; then
+        if ! command -v carapace >/dev/null 2>&1; then
+            echo "Installing Carapace (multi-shell completions)..."
+            CARAPACE_VERSION=$(curl -s https://api.github.com/repos/carapace-sh/carapace-bin/releases/latest | grep '"tag_name"' | sed 's/.*"v\(.*\)".*/\1/')
+            if [ -n "$CARAPACE_VERSION" ]; then
+                CARAPACE_ARCH="$ARCH"
+                [ "$CARAPACE_ARCH" = "x86_64" ] && CARAPACE_ARCH="amd64"
+                [ "$CARAPACE_ARCH" = "aarch64" ] && CARAPACE_ARCH="arm64"
+                curl -fsSL "https://github.com/carapace-sh/carapace-bin/releases/download/v${CARAPACE_VERSION}/carapace-bin_linux_${CARAPACE_ARCH}.tar.gz" | tar xz -C /tmp
+                sudo mv /tmp/carapace /usr/local/bin/carapace
+                echo "Carapace v${CARAPACE_VERSION} installed."
+            else
+                echo "Warning: Could not determine latest carapace version. Skipping."
+            fi
         fi
     fi
     

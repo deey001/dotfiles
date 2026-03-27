@@ -33,6 +33,13 @@ setopt share_history
 # ------------------------------------------------------------------------------
 autoload -Uz compinit && compinit
 
+# Carapace - rich completions with descriptions for CLI tools (works across shells)
+if command -v carapace >/dev/null 2>&1; then
+    export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense'
+    zstyle ':completion:*' format $'\e[2;37mCompleting %d\e[m'
+    source <(carapace _carapace zsh)
+fi
+
 # fzf-tab: vertical dropdown completion powered by fzf
 FZF_TAB_DIR="${HOME}/.local/share/fzf-tab"
 if [[ ! -d "$FZF_TAB_DIR" ]] && command -v git >/dev/null 2>&1; then

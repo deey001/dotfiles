@@ -165,6 +165,12 @@ if ! shopt -oq posix; then
   fi
 fi
 
+# Carapace - rich completions with descriptions for CLI tools
+if command -v carapace >/dev/null 2>&1; then
+    export CARAPACE_BRIDGES='bash,fish,zsh,inshellisense'
+    source <(carapace _carapace bash)
+fi
+
 # ------------------------------------------------------------------------------
 # Helper Tools & Environment
 # ------------------------------------------------------------------------------
@@ -181,10 +187,18 @@ fi
 
 # fzf (Fuzzy Finder) Configuration
 if command -v fzf > /dev/null 2>&1; then
-    # Load key bindings and completion
-    [ -f /usr/share/doc/fzf/examples/key-bindings.bash ] && source /usr/share/doc/fzf/examples/key-bindings.bash
-    [ -f /usr/share/doc/fzf/examples/completion.bash ] && source /usr/share/doc/fzf/examples/completion.bash
-    
+    # Modern integration (fzf 0.48+) with fallback
+    eval "$(fzf --bash 2>/dev/null)" || {
+        [ -f /usr/share/doc/fzf/examples/key-bindings.bash ] && source /usr/share/doc/fzf/examples/key-bindings.bash
+        [ -f /usr/share/doc/fzf/examples/completion.bash ] && source /usr/share/doc/fzf/examples/completion.bash
+    }
+
+    export FZF_DEFAULT_OPTS=" \
+        --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8 \
+        --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc \
+        --color=marker:#a6e3a1,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8 \
+        --layout=reverse --border --height=~40%"
+
     # Custom fzf alias for directory movement
     alias ff='cd $(find . -type d | fzf)'
 fi
