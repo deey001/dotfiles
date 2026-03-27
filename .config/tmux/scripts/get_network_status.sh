@@ -85,7 +85,12 @@ else
         if [ -n "$WAN_IP" ]; then
             ISP_JSON=$(curl -s --connect-timeout 2 --max-time 3 "http://ip-api.com/json/${WAN_IP}?fields=isp" 2>/dev/null)
             if [ -n "$ISP_JSON" ]; then
-                ISP=$(echo "$ISP_JSON" | grep -o '"isp":"[^"]*"' | cut -d'"' -f4)
+                # Use jq if available, otherwise grep+sed to decode JSON unicode escapes
+                if command -v jq >/dev/null 2>&1; then
+                    ISP=$(echo "$ISP_JSON" | jq -r '.isp // empty')
+                else
+                    ISP=$(echo "$ISP_JSON" | grep -o '"isp":"[^"]*"' | cut -d'"' -f4 | sed 's/\\u0026/\&/g; s/\\u003c/</g; s/\\u003e/>/g')
+                fi
             fi
             if [ -z "$ISP" ]; then
                 ISP=$(curl -s --connect-timeout 2 --max-time 3 "https://ipapi.co/${WAN_IP}/org/" 2>/dev/null)
