@@ -7,7 +7,6 @@
 # Caches WAN/ISP results to avoid excessive API calls.
 # ==============================================================================
 
-# Explicitly set PATH to ensure tools are found (crucial for cron/tmux)
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # ------------------------------------------------------------------------------
@@ -19,22 +18,16 @@ CACHE_MAX_AGE=300  # 5 minutes in seconds
 # ------------------------------------------------------------------------------
 # Icon Definitions (Nerd Fonts - literal Unicode characters)
 # ------------------------------------------------------------------------------
-ICON_LAN="󰌘"       # nf-md-lan_connect
-ICON_VPN=""        # nf-fa-lock
-ICON_WAN=""        # nf-fa-globe
-ICON_OFFLINE=""    # nf-fa-chain_broken
-ICON_COMCAST=""    # nf-md-alpha_x_circle
-ICON_VERIZON=""    # nf-md-check_decagram
-ICON_ATT=""        # nf-fa-bar_chart
-ICON_GOOGLE=""     # nf-fa-google
-ICON_TMOBILE=""    # nf-fa-info
-ICON_COX=""        # nf-md-alpha_c_circle
+ICON_LAN="󰌘"
+ICON_VPN=""
+ICON_WAN=""
+ICON_OFFLINE=""
 
 # ------------------------------------------------------------------------------
 # Network Information Retrieval
 # ------------------------------------------------------------------------------
 
-# 1. Get Local IP (LAN) — always fresh, no external call
+# 1. Get Local IP (LAN)
 LOCAL_IP=""
 if command -v ip >/dev/null 2>&1; then
     LOCAL_IP=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \K\S+')
@@ -42,13 +35,11 @@ if command -v ip >/dev/null 2>&1; then
         LOCAL_IP=$(ip route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1)}')
     fi
 fi
-
-# macOS fallback: use ipconfig
+# macOS fallback
 if [ -z "$LOCAL_IP" ] && command -v ipconfig >/dev/null 2>&1; then
     LOCAL_IP=$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null)
 fi
-
-# Linux fallback: hostname -I
+# Linux fallback
 if [ -z "$LOCAL_IP" ] && command -v hostname >/dev/null 2>&1; then
     LOCAL_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
 fi
@@ -65,11 +56,9 @@ fi
 # 3. Get WAN IP and ISP (cached to avoid excessive API calls)
 WAN_IP=""
 ISP=""
-ISP_ICON="$ICON_WAN"
 
 use_cache=false
 if [ -f "$CACHE_FILE" ]; then
-    # Cross-platform stat: try GNU (-c) then BSD (-f)
     cache_mtime=$(stat -c %Y "$CACHE_FILE" 2>/dev/null || stat -f %m "$CACHE_FILE" 2>/dev/null)
     if [ -n "$cache_mtime" ]; then
         cache_age=$(( $(date +%s) - cache_mtime ))
@@ -83,9 +72,7 @@ if [ "$use_cache" = true ]; then
     WAN_IP=$(sed -n '1p' "$CACHE_FILE")
     ISP=$(sed -n '2p' "$CACHE_FILE")
 else
-    # Check connectivity with short timeout
     if ping -c 1 -W 1 8.8.8.8 &>/dev/null 2>&1 || ping -c 1 -t 1 8.8.8.8 &>/dev/null 2>&1; then
-        # Try multiple WAN IP services
         WAN_IP=$(curl -s --connect-timeout 2 --max-time 3 ifconfig.me 2>/dev/null)
         if [ -z "$WAN_IP" ]; then
             WAN_IP=$(curl -s --connect-timeout 2 --max-time 3 icanhazip.com 2>/dev/null)
@@ -94,36 +81,39 @@ else
             WAN_IP=$(curl -s --connect-timeout 2 --max-time 3 api.ipify.org 2>/dev/null)
         fi
 
-        # Get ISP info via JSON API (more reliable than plain text endpoint)
+        # Get ISP info via JSON API
         if [ -n "$WAN_IP" ]; then
             ISP_JSON=$(curl -s --connect-timeout 2 --max-time 3 "http://ip-api.com/json/${WAN_IP}?fields=isp" 2>/dev/null)
             if [ -n "$ISP_JSON" ]; then
                 ISP=$(echo "$ISP_JSON" | grep -o '"isp":"[^"]*"' | cut -d'"' -f4)
             fi
-            # Fallback to ipapi.co
             if [ -z "$ISP" ]; then
                 ISP=$(curl -s --connect-timeout 2 --max-time 3 "https://ipapi.co/${WAN_IP}/org/" 2>/dev/null)
             fi
         fi
-
-        # Write cache (even if partially empty, avoids re-fetching on next call)
         printf '%s\n%s\n' "$WAN_IP" "$ISP" > "$CACHE_FILE" 2>/dev/null
     fi
 fi
 
-# Map ISP to Icon
-case "$ISP" in
-    *Comcast*|*Xfinity*)     ISP_ICON="$ICON_COMCAST" ;;
-    *Verizon*)               ISP_ICON="$ICON_VERIZON" ;;
-    *AT\&T*|*ATT*)           ISP_ICON="$ICON_ATT" ;;
-    *Google*|*GFiber*)       ISP_ICON="$ICON_GOOGLE" ;;
-    *T-Mobile*)              ISP_ICON="$ICON_TMOBILE" ;;
-    *Cox*)                   ISP_ICON="$ICON_COX" ;;
-esac
+# Shorten ISP name to a clean label
+shorten_isp() {
+    local raw="$1"
+    case "$raw" in
+        *Comcast*|*Xfinity*)     echo "Comcast" ;;
+        *Verizon*)               echo "Verizon" ;;
+        *"AT&T"*|*ATT*)          echo "AT&T" ;;
+        *Spectrum*|*Charter*)    echo "Spectrum" ;;
+        *Google*|*GFiber*)       echo "Google" ;;
+        *T-Mobile*)              echo "T-Mobile" ;;
+        *Cox*)                   echo "Cox" ;;
+        *CenturyLink*|*Lumen*)   echo "CenturyLink" ;;
+        *Frontier*)              echo "Frontier" ;;
+        *Optimum*|*Altice*)      echo "Optimum" ;;
+        *)                       echo "$raw" | sed 's/,.*//; s/ LLC//; s/ Inc//; s/ Corp//; s/ Enterprises//' ;;
+    esac
+}
 
-if [ -z "$WAN_IP" ]; then
-    ISP_ICON="$ICON_OFFLINE"
-fi
+ISP_SHORT=$(shorten_isp "$ISP")
 
 # ------------------------------------------------------------------------------
 # Status Construction
@@ -144,11 +134,11 @@ if [ -n "$VPN_IP" ]; then
 fi
 
 # Format: WAN + ISP
-if [ -n "$WAN_IP" ] && [ -n "$ISP" ]; then
-    OUTPUT="${OUTPUT} #[fg=cyan]${ISP_ICON} ${ISP}: ${WAN_IP}"
+if [ -n "$WAN_IP" ] && [ -n "$ISP_SHORT" ]; then
+    OUTPUT="${OUTPUT} #[fg=cyan]${ICON_WAN} ${ISP_SHORT}: ${WAN_IP}"
 elif [ -n "$WAN_IP" ]; then
     OUTPUT="${OUTPUT} #[fg=cyan]${ICON_WAN} WAN: ${WAN_IP}"
-elif [ "$ISP_ICON" = "$ICON_OFFLINE" ]; then
+else
     OUTPUT="${OUTPUT} #[fg=red]${ICON_OFFLINE} Offline"
 fi
 
