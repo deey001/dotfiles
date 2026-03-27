@@ -14,52 +14,31 @@ bleopt history_share=
 # Accept pasted lines immediately (no C-j confirmation)
 bleopt accept_line_threshold=0
 
-# Suppress mode markers
+# Suppress mode markers (only options that exist in ble.sh 0.4)
 bleopt edit_marker=
-bleopt prompt_status_line=
-bleopt edit_marker_multiline=
-bleopt edit_marker_vi_imap=
-bleopt edit_marker_vi_nmap=
 
 bleopt term_bracketed_paste_mode=1
 
 # ------------------------------------------------------------------------------
 # Autosuggestion (fish/zsh-style ghost text)
 # ------------------------------------------------------------------------------
-# Show suggestion from history as grey text while typing
 bleopt complete_auto_history=1
-
-# Delay before auto-complete popup appears (ms) — keep snappy
 bleopt complete_auto_delay=100
-
-# Max candidates to compute before showing menu
 bleopt complete_auto_complete=1
-
-# Enable ambiguous completion (suggest even with partial match)
 bleopt complete_ambiguous=1
 
 # ------------------------------------------------------------------------------
 # Completion Menu (dropdown with keyboard navigation)
 # ------------------------------------------------------------------------------
-# Style: "complete" for inline, "menu-complete" for cycling, "menu" for dropdown
 bleopt complete_menu_style=dense
-
-# Max height of the completion dropdown (rows)
 bleopt menu_linewise_prefix=
-
-# Show completion menu immediately on TAB
 bleopt complete_menu_complete=1
-
-# Color the selected item in the menu
 bleopt complete_menu_color_match=
-
-# Filter completions as you type (narrows dropdown in real time)
 bleopt complete_menu_filter=1
 
 # ------------------------------------------------------------------------------
 # Key Bindings
 # ------------------------------------------------------------------------------
-# Enter works in all modes
 ble-bind -m emacs -f 'C-m' 'accept-line'
 ble-bind -m emacs -f 'RET' 'accept-line'
 ble-bind -m vi_imap -f 'C-m' 'accept-line'
@@ -67,21 +46,21 @@ ble-bind -m vi_imap -f 'RET' 'accept-line'
 ble-bind -m vi_nmap -f 'C-m' 'accept-line'
 ble-bind -m vi_nmap -f 'RET' 'accept-line'
 
-# Accept autosuggestion with Right arrow or End key
-ble-bind -m emacs -f 'right'  'auto_complete/insert'
-ble-bind -m emacs -f 'end'    'auto_complete/insert'
-ble-bind -m emacs -f 'C-f'    'auto_complete/insert'
+# Accept autosuggestion with Right arrow or Ctrl+F
+ble-bind -m auto_complete -f 'right' 'auto_complete/insert'
+ble-bind -m auto_complete -f 'end'   'auto_complete/insert'
+ble-bind -m auto_complete -f 'C-f'   'auto_complete/insert'
 
 # Accept one word of autosuggestion with Alt+Right
-ble-bind -m emacs -f 'M-right' 'auto_complete/insert-word'
-ble-bind -m emacs -f 'M-f'     'auto_complete/insert-word'
+ble-bind -m auto_complete -f 'M-right' 'auto_complete/insert-word'
+ble-bind -m auto_complete -f 'M-f'     'auto_complete/insert-word'
 
-# Navigate completion menu with arrow keys
-ble-bind -m emacs -f 'TAB'     'complete'
-ble-bind -m emacs -f 'S-TAB'   'menu-complete backward'
+# TAB / Shift-TAB for completion menu
+ble-bind -m emacs -f 'TAB'   'complete'
+ble-bind -m emacs -f 'S-TAB' 'complete show_menu'
 
-# Dismiss completion menu with Escape
-ble-bind -m emacs -f 'C-g'    'complete/cancel'
+# Dismiss completion menu
+ble-bind -m emacs -f 'C-g' 'complete/cancel'
 
 # ------------------------------------------------------------------------------
 # Syntax Highlighting
