@@ -94,6 +94,21 @@ esac
 BACKUP_DIR="$HOME/dotfiles_backup_$(date +%Y%m%d_%H%M%S)"
 
 # ------------------------------------------------------------------------------
+# Shell Detection
+# ------------------------------------------------------------------------------
+# Detect the user's active login shell and set flags for conditional setup.
+# Both shells get configs symlinked, but only the active shell's dependencies
+# are prioritized during package installation.
+
+USER_SHELL="$(basename "$SHELL")"
+case "$USER_SHELL" in
+    zsh)  ACTIVE_SHELL="zsh"  ;;
+    bash) ACTIVE_SHELL="bash" ;;
+    *)    ACTIVE_SHELL="bash" ;;  # Default to bash for unknown shells
+esac
+echo "Detected active shell: $ACTIVE_SHELL ($SHELL)"
+
+# ------------------------------------------------------------------------------
 # Helper Functions
 # ------------------------------------------------------------------------------
 
@@ -226,9 +241,21 @@ elif [ "$OS" = "Linux" ]; then
             sudo apt install -f -y
             
             echo "Installing tools via apt..."
-            # Core tools from repositories
-            # xclip/wl-clipboard: Used for clipboard integration (copy/paste)
-            sudo apt install -y tmux git fzf xclip bash-completion hstr bat cmatrix btop tldr zsh zsh-syntax-highlighting zsh-autosuggestions
+            # Core tools (shell-agnostic)
+            sudo apt install -y tmux git fzf xclip hstr bat cmatrix btop tldr
+
+            # Shell-specific packages
+            if [ "$ACTIVE_SHELL" = "bash" ]; then
+                echo "Active shell is Bash — installing bash-completion..."
+                sudo apt install -y bash-completion
+                echo "Zsh plugins will also be installed for secondary shell support..."
+                sudo apt install -y zsh zsh-syntax-highlighting zsh-autosuggestions 2>/dev/null || true
+            else
+                echo "Active shell is Zsh — installing zsh plugins..."
+                sudo apt install -y zsh zsh-syntax-highlighting zsh-autosuggestions
+                echo "Bash completion will also be installed for secondary shell support..."
+                sudo apt install -y bash-completion 2>/dev/null || true
+            fi
             
             # Install Latest Neovim (AppImage/Tarball is better than apt usually)
             echo "Installing Neovim v${NEOVIM_VERSION} for ${NVIM_ARCH}..."
@@ -341,7 +368,16 @@ elif [ "$OS" = "Linux" ]; then
             fi
 
             # Core tools + Build tools for Treesitter
-            sudo $PKG_MANAGER install -y git tmux fzf neovim hstr bat fastfetch cmatrix btop lazygit glow tldr ripgrep fd-find unzip gcc gcc-c++ make gawk zsh zsh-syntax-highlighting zsh-autosuggestions
+            sudo $PKG_MANAGER install -y git tmux fzf neovim hstr bat fastfetch cmatrix btop lazygit glow tldr ripgrep fd-find unzip gcc gcc-c++ make gawk
+
+            # Shell-specific packages
+            if [ "$ACTIVE_SHELL" = "bash" ]; then
+                echo "Active shell is Bash — zsh plugins installed as secondary..."
+                sudo $PKG_MANAGER install -y zsh zsh-syntax-highlighting zsh-autosuggestions 2>/dev/null || true
+            else
+                echo "Active shell is Zsh — installing zsh plugins..."
+                sudo $PKG_MANAGER install -y zsh zsh-syntax-highlighting zsh-autosuggestions
+            fi
 
             # Modern tools that may need manual installation
             # zoxide
@@ -392,7 +428,16 @@ elif [ "$OS" = "Linux" ]; then
         if [ "$IS_ONLINE" = true ]; then
             # Arch has most modern tools in official repos or AUR
             # base-devel provides compilers (gcc, make, etc) for Treesitter
-            sudo pacman -Syu --noconfirm base-devel git tmux fzf neovim eza fastfetch btop ripgrep fd dust duf zoxide unzip gawk zsh zsh-syntax-highlighting zsh-autosuggestions
+            sudo pacman -Syu --noconfirm base-devel git tmux fzf neovim eza fastfetch btop ripgrep fd dust duf zoxide unzip gawk
+
+            # Shell-specific packages
+            if [ "$ACTIVE_SHELL" = "bash" ]; then
+                echo "Active shell is Bash — zsh plugins installed as secondary..."
+                sudo pacman -S --noconfirm zsh zsh-syntax-highlighting zsh-autosuggestions 2>/dev/null || true
+            else
+                echo "Active shell is Zsh — installing zsh plugins..."
+                sudo pacman -S --noconfirm zsh zsh-syntax-highlighting zsh-autosuggestions
+            fi
             
             # These might be in AUR or newly moved to extra, so try them separately
             echo "Attempting to install optional modern tools (hstr, lazygit, glow, tldr, etc)..."
@@ -457,7 +502,8 @@ fi
 # ------------------------------------------------------------------------------
 
 # ble.sh (Bash Line Editor) - Highlighting and Auto-suggestions
-if [ "$IS_ONLINE" = true ] && [ ! -d "$HOME/.local/share/blesh/ble.sh" ]; then
+# Only install if bash is available (it's bash-specific)
+if [ "$IS_ONLINE" = true ] && [ ! -d "$HOME/.local/share/blesh/ble.sh" ] && command -v bash >/dev/null 2>&1; then
     if command -v make >/dev/null 2>&1; then
         echo "Installing ble.sh (Bash Line Editor)..."
         # Remove existing ble.sh dir if it exists from a failed attempt
@@ -490,30 +536,36 @@ fi
 # ------------------------------------------------------------------------------
 
 echo "Creating symlinks for dotfiles..."
+echo "Active shell: $ACTIVE_SHELL (both shell configs will be symlinked)"
+
 # Links the source files from the git repo to the home directory
 # Backup existing configs before creating symlinks
+
+# Bash configs (always symlinked)
 backup_file "$HOME/.bash_aliases"
 backup_file "$HOME/.bash_exports"
 backup_file "$HOME/.bash_functions"
 backup_file "$HOME/.bash_profile"
 backup_file "$HOME/.bash_wrappers"
 backup_file "$HOME/.bashrc"
-backup_file "$HOME/.zshrc"
-backup_file "$HOME/.tmux.conf"
 backup_file "$HOME/.blerc"
-backup_file "$HOME/.inputrc"
-backup_file "$HOME/.gitconfig"
-
-# -f forces the link, -s makes it symbolic
 ln -sf "$DOTFILES_DIR/dots/.bash_aliases" "$HOME/.bash_aliases"
 ln -sf "$DOTFILES_DIR/dots/.bash_exports" "$HOME/.bash_exports"
 ln -sf "$DOTFILES_DIR/dots/.bash_functions" "$HOME/.bash_functions"
 ln -sf "$DOTFILES_DIR/dots/.bash_profile" "$HOME/.bash_profile"
 ln -sf "$DOTFILES_DIR/dots/.bash_wrappers" "$HOME/.bash_wrappers"
 ln -sf "$DOTFILES_DIR/dots/.bashrc" "$HOME/.bashrc"
-ln -sf "$DOTFILES_DIR/dots/.zshrc" "$HOME/.zshrc"
-ln -sf "$DOTFILES_DIR/dots/.tmux.conf" "$HOME/.tmux.conf"
 ln -sf "$DOTFILES_DIR/dots/.blerc" "$HOME/.blerc"
+
+# Zsh config (always symlinked)
+backup_file "$HOME/.zshrc"
+ln -sf "$DOTFILES_DIR/dots/.zshrc" "$HOME/.zshrc"
+
+# Shared configs (shell-agnostic)
+backup_file "$HOME/.tmux.conf"
+backup_file "$HOME/.inputrc"
+backup_file "$HOME/.gitconfig"
+ln -sf "$DOTFILES_DIR/dots/.tmux.conf" "$HOME/.tmux.conf"
 ln -sf "$DOTFILES_DIR/dots/.inputrc" "$HOME/.inputrc"
 ln -sf "$DOTFILES_DIR/dots/.gitconfig" "$HOME/.gitconfig"
 
@@ -603,13 +655,15 @@ fi
 # Final Initialization
 # ------------------------------------------------------------------------------
 
-# Reload Bash Profile
-source "$HOME/.bash_profile" 2>/dev/null || true
+# Reload active shell profile
+if [ "$ACTIVE_SHELL" = "bash" ]; then
+    source "$HOME/.bash_profile" 2>/dev/null || true
+fi
 
 echo "=============================================================================="
 echo "Installation Complete!"
 echo "Notes:"
-echo "1. Restart your terminal or run 'exec bash' to apply changes."
+echo "1. Restart your terminal or run 'exec $ACTIVE_SHELL' to apply changes."
 echo "2. If using Tmux, press 'prefix + I' to install plugins."
 echo "3. For machine-specific settings, create ~/.bash_local (auto-sourced)"
 if [ -d "$BACKUP_DIR" ]; then
@@ -632,8 +686,13 @@ if [ "$(uname)" = "Darwin" ]; then
     echo ""
 fi
 echo "To apply shell changes immediately, please RESTART your terminal or run:"
-echo "  source ~/.bashrc  (if using Bash)"
-echo "  source ~/.zshrc   (if using Zsh)"
+if [ "$ACTIVE_SHELL" = "zsh" ]; then
+    echo "  source ~/.zshrc   (active shell)"
+    echo "  bash              (to switch to Bash temporarily)"
+else
+    echo "  source ~/.bashrc  (active shell)"
+    echo "  zsh               (to switch to Zsh temporarily)"
+fi
 echo ""
 echo "If icons are not showing, ensure your Terminal is set to use 'JetBrainsMono Nerd Font'."
 echo "=============================================================================="
