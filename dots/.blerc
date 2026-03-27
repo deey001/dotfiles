@@ -4,38 +4,91 @@
 # ------------------------------------------------------------------------------
 # Paste & Clipboard Settings
 # ------------------------------------------------------------------------------
-# Disable bracketed paste confirm feature that requires C-q/C-j
-# This fixes the "Crtl-J" requirement when pasting multiple lines.
 bleopt exec_errexit_mark=
 bleopt exec_elapsed_mark=
 
-# Automatically accept pasted lines without confirmation
 bleopt canvas_winch_action=redraw-here
 bleopt edit_abell=
 bleopt history_share=
 
-# CRITICAL: Adjust bracketed paste behavior to execute immediately if safe
-# or at least not require awkward key combos.
-# 0 means accept immediately.
+# Accept pasted lines immediately (no C-j confirmation)
 bleopt accept_line_threshold=0
 
-# Suppress the "-- MULTILINE --" and mode markers
+# Suppress mode markers
 bleopt edit_marker=
 bleopt prompt_status_line=
 bleopt edit_marker_multiline=
 bleopt edit_marker_vi_imap=
 bleopt edit_marker_vi_nmap=
 
-# Ensure pastes don't get stuck in "editor mode"
 bleopt term_bracketed_paste_mode=1
+
+# ------------------------------------------------------------------------------
+# Autosuggestion (fish/zsh-style ghost text)
+# ------------------------------------------------------------------------------
+# Show suggestion from history as grey text while typing
+bleopt complete_auto_history=1
+
+# Delay before auto-complete popup appears (ms) — keep snappy
+bleopt complete_auto_delay=100
+
+# Max candidates to compute before showing menu
+bleopt complete_auto_complete=1
+
+# Enable ambiguous completion (suggest even with partial match)
+bleopt complete_ambiguous=1
+
+# ------------------------------------------------------------------------------
+# Completion Menu (dropdown with keyboard navigation)
+# ------------------------------------------------------------------------------
+# Style: "complete" for inline, "menu-complete" for cycling, "menu" for dropdown
+bleopt complete_menu_style=dense
+
+# Max height of the completion dropdown (rows)
+bleopt menu_linewise_prefix=
+
+# Show completion menu immediately on TAB
+bleopt complete_menu_complete=1
+
+# Color the selected item in the menu
+bleopt complete_menu_color_match=
+
+# Filter completions as you type (narrows dropdown in real time)
+bleopt complete_menu_filter=1
 
 # ------------------------------------------------------------------------------
 # Key Bindings
 # ------------------------------------------------------------------------------
-# Ensure Return/Enter works as expected in all modes
+# Enter works in all modes
 ble-bind -m emacs -f 'C-m' 'accept-line'
 ble-bind -m emacs -f 'RET' 'accept-line'
 ble-bind -m vi_imap -f 'C-m' 'accept-line'
 ble-bind -m vi_imap -f 'RET' 'accept-line'
 ble-bind -m vi_nmap -f 'C-m' 'accept-line'
 ble-bind -m vi_nmap -f 'RET' 'accept-line'
+
+# Accept autosuggestion with Right arrow or End key
+ble-bind -m emacs -f 'right'  'auto_complete/insert'
+ble-bind -m emacs -f 'end'    'auto_complete/insert'
+ble-bind -m emacs -f 'C-f'    'auto_complete/insert'
+
+# Accept one word of autosuggestion with Alt+Right
+ble-bind -m emacs -f 'M-right' 'auto_complete/insert-word'
+ble-bind -m emacs -f 'M-f'     'auto_complete/insert-word'
+
+# Navigate completion menu with arrow keys
+ble-bind -m emacs -f 'TAB'     'complete'
+ble-bind -m emacs -f 'S-TAB'   'menu-complete backward'
+
+# Dismiss completion menu with Escape
+ble-bind -m emacs -f 'C-g'    'complete/cancel'
+
+# ------------------------------------------------------------------------------
+# Syntax Highlighting
+# ------------------------------------------------------------------------------
+ble-face argument_error='fg=red,bold'
+ble-face filename_warning='fg=yellow,underline'
+ble-face command_builtin='fg=cyan'
+ble-face command_function='fg=blue'
+ble-face command_file='fg=green'
+ble-face syntax_error='bg=red,fg=white'
