@@ -30,10 +30,23 @@ bleopt complete_ambiguous=1
 # ------------------------------------------------------------------------------
 # Completion Menu (dropdown with keyboard navigation)
 # ------------------------------------------------------------------------------
-bleopt complete_menu_style=dense
-bleopt menu_linewise_prefix=
+# Menu style: dense packs candidates tightly, desc shows descriptions
+bleopt complete_menu_style=desc
+
+# Auto-show menu after this delay (ms) when there are multiple completions
+bleopt complete_auto_menu=200
+
+# Allow menu to use full terminal height (-1 = no limit)
+bleopt complete_menu_maxlines=-1
+
+# Enable menu completion (cycles through items)
 bleopt complete_menu_complete=1
-bleopt complete_menu_color_match=
+
+# Highlight matching prefix in menu items
+bleopt complete_menu_color=on
+bleopt complete_menu_color_match=on
+
+# Filter menu items as you keep typing
 bleopt complete_menu_filter=1
 
 # ------------------------------------------------------------------------------
@@ -55,12 +68,16 @@ ble-bind -m auto_complete -f 'C-f'   'auto_complete/insert'
 ble-bind -m auto_complete -f 'M-right' 'auto_complete/insert-word'
 ble-bind -m auto_complete -f 'M-f'     'auto_complete/insert-word'
 
-# TAB / Shift-TAB for completion menu
-ble-bind -m emacs -f 'TAB'   'complete'
-ble-bind -m emacs -f 'S-TAB' 'complete show_menu'
+# TAB: cycle through completions with menu visible
+# Shift-TAB: cycle backwards
+ble-bind -m emacs -f 'TAB'   'menu-complete'
+ble-bind -m emacs -f 'S-TAB' 'menu-complete backward'
 
-# Dismiss completion menu
-ble-bind -m emacs -f 'C-g' 'complete/cancel'
+# Also bind TAB within the menu to keep cycling
+ble-bind -m menu_complete -f 'TAB'   'menu-complete'
+ble-bind -m menu_complete -f 'S-TAB' 'menu-complete backward'
+ble-bind -m menu_complete -f 'RET'   'menu-complete accept'
+ble-bind -m menu_complete -f 'C-g'   'menu-complete cancel'
 
 # ------------------------------------------------------------------------------
 # Syntax Highlighting
