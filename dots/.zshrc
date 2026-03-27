@@ -32,10 +32,40 @@ setopt share_history
 # Completion & UI Settings
 # ------------------------------------------------------------------------------
 autoload -Uz compinit && compinit
-zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}' # Case-insensitive completion
-zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}" # Colorized completion
+
+# Menu-driven completion with arrow key navigation
+zstyle ':completion:*' menu select
+
+# Case-insensitive and partial completion
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=*' 'l:|=* r:|=*'
+
+# Colorized completion lists
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+
+# Group completions by type with headers
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*:descriptions' format '%F{cyan}── %d ──%f'
+zstyle ':completion:*:warnings' format '%F{red}No matches found%f'
+
+# Show completion menu immediately on ambiguous match
 setopt complete_in_word
+setopt always_to_end
+setopt auto_menu        # Show menu on second TAB
 setopt auto_cd
+
+# Key bindings for completion menu navigation
+bindkey '^I'   menu-complete              # TAB: open menu and cycle forward
+bindkey '^[[Z' reverse-menu-complete      # Shift-TAB: cycle backward
+
+# Accept autosuggestion with Right arrow
+bindkey '^[[C' forward-char               # Right arrow: accept one char of suggestion
+bindkey '^F'   forward-char               # Ctrl+F: accept one char
+bindkey '^[f'  forward-word               # Alt+F: accept one word
+bindkey '^[[1;3C' forward-word            # Alt+Right: accept one word
+
+# History search with arrow keys (type prefix then Up/Down)
+bindkey '^[[A' history-search-backward    # Up: search history backward
+bindkey '^[[B' history-search-forward     # Down: search history forward
 
 # ------------------------------------------------------------------------------
 # Aliases & Functions (Shared with Bash)
