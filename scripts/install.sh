@@ -49,11 +49,11 @@ if [ -z "${BASH_SOURCE[0]:-}" ]; then
         cd "$TARGET_DIR"
     fi
     # Relaunch the script from the cloned directory to ensure all paths are correct
-    exec bash "$TARGET_DIR/install.sh" "$@"
+    exec bash "$TARGET_DIR/scripts/install.sh" "$@"
 fi
 
 # Set the directory where the dotfiles are located (absolute path)
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 echo "Dotfiles directory detected at: $DOTFILES_DIR"
 
 # Architecture Detection
@@ -137,8 +137,8 @@ fi
 
 # Strict validation of .bashrc before linking
 # This prevents breaking the shell if the new .bashrc has fatal errors.
-if [ -f "$DOTFILES_DIR/.bashrc" ]; then
-    if ! bash -c ". '$DOTFILES_DIR/.bashrc' 2>/dev/null"; then
+if [ -f "$DOTFILES_DIR/dots/.bashrc" ]; then
+    if ! bash -c ". '$DOTFILES_DIR/dots/.bashrc' 2>/dev/null"; then
         echo "CRITICAL ERROR: .bashrc contains syntax errors or causes a segfault."
         echo "Aborting installation to prevent shell lockout."
         echo "Please fix .bashrc or comment out problematic sections."
@@ -505,17 +505,17 @@ backup_file "$HOME/.inputrc"
 backup_file "$HOME/.gitconfig"
 
 # -f forces the link, -s makes it symbolic
-ln -sf "$DOTFILES_DIR/.bash_aliases" "$HOME/.bash_aliases"
-ln -sf "$DOTFILES_DIR/.bash_exports" "$HOME/.bash_exports"
-ln -sf "$DOTFILES_DIR/.bash_functions" "$HOME/.bash_functions"
-ln -sf "$DOTFILES_DIR/.bash_profile" "$HOME/.bash_profile"
-ln -sf "$DOTFILES_DIR/.bash_wrappers" "$HOME/.bash_wrappers"
-ln -sf "$DOTFILES_DIR/.bashrc" "$HOME/.bashrc"
-ln -sf "$DOTFILES_DIR/.zshrc" "$HOME/.zshrc"
-ln -sf "$DOTFILES_DIR/.tmux.conf" "$HOME/.tmux.conf"
-ln -sf "$DOTFILES_DIR/.blerc" "$HOME/.blerc"
-ln -sf "$DOTFILES_DIR/.inputrc" "$HOME/.inputrc"
-ln -sf "$DOTFILES_DIR/.gitconfig" "$HOME/.gitconfig"
+ln -sf "$DOTFILES_DIR/dots/.bash_aliases" "$HOME/.bash_aliases"
+ln -sf "$DOTFILES_DIR/dots/.bash_exports" "$HOME/.bash_exports"
+ln -sf "$DOTFILES_DIR/dots/.bash_functions" "$HOME/.bash_functions"
+ln -sf "$DOTFILES_DIR/dots/.bash_profile" "$HOME/.bash_profile"
+ln -sf "$DOTFILES_DIR/dots/.bash_wrappers" "$HOME/.bash_wrappers"
+ln -sf "$DOTFILES_DIR/dots/.bashrc" "$HOME/.bashrc"
+ln -sf "$DOTFILES_DIR/dots/.zshrc" "$HOME/.zshrc"
+ln -sf "$DOTFILES_DIR/dots/.tmux.conf" "$HOME/.tmux.conf"
+ln -sf "$DOTFILES_DIR/dots/.blerc" "$HOME/.blerc"
+ln -sf "$DOTFILES_DIR/dots/.inputrc" "$HOME/.inputrc"
+ln -sf "$DOTFILES_DIR/dots/.gitconfig" "$HOME/.gitconfig"
 
 # Config directory setups
 mkdir -p "$HOME/.config"
@@ -582,7 +582,7 @@ fi
 # ------------------------------------------------------------------------------
 # SSH Key Installation
 # ------------------------------------------------------------------------------
-SSH_KEY_SOURCE="$DOTFILES_DIR/MDC_public.pub"
+SSH_KEY_SOURCE="$DOTFILES_DIR/.ssh/MDC_public.pub"
 if [ -f "$SSH_KEY_SOURCE" ]; then
     echo "Installing SSH key to authorized_keys..."
     mkdir -p "$HOME/.ssh"

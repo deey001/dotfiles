@@ -2,7 +2,7 @@
 
 # uninstall.sh - Remove dotfiles symlinks and clean up Starship/vim
 
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 # Remove symlinks
 echo "Removing symlinks..."
@@ -53,7 +53,7 @@ echo "Removing cloned repositories..."
 rm -rf "$HOME/.bash-preexec"
 
 # Remove SSH Key
-SSH_KEY_SOURCE="$DOTFILES_DIR/MDC_public.pub"
+SSH_KEY_SOURCE="$DOTFILES_DIR/.ssh/MDC_public.pub"
 if [ -f "$SSH_KEY_SOURCE" ] && [ -f "$HOME/.ssh/authorized_keys" ]; then
     echo "Removing SSH key..."
     # Use grep to remove the key (fixed string matching)

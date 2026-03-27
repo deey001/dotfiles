@@ -38,13 +38,13 @@ help: ## Show this help message
 
 install: ## Install dotfiles and dependencies
 	@echo "$(GREEN)Installing dotfiles...$(NC)"
-	@chmod +x install.sh
-	@./install.sh
+	@chmod +x scripts/install.sh
+	@./scripts/install.sh
 
 uninstall: ## Remove dotfiles and restore backups
 	@echo "$(YELLOW)Uninstalling dotfiles...$(NC)"
-	@chmod +x uninstall.sh
-	@./uninstall.sh
+	@chmod +x scripts/uninstall.sh
+	@./scripts/uninstall.sh
 
 reinstall: uninstall install ## Uninstall and reinstall dotfiles
 
@@ -52,13 +52,13 @@ reinstall: uninstall install ## Uninstall and reinstall dotfiles
 
 test: ## Run validation tests
 	@echo "$(GREEN)Running tests...$(NC)"
-	@chmod +x test.sh
-	@./test.sh
+	@chmod +x scripts/test.sh
+	@./scripts/test.sh
 
 test-verbose: ## Run tests with verbose output
 	@echo "$(GREEN)Running tests (verbose)...$(NC)"
-	@chmod +x test.sh
-	@./test.sh --verbose
+	@chmod +x scripts/test.sh
+	@./scripts/test.sh --verbose
 
 ##@ Updates
 

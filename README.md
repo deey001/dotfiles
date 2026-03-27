@@ -4,12 +4,12 @@
 
 **Any Linux/Mac:**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash
 ```
 
 **Windows:**
 ```powershell
-irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | iex
+irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" | iex
 ```
 
 A streamlined, modern dotfiles configuration designed for headless servers (Linux/macOS/Windows). Optimized for performance, ease of use, and remote development.

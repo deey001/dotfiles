@@ -519,7 +519,7 @@ function Install-CoreTools {
 function Symlink-Dotfiles {
     try {
         Write-Host "Symlinking dotfiles to User Home..." -ForegroundColor Cyan
-        $dotfilesDir = Get-Location
+        $dotfilesDir = Split-Path -Parent $PSScriptRoot
         $homeDir = $env:USERPROFILE
 
         $filesToLink = @(
@@ -529,7 +529,7 @@ function Symlink-Dotfiles {
         )
 
         foreach ($file in $filesToLink) {
-            $source = Join-Path $dotfilesDir $file
+            $source = Join-Path $dotfilesDir "dots\$file"
             $target = Join-Path $homeDir $file
 
             if (Test-Path $source) {

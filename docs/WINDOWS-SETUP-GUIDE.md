@@ -28,30 +28,16 @@ When you connect to a Linux server from Windows and install these dotfiles, you'
    - Extract to `C:\dotfiles` (or anywhere)
 
 2. **Run the setup script**:
-   - Navigate to the extracted folder
-   - **Right-click** `setup-windows.bat`
-   - Select **"Run as Administrator"**
-   - ![Run as Administrator](https://i.imgur.com/example.png)
+   - Open PowerShell as Administrator
+   - Navigate to the extracted folder: `cd C:\dotfiles`
+   - Run the installer: `powershell -ExecutionPolicy Bypass -File scripts/install.ps1`
 
 3. **Follow the prompts**:
    ```
-   [1/4] Installing JetBrainsMono Nerd Font...
-     → Downloading...
-     → Installing...
-     ✓ Font installed
-
-   [2/4] Configuring Windows Terminal...
-     ✓ Configured
-
-   [3/4] Configuring PuTTY...
-     ✓ Template session created
-
-   [4/4] Remote Server Installation...
-   Do you want to install dotfiles on a remote server now? (y/N): y
-   Enter SSH host: user@yourserver.com
-     → Connecting...
-     → Running remote installation...
-     ✓ Complete!
+   [1/5] Install JetBrainsMono Nerd Font only
+   [2/5] Configure Windows Terminal only
+   ...
+   [8/5] Complete Workflow (Local + Remote + Symlink)
    ```
 
 4. **Restart your terminal** (Windows Terminal or PuTTY)
@@ -103,7 +89,7 @@ When you connect to a Linux server from Windows and install these dotfiles, you'
    ```bash
    git clone https://github.com/deey001/dotfiles.git ~/dotfiles
    cd ~/dotfiles
-   ./install.sh
+   ./scripts/install.sh
    ```
 3. Wait for installation
 4. Disconnect and reconnect
@@ -130,7 +116,7 @@ When you connect to a Linux server from Windows and install these dotfiles, you'
 **Fix:**
 1. Open PowerShell as Administrator
 2. Run: `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
-3. Run the script: `.\local-setup.ps1`
+3. Run the script: `.\scripts\install.ps1`
 
 ### "Font looks wrong/blurry"
 
@@ -148,7 +134,7 @@ When you connect to a Linux server from Windows and install these dotfiles, you'
 3. Run these commands manually:
    ```bash
    git clone https://github.com/deey001/dotfiles.git ~/dotfiles
-   cd ~/dotfiles && ./install.sh
+   cd ~/dotfiles && ./scripts/install.sh
    ```
 
 ---
@@ -228,8 +214,9 @@ Just load, change host, save as new session!
 │                                             │
 │  1. Download: github.com/deey001/dotfiles  │
 │                                             │
-│  2. Right-click setup-windows.bat          │
-│     → Run as Administrator                  │
+│  2. Open PowerShell as Admin                │
+│     → cd C:\dotfiles                        │
+│     → .\scripts\install.ps1                 │
 │                                             │
 │  3. Follow prompts                          │
 │                                             │
@@ -260,7 +247,7 @@ A: Yes, but you'll need to manually configure the font in that terminal's settin
 A: No, existing sessions are untouched. The script creates a new "Dotfiles-Template" session.
 
 **Q: Can multiple colleagues use the same script?**
-A: Yes! Share `setup-windows.bat`. Each person runs it on their own Windows machine.
+A: Yes! Each person runs `scripts/install.ps1` on their own Windows machine.
 
 **Q: What if I already have Nerd Fonts installed?**
 A: The script detects this and skips font installation. Safe to run!
