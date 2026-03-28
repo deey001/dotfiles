@@ -242,7 +242,7 @@ elif [ "$OS" = "Linux" ]; then
             
             echo "Installing tools via apt..."
             # Core tools (shell-agnostic)
-            sudo apt install -y tmux git fzf xclip hstr bat cmatrix btop tldr
+            sudo apt install -y tmux git fzf xclip hstr bat cmatrix btop tldr ncurses-term
 
             # Shell-specific packages
             if [ "$ACTIVE_SHELL" = "bash" ]; then
@@ -268,8 +268,8 @@ elif [ "$OS" = "Linux" ]; then
                 fi
             fi
 
-            if [ ! -f /usr/local/bin/nvim ]; then
-                # Ensure we are starting fresh in the current dir
+            if [ ! -f /usr/local/bin/nvim ] || ! nvim --version 2>/dev/null | grep -q "^NVIM v${NEOVIM_VERSION}"; then
+                echo "Installing/upgrading Neovim to v${NEOVIM_VERSION}..."
                 rm -f "nvim-linux-${NVIM_ARCH}.tar.gz"
                 rm -rf "nvim-linux-${NVIM_ARCH}"
                 
