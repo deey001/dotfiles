@@ -15,6 +15,16 @@ case $- in
 esac
 
 # ------------------------------------------------------------------------------
+# ble.sh Early Init (--noattach delays terminal hookup)
+# ------------------------------------------------------------------------------
+# Must load early so it can wrap readline, but --noattach prevents it from
+# intercepting keystrokes until ble-attach is called at the very end.
+# ble.sh automatically reads ~/.blerc during this phase.
+if [ -f ~/.local/share/blesh/ble.sh ]; then
+    source ~/.local/share/blesh/ble.sh --noattach
+fi
+
+# ------------------------------------------------------------------------------
 # History Settings
 # ------------------------------------------------------------------------------
 # erasedups: Remove duplicates if they are the same as the previous command
@@ -221,20 +231,6 @@ if command -v starship > /dev/null 2>&1; then
 fi
 
 # ------------------------------------------------------------------------------
-# ble.sh (Bash Line Editor)
-# ------------------------------------------------------------------------------
-# Provides syntax highlighting and predictive text.
-# Must be sourced AFTER starship prompt.
-if [ -f ~/.local/share/blesh/ble.sh ]; then
-    source ~/.local/share/blesh/ble.sh
-    
-    # Apply custom config (fixes paste issues)
-    if [ -f ~/.blerc ]; then
-        source ~/.blerc
-    fi
-fi
-
-# ------------------------------------------------------------------------------
 # Local/Private Configuration
 # ------------------------------------------------------------------------------
 # Source machine-specific or private settings (API keys, custom paths, etc.)
@@ -259,3 +255,10 @@ if command -v fastfetch > /dev/null 2>&1; then
         fastfetch
     fi
 fi
+
+# ------------------------------------------------------------------------------
+# ble.sh Attach (MUST be the absolute last thing)
+# ------------------------------------------------------------------------------
+# Now that starship, atuin, fzf, completions, and local config are all loaded,
+# attach ble.sh to the terminal so it can intercept keystrokes safely.
+[[ ${BLE_VERSION-} ]] && ble-attach
