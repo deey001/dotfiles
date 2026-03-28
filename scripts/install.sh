@@ -530,23 +530,30 @@ fi
 # ------------------------------------------------------------------------------
 
 # ble.sh (Bash Line Editor) - fish-style autosuggestions + syntax highlighting
-# Force-reinstall if the version is old (devel4 has broken terminal queries).
+# Force-reinstall if missing or version is old (devel4 has broken terminal queries).
 if [ "$IS_ONLINE" = true ] && command -v bash >/dev/null 2>&1; then
-    if command -v make >/dev/null 2>&1; then
-        _ble_ver=$(cat "$HOME/.local/share/blesh/ble.sh" 2>/dev/null | grep -o 'BLE_VERSION=[^ ]*' | head -1 || echo "")
-        _ble_needs_install=false
-        [ ! -f "$HOME/.local/share/blesh/ble.sh" ] && _ble_needs_install=true
-        # Reinstall if version contains 'devel4' (known broken version)
-        echo "$_ble_ver" | grep -q 'devel4' && _ble_needs_install=true
-        if [ "$_ble_needs_install" = true ]; then
-            echo "Installing/upgrading ble.sh..."
-            rm -rf ble.sh "$HOME/.local/share/blesh"
-            git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git
-            make -C ble.sh install PREFIX=~/.local
-            rm -rf ble.sh
+    _ble_installed_ver=$(grep -o "BLE_VERSION='[^']*'" "$HOME/.local/share/blesh/ble.sh" 2>/dev/null | head -1 || echo "")
+    _ble_needs_install=false
+    [ ! -f "$HOME/.local/share/blesh/ble.sh" ] && _ble_needs_install=true
+    echo "$_ble_installed_ver" | grep -q 'devel4' && _ble_needs_install=true
+
+    if [ "$_ble_needs_install" = true ]; then
+        echo "Installing/upgrading ble.sh..."
+        rm -rf "$HOME/.local/share/blesh"
+        _ble_tmpdir=$(mktemp -d)
+        # Try tarball first (faster, no git required), fall back to git clone
+        _ble_tarball_url="https://github.com/akinomyoga/ble.sh/releases/download/nightly/ble-nightly.tar.xz"
+        if curl -fsSL "$_ble_tarball_url" -o "$_ble_tmpdir/ble-nightly.tar.xz" 2>/dev/null; then
+            tar -xJf "$_ble_tmpdir/ble-nightly.tar.xz" -C "$_ble_tmpdir"
+            bash "$_ble_tmpdir/ble-nightly/install.sh" --prefix="$HOME/.local"
+        elif command -v make >/dev/null 2>&1; then
+            git clone --recursive --depth 1 --shallow-submodules \
+                https://github.com/akinomyoga/ble.sh.git "$_ble_tmpdir/ble.sh"
+            make -C "$_ble_tmpdir/ble.sh" install PREFIX=~/.local
+        else
+            echo "Warning: Could not install ble.sh (no curl+tarball, no make+git)."
         fi
-    else
-        echo "Warning: 'make' not found. Skipping ble.sh installation."
+        rm -rf "$_ble_tmpdir"
     fi
 fi
 
