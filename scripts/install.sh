@@ -510,6 +510,15 @@ elif [ "$OS" = "Linux" ]; then
             fi
         fi
     fi
+
+    # Atuin - Magical Shell History
+    # --------------------------------------------------------------------------
+    if [ "$IS_ONLINE" = true ]; then
+        if ! command -v atuin >/dev/null 2>&1; then
+            echo "Installing Atuin (shell history)..."
+            curl --proto '=https' --tlsv1.2 -fsSL https://setup.atuin.sh | bash 2>/dev/null || echo "Warning: Atuin install failed. Install manually: https://docs.atuin.sh"
+        fi
+    fi
     
 else
     echo "Unsupported OS: $OS"
@@ -612,6 +621,10 @@ if command -v bat > /dev/null 2>&1; then
 elif command -v batcat > /dev/null 2>&1; then
     batcat cache --build
 fi
+
+# Atuin Config
+mkdir -p "$HOME/.config/atuin"
+ln -sf "$DOTFILES_DIR/.config/atuin/config.toml" "$HOME/.config/atuin/config.toml"
 
 # Neovim Setup
 mkdir -p "$HOME/.config/nvim"

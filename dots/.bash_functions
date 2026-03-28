@@ -154,3 +154,30 @@ cd() {
         builtin cd ~ && if command -v eza > /dev/null 2>&1; then eza -lha --icons; else ls -lhsA; fi
     fi
 }
+
+# Fuzzy find a directory and cd into it
+fcd() {
+    local dir
+    dir=$(find . -type d -not -path '*/.*' 2>/dev/null | fzf +m) && cd "$dir"
+}
+
+# Fuzzy find a file and open it in nvim
+fv() {
+    local file
+    file=$(find . -type f -not -path '*/.*' 2>/dev/null | fzf +m) && nvim "$file"
+}
+
+# Fuzzy find a file and copy its path to clipboard
+fp() {
+    local file
+    file=$(find . -type f -not -path '*/.*' 2>/dev/null | fzf +m)
+    if [ -n "$file" ]; then
+        echo -n "$file" | if command -v pbcopy >/dev/null 2>&1; then pbcopy; elif command -v xclip >/dev/null 2>&1; then xclip -selection clipboard; fi
+        echo "Copied: $file"
+    fi
+}
+
+# Quick HTTP requests with xh (if available)
+if command -v xh >/dev/null 2>&1; then
+    alias http='xh'
+fi

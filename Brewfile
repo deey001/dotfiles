@@ -83,8 +83,8 @@ brew "bottom"
 # Fzf - Command-line fuzzy finder
 brew "fzf"
 
-# Hstr - Better bash history search
-brew "hstr"
+# Atuin - Magical shell history (replaces hstr)
+brew "atuin"
 
 # Carapace - Multi-shell completion engine with descriptions for 1000+ commands
 brew "carapace"
@@ -117,6 +117,9 @@ brew "jq"
 
 # Gawk - Required for ble.sh build
 brew "gawk"
+
+# Xh - Friendly HTTP client (modern curl/httpie)
+brew "xh"
 
 # GCC & Make - Required for Neovim Treesitter parsers
 brew "gcc"

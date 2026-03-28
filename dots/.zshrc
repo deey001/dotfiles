@@ -145,6 +145,11 @@ elif [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
     source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 fi
 
+# Atuin (Magical Shell History - replaces Ctrl+R)
+if command -v atuin >/dev/null 2>&1; then
+    eval "$(atuin init zsh)"
+fi
+
 # ------------------------------------------------------------------------------
 # Starship Prompt (Must be initialized last)
 # ------------------------------------------------------------------------------

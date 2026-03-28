@@ -206,8 +206,11 @@ fi
 # hstr (History Search)
 if command -v hstr > /dev/null 2>&1; then
     alias hh=hstr
-    # Bind Ctrl-r to hstr if desired (commented out by default to prefer fzf)
-    # bind '"\C-r": "\C-a hstr -- \C-j"'
+fi
+
+# Atuin (Magical Shell History - replaces Ctrl+R)
+if command -v atuin >/dev/null 2>&1; then
+    eval "$(atuin init bash)"
 fi
 
 # ------------------------------------------------------------------------------

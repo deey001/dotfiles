@@ -1,0 +1,53 @@
+# ==============================================================================
+# Atuin Configuration - Magical Shell History
+# ==============================================================================
+# Syncs, searches, and manages shell history across machines.
+# Docs: https://docs.atuin.sh
+# ==============================================================================
+
+# Search mode: prefix, fulltext, fuzzy, skim
+search_mode = "fuzzy"
+
+# Filter: global (all machines), host, session, directory
+filter_mode = "global"
+
+# Use same filter when pressing Up arrow in shell
+filter_mode_shell_up_key_binding = "host"
+
+# Compact UI (less chrome, more history)
+style = "compact"
+
+# Press Enter to immediately execute the selected command
+enter_accept = true
+
+# Don't show the help/version bar
+show_help = false
+show_tabs = true
+
+# History settings
+history_filter = [
+  "^secret-",
+  "^export .*TOKEN",
+  "^export .*KEY",
+  "^export .*PASSWORD",
+]
+
+# Ignore common noise commands from stats
+[stats]
+common_subcommands = [
+  "cargo",
+  "docker",
+  "git",
+  "go",
+  "kubectl",
+  "npm",
+  "systemctl",
+  "tmux",
+]
+common_prefix = ["sudo"]
+
+[keys]
+scroll_exits = true
+
+[sync]
+records = true
