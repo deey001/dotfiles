@@ -217,5 +217,41 @@ if command -v fastfetch >/dev/null 2>&1 \
     fastfetch
 fi
 
-# ── 20. ble.sh attach (MUST be last) ──────────────────────────────────────────
+# ── 20. ble.sh attach ─────────────────────────────────────────────────────────
 [[ ${BLE_VERSION-} ]] && ble-attach 2>/dev/null
+
+# ── 21. bash 5.2 + ble.sh: filter empty variable names from 'read' calls ──────
+# bash 5.2 strict: rejects empty var names → "read: '': not a valid identifier".
+# Some bash-completion functions pass empty strings as variable name args.
+# FIX: wrap 'read' to filter empty positional names, then call ble/builtin/read
+# (NOT builtin read) so ble.sh's completion state machine (_ble_builtin_read_hook)
+# is preserved. Defined AFTER ble-attach so it can't be overridden by ble.sh init.
+if (( BASH_VERSINFO[0] > 5 || (BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 2) )); then
+    if declare -f 'ble/builtin/read' >/dev/null 2>&1; then
+        read() {
+            local -a _safe=()
+            local _in_name_arg=0 _in_opt_arg=0 _arg
+            for _arg in "$@"; do
+                if (( _in_name_arg )); then
+                    # After -a: next arg is array name — skip if empty
+                    _in_name_arg=0; [[ -n "$_arg" ]] && _safe+=("$_arg")
+                elif (( _in_opt_arg )); then
+                    # After -d/-p/-t/-etc: option value — never skip (e.g. -d "" = NUL delim)
+                    _in_opt_arg=0; _safe+=("$_arg")
+                elif [[ "$_arg" == -- ]]; then
+                    _safe+=("$_arg")
+                elif [[ "$_arg" == -* ]]; then
+                    _safe+=("$_arg")
+                    case "$_arg" in
+                        *a*) _in_name_arg=1 ;;        # -a takes array var name
+                        *[dinNptu]*) _in_opt_arg=1 ;;  # others take non-name values
+                    esac
+                else
+                    # Positional variable name — skip if empty
+                    [[ -n "$_arg" ]] && _safe+=("$_arg")
+                fi
+            done
+            ble/builtin/read "${_safe[@]}"
+        }
+    fi
+fi

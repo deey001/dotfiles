@@ -2,35 +2,12 @@
 # Configuration for ble.sh (Bash Line Editor)
 
 # ------------------------------------------------------------------------------
-# Bash 5.2 Compatibility Patch (MUST be first)
+# Bash 5.2 Compatibility Note
 # ------------------------------------------------------------------------------
-# bash 5.2 added strict validation on 'read': empty variable names now throw
-# "read: '': not a valid identifier". ble.sh b99cadb passes empty variable names
-# from completion functions through to builtin read without filtering.
-#
-# ROOT CAUSE: ble/builtin/read/.read-arguments (~line 27744) collects read
-# arguments without checking for empty strings. bash 5.1 silently ignored them;
-# bash 5.2 rejects them in C code (BASH_COMPAT=5.1 does NOT help).
-#
-# FIX STRATEGY:
-#  1. install-blesh.sh patches the installed ble.sh file directly (persistent).
-#  2. This runtime patch via declare-f|sed|eval patches whatever is in memory,
-#     covering the case where ble.sh is loaded before the file is re-installed.
-#
-# NOTE: Hardcoding the function body fails when ble.sh uses different indentation
-# or minor structural changes. The declare-f approach reads the ACTUAL installed
-# function and surgically inserts the one-line guard.
-#
-# WRONG FIX (do NOT use): read() { builtin read "$@" 2>/dev/null; }
-#   Bypasses ble/builtin/read entirely → breaks completion state machine.
-if (( BASH_VERSINFO[0] > 5 || (BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 2) )); then
-    if declare -f 'ble/builtin/read/.read-arguments' >/dev/null 2>&1; then
-        _ble_patch=$(declare -f 'ble/builtin/read/.read-arguments' | \
-            sed 's/ble\/array#push vars "\$arg"/[[ $arg ]] \&\& ble\/array#push vars "$arg"/')
-        eval "$_ble_patch"
-        unset _ble_patch
-    fi
-fi
+# The bash 5.2 "read: '': not a valid identifier" error is fixed in .bashrc
+# (section 21) via a read() wrapper defined after ble-attach. That approach is
+# more reliable: it runs AFTER ble.sh fully attaches and can't be overridden.
+
 
 # ------------------------------------------------------------------------------
 # Paste & Clipboard Settings
