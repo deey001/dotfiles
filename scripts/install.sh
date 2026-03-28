@@ -502,7 +502,7 @@ elif [ "$OS" = "Linux" ]; then
                 CARAPACE_ARCH="$ARCH"
                 [ "$CARAPACE_ARCH" = "x86_64" ] && CARAPACE_ARCH="amd64"
                 [ "$CARAPACE_ARCH" = "aarch64" ] && CARAPACE_ARCH="arm64"
-                curl -fsSL "https://github.com/carapace-sh/carapace-bin/releases/download/v${CARAPACE_VERSION}/carapace-bin_linux_${CARAPACE_ARCH}.tar.gz" | tar xz -C /tmp
+                curl -fsSL "https://github.com/carapace-sh/carapace-bin/releases/download/v${CARAPACE_VERSION}/carapace-bin_${CARAPACE_VERSION}_linux_${CARAPACE_ARCH}.tar.gz" | tar xz -C /tmp
                 sudo mv /tmp/carapace /usr/local/bin/carapace
                 echo "Carapace v${CARAPACE_VERSION} installed."
             else
