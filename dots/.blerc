@@ -30,8 +30,8 @@ bleopt complete_ambiguous=1
 # ------------------------------------------------------------------------------
 # Completion Menu (dropdown with keyboard navigation)
 # ------------------------------------------------------------------------------
-# Menu style: dense packs candidates tightly, desc shows descriptions
-bleopt complete_menu_style=desc
+# Menu style: dense = clean compact list, desc = shows descriptions (can show action names)
+bleopt complete_menu_style=dense
 
 # Auto-show menu after this delay (ms) when there are multiple completions
 bleopt complete_auto_menu=200
