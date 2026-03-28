@@ -3,7 +3,7 @@
 
 [window]
 opacity = 0.95
-decorations = "none"
+decorations = "full"
 
 [window.padding]
 x = 10

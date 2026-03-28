@@ -16,7 +16,7 @@
 #   make update         # Update to latest version
 # ==============================================================================
 
-.PHONY: help install uninstall test update backup clean
+.PHONY: help install uninstall test update backup clean stow-server stow-workstation stow-dry-run restow
 
 # Default target
 .DEFAULT_GOAL := help
@@ -91,6 +91,24 @@ brew-dump: ## Update Brewfile with currently installed packages (macOS only)
 brew-cleanup: ## Remove packages not in Brewfile (macOS only)
 	@echo "$(YELLOW)Cleaning up Homebrew packages...$(NC)"
 	@brew bundle cleanup --file=Brewfile
+
+##@ GNU Stow
+
+stow-server: ## Stow core packages (bash, tmux, nvim, etc.) — for headless servers
+	@echo "$(GREEN)Stowing core packages (server profile)...$(NC)"
+	@cd $(CURDIR) && stow --restow bash zsh git shell tmux nvim starship bat atuin fastfetch
+
+stow-workstation: ## Stow all packages including GUI tools — for workstations/macOS
+	@echo "$(GREEN)Stowing all packages (workstation profile)...$(NC)"
+	@cd $(CURDIR) && stow --restow bash zsh git shell tmux nvim starship bat atuin fastfetch alacritty
+
+stow-dry-run: ## Preview what stow would create (no changes made)
+	@echo "$(GREEN)Dry run — no changes will be made:$(NC)"
+	@cd $(CURDIR) && stow -nv bash zsh git shell tmux nvim starship bat atuin fastfetch alacritty
+
+restow: ## Restow all packages (cleans up stale symlinks after repo changes)
+	@echo "$(GREEN)Restowing all packages...$(NC)"
+	@cd $(CURDIR) && stow --restow bash zsh git shell tmux nvim starship bat atuin fastfetch alacritty
 
 ##@ Utilities
 

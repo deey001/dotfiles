@@ -152,8 +152,8 @@ fi
 
 # Strict validation of .bashrc before linking
 # This prevents breaking the shell if the new .bashrc has fatal errors.
-if [ -f "$DOTFILES_DIR/dots/.bashrc" ]; then
-    if ! bash -c ". '$DOTFILES_DIR/dots/.bashrc' 2>/dev/null"; then
+if [ -f "$DOTFILES_DIR/stow/bash/.bashrc" ]; then
+    if ! bash -c ". '$DOTFILES_DIR/stow/bash/.bashrc' 2>/dev/null"; then
         echo "CRITICAL ERROR: .bashrc contains syntax errors or causes a segfault."
         echo "Aborting installation to prevent shell lockout."
         echo "Please fix .bashrc or comment out problematic sections."
@@ -556,101 +556,85 @@ fi
 # Dotfiles Symlinking & Setup
 # ------------------------------------------------------------------------------
 
-echo "Creating symlinks for dotfiles..."
-echo "Active shell: $ACTIVE_SHELL (both shell configs will be symlinked)"
+# ------------------------------------------------------------------------------
+# Dotfiles Symlinking via GNU Stow
+# ------------------------------------------------------------------------------
 
-# Links the source files from the git repo to the home directory
-# Backup existing configs before creating symlinks
+# Install stow if not present
+if ! command -v stow &>/dev/null; then
+    echo "Installing GNU Stow..."
+    if [ "$OS" = "Darwin" ]; then
+        brew install stow
+    elif command -v apt &>/dev/null; then
+        sudo apt install -y stow
+    elif command -v dnf &>/dev/null; then
+        sudo dnf install -y stow
+    elif command -v yum &>/dev/null; then
+        sudo yum install -y stow
+    elif command -v pacman &>/dev/null; then
+        sudo pacman -S --noconfirm stow
+    else
+        echo "ERROR: Cannot install stow automatically. Install it manually and re-run."
+        exit 1
+    fi
+fi
 
-# Bash configs (always symlinked)
-backup_file "$HOME/.bash_aliases"
-backup_file "$HOME/.bash_exports"
-backup_file "$HOME/.bash_functions"
-backup_file "$HOME/.bash_profile"
-backup_file "$HOME/.bash_wrappers"
-backup_file "$HOME/.bashrc"
-ln -sf "$DOTFILES_DIR/dots/.bash_aliases" "$HOME/.bash_aliases"
-ln -sf "$DOTFILES_DIR/dots/.bash_exports" "$HOME/.bash_exports"
-ln -sf "$DOTFILES_DIR/dots/.bash_functions" "$HOME/.bash_functions"
-ln -sf "$DOTFILES_DIR/dots/.bash_profile" "$HOME/.bash_profile"
-ln -sf "$DOTFILES_DIR/dots/.bash_wrappers" "$HOME/.bash_wrappers"
-ln -sf "$DOTFILES_DIR/dots/.bashrc" "$HOME/.bashrc"
-ln -sf "$DOTFILES_DIR/dots/.blerc" "$HOME/.blerc"
+echo "Stowing dotfiles..."
+echo "Active shell: $ACTIVE_SHELL"
 
-# Zsh config (always symlinked)
-backup_file "$HOME/.zshrc"
-ln -sf "$DOTFILES_DIR/dots/.zshrc" "$HOME/.zshrc"
+# Backup any real (non-symlink) files that would conflict with stow
+# stow's dry-run detects conflicts; we back them up first
+for dotfile in .bashrc .bash_profile .bash_aliases .bash_exports .bash_functions \
+               .bash_wrappers .blerc .zshrc .tmux.conf .inputrc .gitconfig .editorconfig; do
+    if [ -f "$HOME/$dotfile" ] && [ ! -L "$HOME/$dotfile" ]; then
+        echo "Backing up existing file: $HOME/$dotfile"
+        mkdir -p "$BACKUP_DIR"
+        cp -P "$HOME/$dotfile" "$BACKUP_DIR/"
+        rm "$HOME/$dotfile"
+    fi
+done
 
-# Shared configs (shell-agnostic)
-backup_file "$HOME/.tmux.conf"
-backup_file "$HOME/.inputrc"
-backup_file "$HOME/.gitconfig"
-ln -sf "$DOTFILES_DIR/dots/.tmux.conf" "$HOME/.tmux.conf"
-ln -sf "$DOTFILES_DIR/dots/.inputrc" "$HOME/.inputrc"
-ln -sf "$DOTFILES_DIR/dots/.gitconfig" "$HOME/.gitconfig"
+# Core packages — deployed to all machines (servers + workstations)
+STOW_PKGS=(bash zsh git shell tmux nvim starship bat atuin fastfetch)
 
-# Config directory setups
-mkdir -p "$HOME/.config"
-ln -sf "$DOTFILES_DIR/.config/starship.toml" "$HOME/.config/starship.toml"
+# Workstation-only packages — skip on headless servers
+if [ "$OS" = "Darwin" ] || [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then
+    STOW_PKGS+=(alacritty)
+fi
 
-# Alacritty Setup
-mkdir -p "$HOME/.config/alacritty"
-ln -sf "$DOTFILES_DIR/.config/alacritty/alacritty.yml" "$HOME/.config/alacritty/alacritty.yml"
-ln -sf "$DOTFILES_DIR/.config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.toml"
+echo "Packages: ${STOW_PKGS[*]}"
 
-# Symlink Tmux Config & Scripts
-# This puts the scripts in ~/.config/tmux/scripts/ which is cleaner than ~/.local/bin
-mkdir -p "$HOME/.config/tmux"
-ln -sf "$DOTFILES_DIR/.config/tmux/scripts" "$HOME/.config/tmux/scripts"
-# Ensure the script is executable (in the source repo)
-chmod +x "$DOTFILES_DIR/.config/tmux/scripts/get_network_status.sh"
+# --restow = unstow then stow (removes stale symlinks, safe for re-runs)
+# .stowrc provides: --dir=stow --target=~ --no-folding
+cd "$DOTFILES_DIR"
+stow --restow "${STOW_PKGS[@]}"
 
-# Bat (Better Cat) Theme Setup
-mkdir -p "$HOME/.config/bat"
-# Remove any existing themes dir/symlink to avoid circular symlink
-rm -rf "$HOME/.config/bat/themes"
-ln -sf "$DOTFILES_DIR/.config/bat/themes" "$HOME/.config/bat/themes"
-if command -v bat > /dev/null 2>&1; then
+# Rebuild bat theme cache after themes dir is symlinked
+if command -v bat &>/dev/null; then
     bat cache --build
-elif command -v batcat > /dev/null 2>&1; then
+elif command -v batcat &>/dev/null; then
     batcat cache --build
 fi
 
-# Atuin Config
-mkdir -p "$HOME/.config/atuin"
-ln -sf "$DOTFILES_DIR/.config/atuin/config.toml" "$HOME/.config/atuin/config.toml"
+# Ensure tmux scripts are executable (stow preserves permissions but be explicit)
+chmod +x "$DOTFILES_DIR/stow/tmux/.config/tmux/scripts/"*.sh
 
-# Neovim Setup (LazyVim distribution)
-mkdir -p "$HOME/.config/nvim"
-ln -sf "$DOTFILES_DIR/.config/nvim/init.lua" "$HOME/.config/nvim/init.lua"
-# Remove existing lua dir/symlink to avoid circular symlink on re-install
-rm -rf "$HOME/.config/nvim/lua"
-ln -sf "$DOTFILES_DIR/.config/nvim/lua" "$HOME/.config/nvim/lua"
-echo "Neovim configured with LazyVim. Plugins will auto-install on first run (Internet required)."
+echo "Symlinks created via GNU Stow."
 
-# Run Neovim plugin installation if online
-# NOTE: Skipped — LazyVim auto-installs all plugins on first real nvim launch.
-# Headless sync can hang indefinitely on slow systems.
-echo "Neovim ready. Run 'nvim' to auto-install plugins on first launch."
-
-# Fastfetch Config
-mkdir -p "$HOME/.config/fastfetch"
-ln -sf "$DOTFILES_DIR/.config/fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
-
-# SSH Config Template
+# SSH Config (handled separately — symlinks in .ssh/ can cause permission issues)
 if [ ! -d "$HOME/.ssh" ]; then
     mkdir -p "$HOME/.ssh"
     chmod 700 "$HOME/.ssh"
 fi
-
-# Create sockets directory for SSH multiplexing
 if [ ! -d "$HOME/.ssh/sockets" ]; then
     mkdir -p "$HOME/.ssh/sockets"
     chmod 700 "$HOME/.ssh/sockets"
 fi
-
 if [ -f "$DOTFILES_DIR/.ssh/config" ]; then
-    backup_file "$HOME/.ssh/config"
+    if [ -f "$HOME/.ssh/config" ] && [ ! -L "$HOME/.ssh/config" ]; then
+        mkdir -p "$BACKUP_DIR"
+        cp "$HOME/.ssh/config" "$BACKUP_DIR/ssh_config"
+    fi
     ln -sf "$DOTFILES_DIR/.ssh/config" "$HOME/.ssh/config"
     chmod 600 "$HOME/.ssh/config"
 fi

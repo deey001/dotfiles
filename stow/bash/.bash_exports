@@ -1,0 +1,53 @@
+# ==============================================================================
+# .bash_exports — Exported Environment Variables
+# ==============================================================================
+# Variables exported to child processes: PATH, EDITOR, tool-specific settings.
+# HISTTIMEFORMAT and HIST* settings live in .bashrc (bash builtins).
+# ==============================================================================
+
+# ── PATH — user bins first so user-installed tools shadow system tools ─────────
+# XDG user bin and local bin take priority over /usr/local/bin and /usr/bin.
+export PATH="${HOME}/.local/bin:${HOME}/bin:${PATH}"
+
+# Deduplicate PATH entries (re-sourcing .bash_exports won't accumulate dupes)
+if [[ -n "$PATH" ]]; then
+    export PATH=$(awk -v RS=':' -v ORS=':' '!seen[$0]++' <<< "$PATH" | sed 's/:$//')
+fi
+
+# ── CDPATH — quick cd from anywhere ───────────────────────────────────────────
+# Leading colon = current directory first (prevents CDPATH from shadowing ./foo)
+export CDPATH=":${HOME}:${HOME}/projects:${HOME}/work:${HOME}/src"
+
+# ── Editor ─────────────────────────────────────────────────────────────────────
+# Safe fallback chain: nvim → vim → vi → nano
+for _editor in nvim vim vi nano; do
+    if command -v "$_editor" >/dev/null 2>&1; then
+        export EDITOR="$_editor"
+        export VISUAL="$_editor"
+        break
+    fi
+done
+unset _editor
+
+# ── Pager ──────────────────────────────────────────────────────────────────────
+export LESS='-R'
+export LESSOPEN='|~/.lessfilter %s'
+
+# ── Go ─────────────────────────────────────────────────────────────────────────
+export GOPATH="${HOME}/gocode"
+export PATH="${GOPATH}/bin:/usr/local/go/bin:${PATH}"
+
+# ── rbenv (lazy-loaded — only adds to PATH, defers eval until first use) ───────
+# Full 'rbenv init' runs on first invocation of 'rbenv', saving ~50ms per shell.
+if [[ -d "${HOME}/.rbenv" ]]; then
+    export PATH="${HOME}/.rbenv/bin:${HOME}/.rbenv/plugins/ruby-build/bin:${PATH}"
+    rbenv() {
+        unset -f rbenv
+        eval "$(command rbenv init - bash)"
+        rbenv "$@"
+    }
+fi
+
+# ── bat ────────────────────────────────────────────────────────────────────────
+export BAT_THEME="Catppuccin Mocha"
+export BAT_PAGING="never"

@@ -14,7 +14,7 @@ man() {
 whatsgoingon() {
     for i in $(find . -maxdepth 1 -type d | sed -e 's/\.\///' -e '/\./d'); do
         if [ -d "$i/.git" ]; then
-            pushd "$i" >/dev/null
+            pushd "$i" >/dev/null 2>&1 || continue
             echo "$(tput bold)$i$(tput sgr0)"
             if [ -z "$(git status --porcelain)" ]; then
                 echo "is clean"
