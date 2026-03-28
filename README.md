@@ -1,166 +1,287 @@
-# Headless Server Dotfiles
+# Dotfiles
 
-### ⚡ Quick Install
+
+### Quick Install
+
 
 **Any Linux/Mac:**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash
 ```
 
+
 **Windows:**
 ```powershell
 irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" | iex
 ```
 
-A streamlined, modern dotfiles configuration designed for headless servers (Linux/macOS/Windows). Optimized for performance, ease of use, and remote development.
 
-**Supported OS**: macOS, Debian/Ubuntu, RHEL/CentOS/Fedora, Arch Linux.
+A modern, cross-platform dotfiles configuration for macOS and Linux (Debian/Ubuntu, RHEL/Fedora, Arch). Themed with **Catppuccin Mocha** throughout — terminal, editor, tmux, git diffs, and prompt.
 
-## Features
-
-### 🚀 Modern Shell Experience
-- **Starship Prompt**: Minimal, fast, and informative prompt with Tokyo Night theme showing git status, package versions, and execution time. Root user displays in red for safety.
-- **Predictive Text**: `ble.sh` provides syntax highlighting, autosuggestions, and Tab autocomplete (like zsh) in pure Bash. Configured for immediate multiline execution (no `Ctrl+J` confirmation).
-- **Enhanced Readline**: `.inputrc` configuration with intelligent tab completion, case-insensitive matching, and history search
-- **Environment Detection**: Automatically detects SSH sessions, WSL, Docker containers, and Tmux for adaptive behavior
-- **Modern CLI Tools** (with fallback aliases to original commands):
-  - `eza` - Better `ls` with icons and git status (alias: `oldls` for original)
-  - `bat`/`batcat` - Better `cat` with syntax highlighting and Visual Studio Dark+ theme (alias: `oldcat`)
-  - `zoxide` - Smarter `cd` that learns your navigation patterns (alias: `cd`)
-  - `fzf` - Fuzzy finder for files and command history
-  - `ripgrep` (`rg`) - Faster grep that respects .gitignore
-  - `fd` - Faster find with simpler syntax (alias: `oldfind`)
-  - `dust` - Better `du` with tree visualization (alias: `olddu`)
-  - `duf` - Better `df` with colorful output (alias: `olddf`)
-  - `procs` - Modern `ps` with colors and tree view (alias: `oldps`)
-  - `btop` - Beautiful resource monitor (alias: `oldtop`)
-  - `bottom` - Alternative resource monitor
-  - `hstr` - Visual history search with reverse-i-search
-  - `fastfetch` - System information display with custom config
-  - `cmatrix` - Matrix-style screensaver
-  - `lazygit` - Terminal UI for Git operations
-  - `glow` - Beautiful markdown renderer
-  - `tldr` - Simplified man pages with practical examples
-
-### 🧹 Minimalist Ubuntu
-- **Snap Removal**: On Ubuntu systems, `snapd` is automatically purged to ensure a lightweight, bloat-free environment.
-
-### 📝 Neovim-Only Workflow
-- **Neovim v0.11.0**: Installed from official tarball for compatibility. Replaces Vim completely.
-- **Aliases**: `vi`, `vim`, and `v` all point to `nvim`.
-- **LazyVim**: Pre-configured with modern plugin manager and LSP support.
-- **Dynamic Editor**: `EDITOR` environment variable automatically finds nvim installation.
-
-### 💻 Terminal Multiplexing
-- **Tmux**: Pre-configured with:
-  - Mouse support (toggle with `Prefix + m/M`)
-  - Split/navigation keybinds
-  - **Pane Synchronization**: Type in all panes at once (`Prefix + S`)
-  - **Persistence**: Automatically saves and restores sessions (`tmux-resurrect` + `tmux-continuum`)
-  - **Smart fastfetch**: Only displays on initial login, not in new panes
-  - **Network Status Bar**: Real-time LAN/VPN/WAN IP display with ISP detection (cached for performance)
-  - History limit of 50,000 lines
-
-### 📋 Copy/Paste Workflow (Keyboard Only)
-1.  **Enter Copy Mode**: Press `Prefix + [` (Default: `Ctrl-a` then `[`).
-    *   You will see a yellow indicator in the top right.
-2.  **Navigate**: Use arrow keys (or `h`,`j`,`k`,`l`) to move the cursor to where you want to start copying.
-3.  **Start Selection**: Press `v` (visual mode) to begin highlighting text.
-4.  **Copy**: Press `y` (yank).
-    *   This copies the text to the system clipboard (Windows/Mac) via OSC 52.
-    *   It also exits copy mode automatically.
-5.  **Paste**: Use `Ctrl+v` (Windows) or `Cmd+v` (Mac) to paste anywhere.
-
-
-### 🎨 Theming
-- **Starship**: Tokyo Night color scheme with custom icons and formatting
-- **Bat**: Visual Studio Dark+ theme for syntax highlighting
-- **Nerd Fonts**: JetBrainsMono Nerd Font for icon support
-
-### 🔧 Cross-Platform Compatibility
-- **Distribution Detection**: Automatically detects OS and uses appropriate commands (`bat` vs `batcat`, etc.)
-- **Conditional Initialization**: Only loads tools if they're installed (rbenv, zoxide, etc.)
-- **Dynamic Paths**: Uses `which` to find executables for maximum portability
-
-### 🔐 Configuration & Security
-- **Git Configuration**: Pre-configured `.gitconfig` with aliases, colors, and best practices
-- **SSH Config Template**: Connection multiplexing, keep-alive, and host shortcuts
-- **Secret Management**: `.bash_local` support for machine-specific and private settings
-- **Backup on Install**: Existing configs are automatically backed up before installation
-- **EditorConfig**: Consistent code formatting across different editors
-
-### 🛠️ Developer Experience
-- **Makefile**: Simple commands for installation, testing, and updates
-- **Version-Locked Tools**: Critical tools (Neovim) locked to specific versions for stability
-- **Testing Suite**: Validation script to verify installation and configuration
-- **Brewfile**: Declarative package management for macOS
-- **Comprehensive Documentation**: Every config file includes detailed comments and usage examples
-
-## Installation
-
-### 🖥️ Windows Users: Local Setup First! ⚠️
-
-**STOP! Read this before connecting to your server.**
-
-If you are using Windows, you **MUST** run this local setup script first. If you don't, your icons will look like broken squares `[]` and the terminal will look ugly.
-
-This script does everything for you: calls the font police, installs the correct font, and forces your terminals (PuTTY & Windows Terminal) to use it.
-
-#### Option 1: The "I want it done now" Method (Recommended) ⚡
-
-1.  Click the **Start Menu** and type `PowerShell`.
-2.  **Right-click** "Windows PowerShell" and choose **Run as Administrator**.
-    > *If you forget to run as Admin, the script will try to restart itself as Admin. Just say "Yes" to the blue/yellow popup.*
-3.  Copy and paste this exact command and press **Enter**:
-
-    ```powershell
-    irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | iex
-    ```
-
-4.  **The Menu**: You will see a menu. Type `4` and press **Enter** for the "Full Local Setup".
-    *   This installs the Nerd Font.
-    *   This configures Windows Terminal.
-    *   This configures PuTTY (so KeePass works too!).
-
-5.  **Done**: Close all your terminal windows and open them again. You are now ready to connect to your server.
-
-#### Option 2: The "I like downloading files" Method
-
-1.  **Download**: [Download this repository as a ZIP](https://github.com/deey001/dotfiles/archive/refs/heads/master.zip) and extract it.
-2.  **Run**: Find the `install.ps1` file within the `dotfiles` folder.
-3.  **Execute**: Right-click it and select **Run with PowerShell**.
 
 ---
 
-### 🆘 Troubleshooting Windows Install
+
+## Features
+
+
+### Catppuccin Mocha Theme — Everywhere
+- **Starship Prompt**: Pure-inspired minimal two-line prompt
+- **Neovim**: LazyVim distribution with full Catppuccin integration
+- **Tmux**: Hand-crafted status pills with rounded separators
+- **Alacritty**: Terminal colors and cursor
+- **bat**: Syntax-highlighted cat replacement
+- **git-delta**: Beautiful diff viewer
+- **fzf**: Fuzzy finder colors
+
+### Modern Shell Experience (Bash + Zsh)
+- **Starship Prompt**: Minimal two-line Pure-inspired prompt — OS icon, directory, git, language versions on line 1, ❯ on line 2
+- **Smart Completions**: carapace multi-shell completion engine with rich descriptions + fzf-tab vertical dropdown (zsh)
+- **Predictive Text**: ble.sh for bash (syntax highlighting, autosuggestions, menu-complete dropdown)
+- **Shell History**: atuin — magical fuzzy shell history search with sync support (replaces Ctrl+R)
+- **Fuzzy Finder**: fzf with Catppuccin colors for files, history, and completions
+- **Smart Navigation**: zoxide learns your cd patterns, fcd() for fuzzy directory jump
+- **Shell Detection**: Install script auto-detects active shell (bash/zsh) and configures accordingly
+- **Environment Detection**: Automatically detects SSH, WSL, Docker, and Tmux sessions
+
+### Neovim — LazyVim Distribution
+- **LazyVim**: Full-featured Neovim distribution — batteries included
+- **Snacks.nvim**: Dashboard, file explorer, fuzzy picker, zen mode, lazygit, notifications, smooth scroll
+- **Noice.nvim**: Floating popup for `:` commands with autocompletion
+- **Which-key**: Press `Space` to see all available keybindings
+- **Built-in**: Treesitter, Telescope, LSP, Mason, Gitsigns, Lualine, Flash, Autopairs, Indent guides
+- **Custom**: render-markdown.nvim for beautiful markdown, 18 treesitter parsers
+
+### Tmux
+- **Catppuccin Status Bar**: Rounded pill separators with network status, date/time, directory
+- **Session Persistence**: Auto-save/restore with tmux-resurrect + tmux-continuum
+- **Session Switcher**: tmux-sessionx fuzzy session manager (`Prefix + o`)
+- **Floating Terminal**: tmux-floax popup pane (`Prefix + p`)
+- **URL Extraction**: tmux-fzf-url finds/opens URLs in panes
+- **Quick Copy**: tmux-thumbs for instant text extraction
+- **Vim Navigation**: h/j/k/l pane movement, v/s splits
+- **Network Monitor**: Real-time LAN/VPN/WAN IP with ISP detection
+- **Scrollback**: 1,000,000 lines
+
+### Modern CLI Tools
+| Tool | Replaces | What it does |
+|------|----------|--------------|
+| eza | ls | Icons, git status, tree view |
+| bat | cat | Syntax highlighting (no pager) |
+| ripgrep (rg) | grep | Fast, respects .gitignore |
+| fd | find | Simple, fast file search |
+| zoxide | cd | Learns your navigation patterns |
+| dust | du | Visual disk usage tree |
+| duf | df | Colorful disk free display |
+| procs | ps | Modern process viewer |
+| btop | top | Beautiful resource monitor |
+| git-delta | diff | Syntax-highlighted git diffs |
+| atuin | Ctrl+R | Magical shell history search |
+| carapace | — | Multi-shell completion engine |
+| lazygit | — | Terminal UI for git |
+| lazydocker | — | Terminal UI for Docker |
+| xh | curl | Modern HTTP client |
+| fzf | — | Fuzzy finder for everything |
+| tldr | man | Simplified command examples |
+| glow | — | Markdown renderer |
+| fastfetch | — | System information display |
+
+All originals accessible via `old*` prefix: `oldcat`, `oldfind`, `olddu`, `olddf`, `oldps`, `oldtop`.
+
+---
+
+## Neovim Cheat Sheet (LazyVim)
+
+### Navigation
+| Key | Action |
+|-----|--------|
+| `Space` | Show all keybindings (which-key) |
+| `Space Space` | Smart find files |
+| `Space /` | Grep across project |
+| `Space ,` | Switch buffers |
+| `Space e` | Toggle file explorer |
+| `Ctrl+h/j/k/l` | Navigate between windows |
+| `s` + char | Flash jump to character |
+
+### Files & Search
+| Key | Action |
+|-----|--------|
+| `Space f f` | Find files |
+| `Space f g` | Live grep |
+| `Space f r` | Recent files |
+| `Space f b` | Open buffers |
+| `Space f t` | Find TODOs |
+| `Space f c` | Commands |
+
+### Git
+| Key | Action |
+|-----|--------|
+| `Space g g` | Open Lazygit |
+| `Space g b` | Toggle git blame |
+| `Space g d` | Git diff current file |
+| `Space g p` | Preview hunk |
+| `]h` / `[h` | Next/previous git hunk |
+
+### Code & LSP
+| Key | Action |
+|-----|--------|
+| `gd` | Go to definition |
+| `gr` | Find references |
+| `K` | Hover documentation |
+| `Space c a` | Code actions |
+| `Space c r` | Rename symbol |
+| `]d` / `[d` | Next/previous diagnostic |
+
+### Quality of Life
+| Key | Action |
+|-----|--------|
+| `Space z` | Zen mode (distraction-free) |
+| `Space n` | Notification history |
+| `:` | Floating command palette with autocompletion |
+| `/` | Search with buffer completion |
+| `Space u` | Toggle UI elements |
+| `Space q q` | Quit all |
+| `Space q s` | Restore session |
+
+---
+
+## Tmux Cheat Sheet
+
+**Prefix**: `Ctrl+a` (not default Ctrl+b)
+
+### Sessions & Windows
+| Key | Action |
+|-----|--------|
+| `Prefix + o` | Fuzzy session switcher (sessionx) |
+| `Prefix + p` | Floating terminal pane (floax) |
+| `Prefix + c` | New window |
+| `Prefix + ,` | Rename window |
+| `Prefix + &` | Close window |
+| `Prefix + 1-9` | Switch to window N |
+| `Prefix + d` | Detach session |
+
+### Panes
+| Key | Action |
+|-----|--------|
+| `Prefix + v` or `\\` | Split vertical |
+| `Prefix + s` or `-` | Split horizontal |
+| `Prefix + h/j/k/l` | Vim-style pane navigation |
+| `Alt + Arrow` | Pane navigation (no prefix) |
+| `Prefix + Shift+Arrow` | Resize pane |
+| `Prefix + S` | Synchronize panes (type in all) |
+| `Prefix + x` | Close pane |
+
+### Copy Mode
+| Key | Action |
+|-----|--------|
+| `Prefix + [` | Enter copy mode |
+| `v` | Start selection (in copy mode) |
+| `y` | Copy to clipboard (in copy mode) |
+| `Prefix + ]` | Paste |
+
+### Plugins
+| Key | Action |
+|-----|--------|
+| `Prefix + I` | Install plugins (TPM) |
+| `Prefix + U` | Update plugins |
+| `Prefix + u` | Open URLs in pane (fzf-url) |
+| `Prefix + r` | Reload config |
+| `Prefix + m/M` | Toggle mouse on/off |
+
+### Status Bar
+- **Left**: Session name pill (green, turns red on prefix)
+- **Right**: Directory > Date/Time (12h) > Network (LAN/WAN/ISP)
+- All styled with Catppuccin Mocha rounded pills
+
+---
+
+## Shell Shortcuts & QoL
+
+### Navigation Functions
+| Command | Action |
+|---------|--------|
+| `fcd` | Fuzzy find and cd into a directory |
+| `fv` | Fuzzy find and open a file in nvim |
+| `fp` | Fuzzy find a running process |
+| `..` / `...` / `....` | Go up 1/2/3 directories |
+| `-` | Go to previous directory |
+
+### Git Aliases
+| Alias | Command |
+|-------|---------|
+| `ga` | `git add` |
+| `gst` | `git status` |
+| `gd` | `git diff` |
+| `gc "msg"` | `git commit -m "msg"` |
+| `gp` | `git push` |
+| `gl` | `git pull` |
+| `gco branch` | `git checkout branch` |
+| `glog` | Pretty git log graph |
+
+### Quick Aliases
+| Alias | What it does |
+|-------|-------------|
+| `v` / `vi` / `vim` | Opens Neovim |
+| `c` | Clear screen |
+| `q` | Exit shell |
+| `tree` | `eza --tree --icons` |
+| `mkdir` | Always creates parent dirs (-p) |
+| `da` | Show full date and timezone |
+
+### Shell History (Atuin)
+- **Ctrl+R**: Opens atuin fuzzy history search
+- Type to filter, Enter to execute
+- Syncs across machines (optional)
+- Filters secrets (TOKEN, KEY, PASSWORD) from history
+
+### Tab Completion
+- **Zsh**: fzf-tab vertical dropdown with carapace descriptions
+- **Bash**: ble.sh menu-complete dropdown with carapace descriptions
+- Press **Tab** to trigger, arrow keys to navigate, Enter to select
+
+---
+
+## Installation
+
+### Windows Users: Local Setup First!
+
+You **MUST** run the local setup script first to install Nerd Fonts, or icons will show as broken squares.
+
+1. Open **PowerShell as Administrator**
+2. Run:
+   ```powershell
+   irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | iex
+   ```
+3. Type `4` for "Full Local Setup" (installs font, configures terminals)
+4. Restart all terminal windows
+
+<details>
+<summary>Windows Troubleshooting</summary>
 
 | Problem | Solution |
-| :--- | :--- |
-| **"Script is disabled" error** | Run this command first: `Set-ExecutionPolicy Bypass -Scope Process` |
-| **"Could not create SSL/TLS channel"** | You are on an old Windows. The new script fixes this automatically! Try running the command again. |
-| **Icons are still broken squares** | 1. Did you restart the terminal? <br> 2. Open PuTTY -> Window -> Appearance -> Check if "Font" is "JetBrainsMono Nerd Font". |
-| **Permission Denied** | Use **Run as Administrator**. The font needs to go into the system folder. |
+|---------|----------|
+| "Script is disabled" error | Run: `Set-ExecutionPolicy Bypass -Scope Process` |
+| "Could not create SSL/TLS channel" | Re-run the command (auto-fixes) |
+| Icons are broken squares | Restart terminal; check font is "JetBrainsMono Nerd Font" |
+| Permission Denied | Use Run as Administrator |
 
-### Quick Install (Server-Side)
+</details>
 
-1.  **Clone**:
-    ```bash
-    git clone https://github.com/deey001/dotfiles.git ~/dotfiles
-    ```
-2.  **Install**:
-    ```bash
-    cd ~/dotfiles && ./install.sh
-    ```
-    *Installs all dependencies (Neovim v0.11.0, Tmux, Starship, bat themes, fonts, etc.) and sets up symlinks. Existing configs are backed up automatically.*
+### Quick Install (Server/Mac/Linux)
 
-3.  **Finalize**:
-    - **Tmux**: Press `Prefix + I` (default `Ctrl+a` then `I`) to install plugins.
-    - **Neovim**: LazyVim will auto-install plugins on first launch.
-    - **Reload Shell**: Run `source ~/.bashrc` or restart your terminal.
+```bash
+git clone https://github.com/deey001/dotfiles.git ~/dotfiles
+cd ~/dotfiles && ./scripts/install.sh
+```
+
+**Post-install:**
+- **Tmux**: Press `Prefix + I` (`Ctrl+a` then `I`) to install plugins
+- **Neovim**: Open `nvim` — LazyVim auto-installs ~40 plugins on first launch
+- **macOS**: Run `brew bundle --file=~/dotfiles/Brewfile` for all CLI tools
+- **Reload Shell**: `exec $SHELL`
 
 ### Using Makefile
 
-Alternatively, use the Makefile for easier management:
 ```bash
 cd ~/dotfiles
 make install      # Install dotfiles
@@ -169,598 +290,123 @@ make update       # Update from git and reinstall
 make help         # Show all available commands
 ```
 
-## Uninstallation
-
-Run `./uninstall.sh` to perform a comprehensive cleanup, which supports a full **Factory Reset** of the environment. This script will:
-
-- **Remove Symlinks**: Cleans up all dotfile symlinks (`.bashrc`, `.config/*`, etc.).
-- **Remove Configurations**: Deletes config directories for `nvim`, `alacritty`, `bat`, `fastfetch`, and `base16-shell`.
-- **Remove Tools**: Deletes `ble.sh` and `JetBrainsMono Nerd Font`.
-- **Remove SSH Key**: Safely removes the specific SSH key added by the installer from `~/.ssh/authorized_keys`.
-- **Interactive Package Removal**: Asks if you want to uninstall system packages (neovim, tmux, starship, etc.) to restore the system to its original state.
-
-**Note**: The script handles distribution-specific package managers (apt, dnf, yum, pacman, brew) automatically.
+---
 
 ## File Structure
 
 ### Shell Configuration
-- `.bashrc` - Main bash configuration with tool initialization
-- `.bash_aliases` - Command aliases (ll, la, vi, vim, .., h, p, f, etc.)
-- `.bash_exports` - Environment variables (EDITOR, BAT_THEME, PATH, history config, etc.)
-- `.bash_functions` - Utility functions (extract, mkdirg, up, ftext, distribution, etc.)
-- `.bash_wrappers` - Custom functions (colored man pages, whatsgoingon)
-- `.bash_profile` - Bash profile for login shells
-- `.bash_local` - Machine-specific settings (not tracked in git)
-- `.inputrc` - Readline configuration with enhanced completion
-- `.blerc` - ble.sh configuration (disables multiline confirmation)
+| File | Purpose |
+|------|---------|
+| `.bashrc` | Main bash config (carapace, fzf, atuin, ble.sh) |
+| `.zshrc` | Main zsh config (fzf-tab, carapace, atuin, syntax-highlighting) |
+| `.bash_aliases` | Command aliases with modern tool fallbacks |
+| `.bash_exports` | Environment variables (EDITOR, BAT_THEME, PATH) |
+| `.bash_functions` | Utility functions (fcd, fv, fp, extract, cd override) |
+| `.bash_wrappers` | Custom functions (colored man pages, whatsgoingon) |
+| `.bash_profile` | Login shell sourcing |
+| `.bash_local` | Machine-specific settings (not tracked) |
+| `.blerc` | ble.sh config for bash (menu-complete, autosuggestions) |
+| `.inputrc` | Readline config with smart completion |
 
 ### Application Configs
-- `.tmux.conf` - Tmux configuration
-- `.gitconfig` - Git global configuration
-- `.ssh/config` - SSH client configuration template
-- `.editorconfig` - Editor formatting rules
-- `.config/starship.toml` - Starship prompt configuration (Tokyo Night theme)
-- `.config/nvim/init.lua` - Neovim LazyVim configuration
-- `.config/bat/themes/` - Bat color themes (Visual Studio Dark+)
-- `.config/fastfetch/config.jsonc` - Fastfetch system info configuration
-- `.config/alacritty/alacritty.yml` - Alacritty terminal configuration
-- `.config/tmux/scripts/` - Tmux status bar scripts
+| File | Purpose |
+|------|---------|
+| `.tmux.conf` | Tmux with catppuccin pills, 12 plugins, vim nav |
+| `.gitconfig` | Git config with delta pager, aliases, Catppuccin diffs |
+| `.config/nvim/` | LazyVim distribution (init.lua + lua/{config,plugins}/) |
+| `.config/starship.toml` | Pure-inspired prompt with Catppuccin Mocha |
+| `.config/atuin/config.toml` | Shell history config (fuzzy, compact, secret filter) |
+| `.config/alacritty/` | Terminal config with Catppuccin Mocha colors |
+| `.config/bat/themes/` | Catppuccin Mocha bat theme |
+| `.config/tmux/scripts/` | Network status bar script |
+| `.config/fastfetch/` | System info display config |
+| `.editorconfig` | Editor formatting rules |
+| `.ssh/config` | SSH client config template |
 
-### Management Scripts
-- `install.sh` - Installation script with version management
-- `uninstall.sh` - Comprehensive uninstallation script
-- `test.sh` - Validation and testing script
-- `Makefile` - Convenient management commands
-- `Brewfile` - macOS package declarations
-
-## Modern CLI Tools Usage Guide
-
-All modern tools are automatically installed by `install.sh` and are available immediately after installation. Each tool replaces a standard Unix command with a modern, feature-rich alternative. The original commands are still accessible via `old*` aliases.
-
-### 📁 File Listing: `eza` (replaces `ls`)
-
-**What it does**: Modern replacement for `ls` with icons, git status, and colors.
-
-**Why use it**: Shows file icons, git modification status, and uses colors to distinguish file types at a glance.
-
-**Examples**:
-```bash
-# Basic listing with icons (same as 'ls')
-eza
-
-# Long format with all files (same as 'ls -la')
-ll
-
-# List with git status indicators
-eza --git
-
-# Tree view of directory structure
-eza --tree --level=2
-
-# Sort by modification time
-eza -l --sort=modified
-
-# Use original ls if needed
-oldls -la
-```
-
-**Auto-configured**: The `cd` command automatically shows an `eza` listing when you change directories.
+### Management
+| File | Purpose |
+|------|---------|
+| `scripts/install.sh` | Main installer (shell detection, cross-platform) |
+| `scripts/uninstall.sh` | Full cleanup/factory reset |
+| `scripts/test.sh` | Installation validation |
+| `Makefile` | Convenient management commands |
+| `Brewfile` | macOS Homebrew package declarations |
 
 ---
 
-### 📄 File Viewing: `bat` (replaces `cat`)
+## Uninstallation
 
-**What it does**: Display file contents with syntax highlighting, line numbers, and git integration.
-
-**Why use it**: Makes reading code files easier with automatic language detection and syntax highlighting.
-
-**Examples**:
 ```bash
-# View a file with syntax highlighting (same as 'cat')
-cat file.js
-
-# View with line numbers
-bat -n file.py
-
-# Show git modifications
-bat --diff file.sh
-
-# Plain output without decorations
-bat --style=plain config.json
-
-# Use original cat if needed
-oldcat file.txt
+./scripts/uninstall.sh
 ```
 
-**Theme**: Pre-configured with "Visual Studio Dark+" theme (set in `.bash_exports`).
+Performs a full factory reset: removes symlinks, configs, tools (ble.sh, fonts), SSH keys, and optionally uninstalls system packages. Handles all package managers (apt, dnf, pacman, brew).
 
 ---
 
-### 🚀 Smart Navigation: `zoxide` (replaces `cd`)
+## Technical Details
 
-**What it does**: Learns your most-used directories and lets you jump to them with partial names.
+### Shell Detection
+The install script detects the active shell via `$SHELL`:
+- Both bash and zsh configs are always symlinked
+- Active shell dependencies are hard requirements; secondary shell uses `|| true`
+- ble.sh only installs when bash is available
+- carapace configures both shells
 
-**Why use it**: No need to type full paths. After visiting a directory once, jump to it from anywhere.
+### Theme Configuration
+- **bat**: `BAT_THEME="Catppuccin Mocha"` + `BAT_PAGING=never`
+- **Starship**: Catppuccin Mocha colors in Pure-inspired layout
+- **git-delta**: `syntax-theme = Catppuccin Mocha` with line numbers
+- **fzf**: Catppuccin Mocha colors in `FZF_DEFAULT_OPTS`
+- **Nerd Font**: JetBrainsMono Nerd Font for all icon support
 
-**Examples**:
-```bash
-# First time: use full path
-cd ~/Projects/dotfiles
-
-# Later: jump using just part of the name
-cd dot        # Goes to ~/Projects/dotfiles
-
-# Jump to most frecent directory matching "config"
-cd conf       # Might go to ~/.config
-
-# Interactive selection if multiple matches
-cd -i proj    # Shows menu of matching directories
-
-# List all tracked directories with scores
-zoxide query -l
-
-# Remove a directory from database
-zoxide remove ~/old/path
+### Plugin Load Order (Zsh)
+```
+compinit > carapace > fzf-tab > completion styles > fzf >
+syntax-highlighting > autosuggestions > history-substring-search > atuin > starship
 ```
 
-**How it learns**: Every `cd` command is tracked. Directories you visit frequently rank higher.
-
----
-
-### 🔍 File Search: `fd` (replaces `find`)
-
-**What it does**: Fast, user-friendly file finder with sensible defaults.
-
-**Why use it**: Simpler syntax than `find`, respects `.gitignore`, and much faster.
-
-**Examples**:
-```bash
-# Find all .js files (same as complex 'find' command)
-fd '\.js$'
-
-# Find by name (case-insensitive by default)
-fd readme
-
-# Find in specific directory
-fd config /etc
-
-# Find and execute command
-fd '\.txt$' --exec wc -l
-
-# Find hidden files too
-fd -H config
-
-# Search only directories
-fd -t d dotfiles
-
-# Use original find if needed
-oldfind . -name "*.txt"
+### Plugin Load Order (Bash)
+```
+history > env > shell opts > aliases > completion >
+carapace > fzf > atuin > starship > ble.sh
 ```
 
-**Note**: On Debian/Ubuntu, installed as `fdfind` but symlinked to `fd` at `~/.local/bin/fd`.
+### Tmux Status Bar
+- Left: session pill (green/red on prefix) — hand-crafted with Nerd Font powerline separators
+- Right: directory (rosewater) + date/time 12h (sapphire) + network (blue)
+- Window tabs: catppuccin/tmux v2 plugin with rounded style
+- Network: 5-min cached WAN/ISP via ip-api.com with jq JSON decode
 
----
-
-### 📊 Disk Usage: `dust` (replaces `du`)
-
-**What it does**: Visualize disk usage with a tree display and percentages.
-
-**Why use it**: Instantly see which directories consume the most space.
-
-**Examples**:
+### Alias System
+All modern tools have conditional aliases with fallbacks:
 ```bash
-# Show disk usage of current directory (same as 'du')
-dust
-
-# Limit tree depth
-dust -d 2
-
-# Show only top 15 entries
-dust -n 15
-
-# Reverse sort (smallest first)
-dust -r
-
-# Show apparent size instead of disk usage
-dust -b
-
-# Use original du if needed
-olddu -sh *
+if command -v duf >/dev/null 2>&1; then
+    alias df='duf'       # Modern command
+    alias olddf='/bin/df' # Original command
+fi
 ```
-
-**Visual**: Shows bars and percentages, making it easy to spot large directories.
-
----
-
-### 💾 Disk Space: `duf` (replaces `df`)
-
-**What it does**: Display disk usage with colors, sorting, and filtering.
-
-**Why use it**: Cleaner output with colors and automatic filtering of pseudo filesystems.
-
-**Examples**:
-```bash
-# Show all mounted filesystems (same as 'df')
-duf
-
-# Show only local filesystems (hides tmpfs, devtmpfs, etc.)
-duf --only local
-
-# Sort by usage
-duf --sort usage
-
-# Show specific filesystem
-duf /home
-
-# JSON output for scripting
-duf --json
-
-# Use original df if needed
-olddf -h
-```
-
-**Auto-filtered**: Hides clutter like `/dev`, `/proc`, `/sys` by default.
-
----
-
-### ⚙️ Process Viewer: `procs` (replaces `ps`)
-
-**What it does**: Modern process viewer with colors, tree view, and better defaults.
-
-**Why use it**: Easier to read, supports filtering, and shows process tree relationships.
-
-**Examples**:
-```bash
-# Show all processes (same as 'ps aux')
-procs
-
-# Filter by name
-procs firefox
-
-# Show process tree
-procs --tree
-
-# Sort by CPU usage
-procs --sortd cpu
-
-# Sort by memory
-procs --sortd mem
-
-# Watch mode (refresh every 2 seconds)
-procs --watch
-
-# Use original ps if needed
-oldps aux
-```
-
-**Colored output**: Different colors for users, states, and resource usage.
-
----
-
-### 📈 System Monitor: `btop` (replaces `top`)
-
-**What it does**: Beautiful, interactive resource monitor with mouse support.
-
-**Why use it**: Modern interface with graphs, colors, and easy navigation.
-
-**Examples**:
-```bash
-# Launch system monitor (same as 'top')
-btop
-
-# Inside btop:
-# - Arrow keys: Navigate
-# - F2: Options menu
-# - Mouse: Click to interact
-# - q: Quit
-```
-
-**Features**: CPU/memory graphs, network stats, disk I/O, process management.
-
-**Alternative**: `bottom` is also installed (run with `btm` command).
-
----
-
-### 🔎 Code Search: `ripgrep` (use as `rg`)
-
-**What it does**: Blazing-fast search that respects `.gitignore` and shows colored matches.
-
-**Why use it**: Much faster than `grep`, automatically skips hidden files and git-ignored paths.
-
-**Examples**:
-```bash
-# Search for pattern in current directory
-rg "function"
-
-# Search with case-insensitive
-rg -i "error"
-
-# Search specific file types
-rg -t js "import"
-
-# Search and show context (3 lines before/after)
-rg -C 3 "TODO"
-
-# Search hidden files too
-rg --hidden "secret"
-
-# List file types
-rg --type-list
-```
-
-**Note**: The `grep` alias still uses traditional grep with colors for compatibility.
-
----
-
-### 📜 Command History: `hstr`
-
-**What it does**: Visual, searchable command history browser.
-
-**Why use it**: Quickly find and re-run previous commands with interactive search.
-
-**Examples**:
-```bash
-# Launch history search (alias: hh)
-hstr
-
-# Inside hstr:
-# - Type to filter commands
-# - Arrow keys to navigate
-# - Enter to select and run
-# - Tab to select and edit
-# - Ctrl-/ to toggle regex search
-```
-
-**Keybinding**: Can also be bound to `Ctrl-r` for reverse-i-search replacement.
-
----
-
-### 🔧 Git Interface: `lazygit`
-
-**What it does**: Terminal UI for git with keyboard shortcuts and visual interface.
-
-**Why use it**: Manage branches, commits, diffs, and merges without memorizing git commands.
-
-**Examples**:
-```bash
-# Launch in current repository
-lazygit
-
-# Inside lazygit:
-# - 1-5: Switch between panels (Status, Files, Branches, Commits, Stash)
-# - Space: Stage/unstage files
-# - c: Commit
-# - p: Pull
-# - P: Push
-# - x: Show command menu
-# - q: Quit
-```
-
-**Features**: Interactive rebasing, cherry-picking, stashing, and conflict resolution.
-
----
-
-### 📖 Quick Help: `tldr`
-
-**What it does**: Community-driven man pages with practical examples.
-
-**Why use it**: Get straight to examples without reading lengthy man pages.
-
-**Examples**:
-```bash
-# Get examples for tar command
-tldr tar
-
-# Get examples for git
-tldr git-commit
-
-# Update tldr cache
-tldr --update
-
-# List all available pages
-tldr --list
-```
-
-**Philosophy**: "Too Long; Didn't Read" - simplified, example-focused documentation.
-
----
-
-### 📝 Markdown Viewer: `glow`
-
-**What it does**: Render markdown files beautifully in the terminal.
-
-**Why use it**: Read README files, documentation, and notes with proper formatting.
-
-**Examples**:
-```bash
-# Render a markdown file
-glow README.md
-
-# Pager mode (like less)
-glow -p CHANGELOG.md
-
-# Fetch and render from URL
-glow https://raw.githubusercontent.com/user/repo/main/README.md
-
-# Interactive file browser
-glow .
-```
-
-**Use cases**: Reading GitHub READMEs locally, previewing markdown before committing.
-
----
-
-### 🎨 System Info: `fastfetch`
-
-**What it does**: Display system information with logo and stats.
-
-**Why use it**: Quick system overview on login or for screenshots.
-
-**Examples**:
-```bash
-# Show system info
-fastfetch
-
-# Use different logo
-fastfetch --logo arch
-
-# JSON output
-fastfetch --format json
-
-# Show specific modules
-fastfetch --config none --structure Title:Separator:OS:Kernel:Uptime
-```
-
-**Auto-run**: Configured to display on login shells (not in tmux panes).
-
----
-
-### 🎬 Matrix Effect: `cmatrix`
-
-**What it does**: Fun Matrix-style falling characters screensaver.
-
-**Why use it**: Look cool or use as a screensaver.
-
-**Examples**:
-```bash
-# Start the Matrix
-cmatrix
-
-# Asynchronous scroll
-cmatrix -a
-
-# Bold characters
-cmatrix -b
-
-# Custom color (green, red, blue, yellow, etc.)
-cmatrix -C blue
-
-# Quit with Ctrl-C
-```
-
-**Just for fun**: Not a productivity tool, but great for impressing people.
-
----
-
-### 🔄 Accessing Original Commands
-
-All replaced commands are still accessible via `old*` aliases:
-
-```bash
-oldcat file.txt     # Use original cat
-oldfind . -name "*" # Use original find
-olddu -sh *         # Use original du
-olddf -h            # Use original df
-oldps aux           # Use original ps
-oldtop              # Use original top
-```
-
-This ensures scripts and workflows that depend on original command behavior still work.
 
 ---
 
 ## Troubleshooting
 
-### 📋 Clipboard Copy Not Working
-If the `y` key copy method fails (e.g., text copies inside tmux but doesn't reach your Windows/Mac clipboard):
-1.  **Check Terminal Support**: Your terminal **MUST** support **OSC 52**.
-    *   **Recommended**: Windows Terminal, Alacritty, iTerm2, WezTerm.
-    *   **PuTTY**: Requires "Allow terminal to access clipboard" enabled in settings. If it still fails, PuTTY is likely blocking the escape sequence strictly.
-2.  **Test Manually**: Run `~/.config/tmux/scripts/test_copy.sh`.
-    *   If this script fails to copy text to your local clipboard, the issue is **Client-Side (Your Terminal)**, not the server setup.
+### Clipboard Copy Not Working
+Your terminal must support **OSC 52** (Windows Terminal, Alacritty, iTerm2, WezTerm). PuTTY requires "Allow terminal to access clipboard" enabled.
 
-### 📶 Network Icons Missing
-- Ensure you have installed a **Nerd Font** (e.g., JetBrainsMono Nerd Font) on your **local machine** (Windows/Mac) and set it as the terminal font.
-- The server installs the font for Linux desktop usage, but your Putty/Terminal needs the font installed locally to render icons.
+### Network Icons Missing
+Install **JetBrainsMono Nerd Font** on your local machine and set it as the terminal font.
 
-## SSH Key Installation
-The install script automatically installs the SSH public key from `MDC_public.pub` to `~/.ssh/authorized_keys` for easy remote access.
+### git-delta Not Found
+If git commands fail with "cannot run delta": install with `brew install git-delta` or use `git -c core.pager=cat` as workaround.
+
+### LazyVim Plugins Not Loading
+Ensure both init.lua AND lua/ are symlinked:
+```bash
+ls -la ~/.config/nvim/
+# Should show init.lua -> .../dotfiles/.config/nvim/init.lua
+#           lua      -> .../dotfiles/.config/nvim/lua
+```
+If lua/ is missing: `ln -sf ~/dotfiles/.config/nvim/lua ~/.config/nvim/lua`
 
 ---
-
-## Technical Implementation Details
-
-### Modern Tools Installation
-
-All modern CLI tools are installed automatically by [install.sh](install.sh) with cross-platform support:
-
-#### macOS (Homebrew)
-- **Package Manager**: Uses [Brewfile](Brewfile) for declarative package management
-- **Tools**: All modern tools available via `brew install`
-- **Fonts**: JetBrainsMono Nerd Font via `brew install --cask font-jetbrains-mono-nerd-font`
-
-#### Debian/Ubuntu (apt)
-- **Core Tools**: Installed from official repositories (`ripgrep`, `fd-find`, `duf`)
-- **Binary Releases**: Tools not in repos installed from GitHub releases:
-  - `zoxide` - From official install script
-  - `eza` - Latest x86_64 Linux tarball
-  - `dust` - Latest x86_64 musl tarball
-- **Font Fix**: JetBrainsMono Nerd Font downloaded as `.zip` and extracted to `~/.local/share/fonts/JetBrainsMono/`
-- **fd Symlink**: `fdfind` → `~/.local/bin/fd` (added to PATH in [.bash_exports:5](.bash_exports#L5))
-
-#### RHEL/CentOS/Fedora (dnf/yum)
-- **EPEL Repository**: Automatically enabled for RHEL/CentOS to access more packages
-- **Core Tools**: Installed from EPEL repositories when available
-- **Binary Releases**: Same as Ubuntu for tools not in repos
-- **duf Installation**: Uses `.rpm` package from GitHub releases
-
-#### Arch Linux (pacman)
-- **All in One**: All modern tools available in official repos
-- **Single Command**: `pacman -Syu` installs everything
-
-### Alias System
-
-All modern tools have conditional aliases in [.bash_aliases](.bash_aliases#L33-L82):
-
-```bash
-# Example: duf replaces df, but keeps original accessible
-if command -v duf >/dev/null 2>&1; then
-    alias df='duf'      # Modern command
-    alias olddf='/bin/df'  # Original command
-fi
-```
-
-**Why this approach?**
-- ✅ Modern tools work seamlessly (just type `df` to get `duf`)
-- ✅ Original commands still accessible (`olddf` for scripts)
-- ✅ Graceful degradation (if tool not installed, uses original)
-- ✅ No conflicts with system scripts that depend on original behavior
-
-### PATH Configuration
-
-The [.bash_exports:5](.bash_exports#L5) adds `~/.local/bin` to PATH:
-
-```bash
-export PATH="$PATH:$HOME/bin:$HOME/.local/bin"
-```
-
-**Why needed?**
-- Ubuntu installs `fd-find` as `/usr/bin/fdfind` (naming conflict)
-- Install script creates symlink: `~/.local/bin/fd` → `/usr/bin/fdfind`
-- This PATH entry makes the `fd` command work system-wide
-
-### Theme Configuration
-
-- **bat theme**: Set to "Visual Studio Dark+" in [.bash_exports:42](.bash_exports#L42)
-- **Starship theme**: Tokyo Night colors in [.config/starship.toml](.config/starship.toml)
-- **Nerd Font**: JetBrainsMono Nerd Font for icons (installed on all platforms)
-
-### Auto-listing on `cd`
-
-The [.bash_functions](.bash_functions#L150-L156) overrides `cd` to auto-list:
-
-```bash
-cd() {
-    if [ -n "$1" ]; then
-        builtin cd "$@" && if command -v eza > /dev/null 2>&1; then eza -lha --icons; else ls -lhsA; fi
-    else
-        builtin cd ~ && if command -v eza > /dev/null 2>&1; then eza -lha --icons; else ls -lhsA; fi
-    fi
-}
-```
-
-**Why?** Automatically shows directory contents after changing directories (saves typing `ls`).
-
----
-
-Thanks to @deey001 for the initial dotfiles configuration.
