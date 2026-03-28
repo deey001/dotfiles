@@ -170,6 +170,9 @@ if command -v carapace >/dev/null 2>&1; then
     # Note: 'bash' removed from bridges — can conflict with readline hooks
     export CARAPACE_BRIDGES='fish,zsh,inshellisense'
     source <(carapace _carapace bash)
+    # Explicitly register carapace for tools with buggy system completions
+    # (tmux's system bash-completion has a 'read' bug — carapace handles it cleanly)
+    complete -F _carapace tmux git docker kubectl helm 2>/dev/null
 fi
 
 # ------------------------------------------------------------------------------
