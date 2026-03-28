@@ -145,6 +145,19 @@ elif [ -f /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh ]; then
     source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 fi
 
+# History substring search (type partial command, Up/Down filters by it)
+if [ -f /opt/homebrew/share/zsh-history-substring-search/zsh-history-substring-search.zsh ]; then
+    source /opt/homebrew/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+elif [ -f /usr/local/share/zsh-history-substring-search/zsh-history-substring-search.zsh ]; then
+    source /usr/local/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+elif [ -f /usr/share/zsh-history-substring-search/zsh-history-substring-search.zsh ]; then
+    source /usr/share/zsh-history-substring-search/zsh-history-substring-search.zsh
+fi
+if typeset -f history-substring-search-up > /dev/null 2>&1; then
+    bindkey '^[[A' history-substring-search-up
+    bindkey '^[[B' history-substring-search-down
+fi
+
 # Atuin (Magical Shell History - replaces Ctrl+R)
 if command -v atuin >/dev/null 2>&1; then
     eval "$(atuin init zsh)"

@@ -114,3 +114,23 @@ alias mountedinfo='df -hT'
 # Date alias
 alias da='date "+%Y-%m-%d %A %T %Z"'
 
+# Always create parent directories
+alias mkdir='mkdir -p'
+
+# Tree view with eza
+if command -v eza >/dev/null 2>&1; then
+    alias tree='eza --tree --icons'
+fi
+
+# Git shortcuts
+alias ga='git add'
+alias gst='git status'
+alias gd='git diff'
+alias gc='git commit -m'
+alias gp='git push'
+alias gl='git pull'
+alias gco='git checkout'
+
+# Quick cd to previous directory
+alias -- -='cd -'
+

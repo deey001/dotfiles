@@ -73,6 +73,12 @@ brew "duf"
 # Procs - Modern replacement for 'ps'
 brew "procs"
 
+# Git-delta - Beautiful syntax-highlighted git diffs
+brew "git-delta"
+
+# Lazydocker - Terminal UI for Docker management
+brew "lazydocker"
+
 # Bottom - Graphical process/resource monitor (like htop/top)
 brew "bottom"
 
@@ -128,6 +134,8 @@ brew "make"
 # Zsh Plugins - Provide ble.sh features for Zsh
 brew "zsh-syntax-highlighting"
 brew "zsh-autosuggestions"
+brew "zsh-completions"
+brew "zsh-history-substring-search"
 
 # ------------------------------------------------------------------------------
 # Fun Stuff

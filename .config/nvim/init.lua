@@ -1,4 +1,4 @@
--- Neovim init.lua - Minimal LazyVim configuration for headless servers
+-- Neovim init.lua - Enhanced configuration with Catppuccin Mocha
 -- Bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
@@ -69,6 +69,11 @@ require("lazy").setup({
         cmp = true,
         native_lsp = { enabled = true },
         markdown = true,
+        gitsigns = true,
+        indent_blankline = { enabled = true },
+        noice = true,
+        which_key = true,
+        neo_tree = true,
       },
     },
     config = function(_, opts)
@@ -82,7 +87,11 @@ require("lazy").setup({
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
     opts = {
-      ensure_installed = { "lua", "vim", "vimdoc", "bash", "python", "javascript", "markdown", "markdown_inline" },
+      ensure_installed = {
+        "lua", "vim", "vimdoc", "bash", "python", "javascript",
+        "typescript", "json", "yaml", "toml", "markdown", "markdown_inline",
+        "go", "rust", "html", "css", "dockerfile", "terraform",
+      },
       highlight = { enable = true },
       indent = { enable = true },
     },
@@ -97,22 +106,146 @@ require("lazy").setup({
   -- Markdown rendering in-buffer
   {
     "MeanderingProgrammer/render-markdown.nvim",
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter",
-    },
+    dependencies = { "nvim-treesitter/nvim-treesitter" },
     ft = { "markdown" },
     opts = {
       heading = {
         enabled = true,
-        icons = { "󰲡 ", "󰲣 ", "󰲥 ", "󰲧 ", "󰲩 ", "󰲫 " },
+        icons = { "󰫄 ", "󰫆 ", "󰫈 ", "󰫊 ", "󰫌 ", "󰫎 " },
       },
-      code = {
-        enabled = true,
-        style = "full",
+      code = { enabled = true, style = "full" },
+      bullet = { enabled = true, icons = { "●", "○", "◆", "◇" } },
+    },
+  },
+
+  -- Which-key: shows keybinding hints
+  {
+    "folke/which-key.nvim",
+    event = "VeryLazy",
+    opts = {
+      preset = "helix",
+    },
+    keys = {
+      { "<leader>?", function() require("which-key").show({ global = false }) end, desc = "Buffer Keymaps" },
+    },
+  },
+
+  -- Neo-tree: file explorer
+  {
+    "nvim-neo-tree/neo-tree.nvim",
+    branch = "v3.x",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "nvim-tree/nvim-web-devicons",
+      "MunifTanjim/nui.nvim",
+    },
+    keys = {
+      { "<leader>e", "<cmd>Neotree toggle<cr>", desc = "File Explorer" },
+      { "<leader>E", "<cmd>Neotree reveal<cr>", desc = "Reveal in Explorer" },
+    },
+    opts = {
+      filesystem = {
+        follow_current_file = { enabled = true },
+        filtered_items = { visible = true },
       },
-      bullet = {
-        enabled = true,
-        icons = { "●", "○", "◆", "◇" },
+      window = { width = 35 },
+    },
+  },
+
+  -- Lualine: status bar
+  {
+    "nvim-lualine/lualine.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    opts = {
+      options = {
+        theme = "catppuccin",
+        component_separators = { left = "", right = "" },
+        section_separators = { left = "", right = "" },
+        globalstatus = true,
+      },
+      sections = {
+        lualine_a = { "mode" },
+        lualine_b = { "branch", "diff", "diagnostics" },
+        lualine_c = { { "filename", path = 1 } },
+        lualine_x = { "encoding", "fileformat", "filetype" },
+        lualine_y = { "progress" },
+        lualine_z = { "location" },
+      },
+    },
+  },
+
+  -- Gitsigns: git status in sign column
+  {
+    "lewis6991/gitsigns.nvim",
+    event = { "BufReadPre", "BufNewFile" },
+    opts = {
+      signs = {
+        add = { text = "▎" },
+        change = { text = "▎" },
+        delete = { text = "" },
+        topdelete = { text = "" },
+        changedelete = { text = "▎" },
+      },
+      current_line_blame = false,
+    },
+    keys = {
+      { "<leader>gb", "<cmd>Gitsigns toggle_current_line_blame<cr>", desc = "Toggle Git Blame" },
+      { "<leader>gd", "<cmd>Gitsigns diffthis<cr>", desc = "Git Diff" },
+      { "<leader>gp", "<cmd>Gitsigns preview_hunk<cr>", desc = "Preview Hunk" },
+    },
+  },
+
+  -- Autopairs: auto-close brackets
+  {
+    "windwp/nvim-autopairs",
+    event = "InsertEnter",
+    config = true,
+  },
+
+  -- Indent guides
+  {
+    "lukas-reineke/indent-blankline.nvim",
+    main = "ibl",
+    event = { "BufReadPost", "BufNewFile" },
+    opts = {
+      indent = { char = "│" },
+      scope = { enabled = true },
+    },
+  },
+
+  -- Todo comments: highlight TODO/FIXME/HACK
+  {
+    "folke/todo-comments.nvim",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    event = { "BufReadPost", "BufNewFile" },
+    config = true,
+    keys = {
+      { "<leader>ft", "<cmd>TodoTelescope<cr>", desc = "Find TODOs" },
+    },
+  },
+
+  -- Noice: enhanced UI for cmdline, messages, popupmenu
+  {
+    "folke/noice.nvim",
+    event = "VeryLazy",
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      "rcarriga/nvim-notify",
+    },
+    opts = {
+      lsp = {
+        override = {
+          ["vim.lsp.util.convert_input_to_markdown_lines"] = true,
+          ["vim.lsp.util.stylize_markdown"] = true,
+          ["cmp.entry.get_documentation"] = true,
+        },
+      },
+      presets = {
+        bottom_search = true,
+        command_palette = true,
+        long_message_to_split = true,
+        inc_rename = false,
+        lsp_doc_border = true,
       },
     },
   },
@@ -126,6 +259,8 @@ require("lazy").setup({
       { "<leader>fg", "<cmd>Telescope live_grep<cr>", desc = "Live Grep" },
       { "<leader>fb", "<cmd>Telescope buffers<cr>", desc = "Buffers" },
       { "<leader>fh", "<cmd>Telescope help_tags<cr>", desc = "Help Tags" },
+      { "<leader>fr", "<cmd>Telescope oldfiles<cr>", desc = "Recent Files" },
+      { "<leader>fc", "<cmd>Telescope commands<cr>", desc = "Commands" },
     },
   },
 
@@ -134,8 +269,10 @@ require("lazy").setup({
     "neovim/nvim-lspconfig",
     config = function()
       local lspconfig = require("lspconfig")
-      -- Add LSP servers as needed
+      -- Add LSP servers as needed:
       -- lspconfig.pyright.setup{}
+      -- lspconfig.lua_ls.setup{}
+      -- lspconfig.ts_ls.setup{}
     end,
   },
 
@@ -144,7 +281,11 @@ require("lazy").setup({
     "hrsh7th/nvim-cmp",
     dependencies = {
       "hrsh7th/cmp-nvim-lsp",
+      "hrsh7th/cmp-buffer",
+      "hrsh7th/cmp-path",
+      "hrsh7th/cmp-cmdline",
       "L3MON4D3/LuaSnip",
+      "saadparwaiz1/cmp_luasnip",
     },
     config = function()
       local cmp = require("cmp")
@@ -160,11 +301,28 @@ require("lazy").setup({
           ["<C-Space>"] = cmp.mapping.complete(),
           ["<C-e>"] = cmp.mapping.abort(),
           ["<CR>"] = cmp.mapping.confirm({ select = true }),
+          ["<Tab>"] = cmp.mapping.select_next_item(),
+          ["<S-Tab>"] = cmp.mapping.select_prev_item(),
         }),
         sources = cmp.config.sources({
           { name = "nvim_lsp" },
           { name = "luasnip" },
+          { name = "buffer" },
+          { name = "path" },
         }),
+      })
+      -- Cmdline completion for : commands
+      cmp.setup.cmdline(":", {
+        mapping = cmp.mapping.preset.cmdline(),
+        sources = cmp.config.sources({
+          { name = "path" },
+          { name = "cmdline" },
+        }),
+      })
+      -- Search completion
+      cmp.setup.cmdline("/", {
+        mapping = cmp.mapping.preset.cmdline(),
+        sources = { { name = "buffer" } },
       })
     end,
   },
@@ -175,3 +333,4 @@ vim.keymap.set("n", "<C-h>", "<C-w>h", { desc = "Go to left window" })
 vim.keymap.set("n", "<C-j>", "<C-w>j", { desc = "Go to lower window" })
 vim.keymap.set("n", "<C-k>", "<C-w>k", { desc = "Go to upper window" })
 vim.keymap.set("n", "<C-l>", "<C-w>l", { desc = "Go to right window" })
+vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<cr>", { desc = "Clear search highlight" })

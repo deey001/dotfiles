@@ -36,6 +36,9 @@
 	# Use Neovim as the default editor for commit messages and interactive rebases
 	editor = nvim
 
+	# Use delta for beautiful syntax-highlighted diffs
+	pager = delta
+
 	# Automatically convert CRLF to LF on commit (Windows compatibility)
 	autocrlf = input
 
@@ -177,6 +180,19 @@
 [fetch]
 	# Automatically prune deleted remote branches when fetching
 	prune = true
+
+# ------------------------------------------------------------------------------
+# Delta (beautiful diff viewer)
+# ------------------------------------------------------------------------------
+[delta]
+	navigate = true
+	line-numbers = true
+	syntax-theme = Catppuccin Mocha
+	side-by-side = false
+	dark = true
+
+[interactive]
+	diffFilter = delta --color-only
 
 # ------------------------------------------------------------------------------
 # Git LFS (Large File Storage)
