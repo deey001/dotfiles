@@ -8,60 +8,28 @@
 # "read: '': not a valid identifier". ble.sh b99cadb passes empty variable names
 # from completion functions through to builtin read without filtering.
 #
-# ROOT CAUSE: ble/builtin/read/.read-arguments (ble.sh ~line 27744) collects
-# read arguments without checking for empty strings. bash 5.1 silently ignored
-# them; bash 5.2 throws an error.
+# ROOT CAUSE: ble/builtin/read/.read-arguments (~line 27744) collects read
+# arguments without checking for empty strings. bash 5.1 silently ignored them;
+# bash 5.2 rejects them in C code (BASH_COMPAT=5.1 does NOT help).
 #
-# CORRECT FIX: Override ble/builtin/read/.read-arguments here (in .blerc, which
-# is sourced after ble.sh defines all its functions) to skip empty var names.
+# FIX STRATEGY:
+#  1. install-blesh.sh patches the installed ble.sh file directly (persistent).
+#  2. This runtime patch via declare-f|sed|eval patches whatever is in memory,
+#     covering the case where ble.sh is loaded before the file is re-installed.
+#
+# NOTE: Hardcoding the function body fails when ble.sh uses different indentation
+# or minor structural changes. The declare-f approach reads the ACTUAL installed
+# function and surgically inserts the one-line guard.
 #
 # WRONG FIX (do NOT use): read() { builtin read "$@" 2>/dev/null; }
-# That wrapper bypasses ble/builtin/read entirely, breaking ble.sh's completion
-# state machine (_ble_builtin_read_hook never fires), causing menu hangs and
-# lost internal read context.
-if ((_ble_bash >= 50200)); then
-    function ble/builtin/read/.read-arguments {
-        local is_normal_args=
-        vars=()
-        opts=()
-        while (($#)); do
-            local arg=$1; shift
-            if [[ $is_normal_args || $arg != -* ]]; then
-                # FIX: bash 5.2 rejects empty variable names — skip them.
-                [[ $arg ]] && ble/array#push vars "$arg"
-            elif [[ $arg == -- ]]; then
-                is_normal_args=1
-            elif [[ $arg == --* ]]; then
-                case $arg in
-                (--help)
-                    opt_flags=${opt_flags}H ;;
-                (*)
-                    ble/util/print "read: unrecognized long option '$arg'" >&2
-                    opt_flags=${opt_flags}E ;;
-                esac
-            else
-                local i n=${#arg} c
-                for ((i=1;i<n;i++)); do
-                    c=${arg:i:1}
-                    case ${arg:i} in
-                    ([adinNptu])
-                        if (($#)); then
-                            ble/builtin/read/.process-option -$c "$1"; shift
-                        else
-                            ble/util/print "read: missing option argument for '-$c'" >&2
-                            opt_flags=${opt_flags}E
-                        fi
-                        break ;;
-                    ([adinNptu]*) ble/builtin/read/.process-option -$c "${arg:i+1}"; break ;;
-                    ([ers]*)      ble/builtin/read/.process-option -$c ;;
-                    (*)
-                        ble/util/print "read: unrecognized option '-$c'" >&2
-                        opt_flags=${opt_flags}E ;;
-                    esac
-                done
-            fi
-        done
-    }
+#   Bypasses ble/builtin/read entirely → breaks completion state machine.
+if (( BASH_VERSINFO[0] > 5 || (BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 2) )); then
+    if declare -f 'ble/builtin/read/.read-arguments' >/dev/null 2>&1; then
+        _ble_patch=$(declare -f 'ble/builtin/read/.read-arguments' | \
+            sed 's/ble\/array#push vars "\$arg"/[[ $arg ]] \&\& ble\/array#push vars "$arg"/')
+        eval "$_ble_patch"
+        unset _ble_patch
+    fi
 fi
 
 # ------------------------------------------------------------------------------
