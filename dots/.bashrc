@@ -15,18 +15,6 @@ case $- in
 esac
 
 # ------------------------------------------------------------------------------
-# ble.sh Early Init (--noattach delays terminal hookup)
-# ------------------------------------------------------------------------------
-# Must load early so it can wrap readline, but --noattach prevents it from
-# intercepting keystrokes until ble-attach is called at the very end.
-# ble.sh automatically reads ~/.blerc during this phase.
-# stderr suppressed: ble.sh terminal queries can produce harmless read errors.
-# Only load in interactive terminals (not pipes, scripts, or SSH without TTY).
-if [ -f ~/.local/share/blesh/ble.sh ] && [ -t 1 ]; then
-    source ~/.local/share/blesh/ble.sh --noattach 2>/dev/null
-fi
-
-# ------------------------------------------------------------------------------
 # History Settings
 # ------------------------------------------------------------------------------
 # erasedups: Remove duplicates if they are the same as the previous command
@@ -179,7 +167,7 @@ fi
 
 # Carapace - rich completions with descriptions for CLI tools
 if command -v carapace >/dev/null 2>&1; then
-    # Note: 'bash' removed from bridges — it conflicts with ble.sh's completion hooks
+    # Note: 'bash' removed from bridges — can conflict with readline hooks
     export CARAPACE_BRIDGES='fish,zsh,inshellisense'
     source <(carapace _carapace bash)
 fi
@@ -258,10 +246,3 @@ if command -v fastfetch > /dev/null 2>&1; then
         fastfetch
     fi
 fi
-
-# ------------------------------------------------------------------------------
-# ble.sh Attach (MUST be the absolute last thing)
-# ------------------------------------------------------------------------------
-# Now that starship, atuin, fzf, completions, and local config are all loaded,
-# attach ble.sh to the terminal so it can intercept keystrokes safely.
-[[ ${BLE_VERSION-} ]] && ble-attach 2>/dev/null
