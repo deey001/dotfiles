@@ -146,15 +146,6 @@ distribution() {
     echo $dtype
 }
 
-# Override cd to automatically list directory contents after changing
-cd() {
-    if [ -n "$1" ]; then
-        builtin cd "$@" && if command -v eza > /dev/null 2>&1; then eza -lha --icons; else ls -lhsA; fi
-    else
-        builtin cd ~ && if command -v eza > /dev/null 2>&1; then eza -lha --icons; else ls -lhsA; fi
-    fi
-}
-
 # Fuzzy find a directory and cd into it
 fcd() {
     local dir

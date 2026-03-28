@@ -81,8 +81,18 @@ stty -ixon 2>/dev/null
 # Bash completion improvements
 # Ignore case when completing
 bind "set completion-ignore-case on" 2>/dev/null
-# Show all options immediately if ambiguous
+# Show all options immediately if ambiguous (no need to press Tab twice)
 bind "set show-all-if-ambiguous on" 2>/dev/null
+# Tab cycles through completions (like zsh/ble.sh menu)
+bind "TAB:menu-complete" 2>/dev/null
+# Shift+Tab cycles backwards
+bind '"\e[Z":menu-complete-backward' 2>/dev/null
+# Show common prefix before cycling
+bind "set menu-complete-display-prefix on" 2>/dev/null
+# Color completions by file type (like ls --color)
+bind "set colored-stats on" 2>/dev/null
+# Highlight matching prefix in completions
+bind "set colored-completion-prefix on" 2>/dev/null
 
 # ------------------------------------------------------------------------------
 # Utilities
