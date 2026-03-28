@@ -40,6 +40,6 @@ else
     cp -r "$BLE_DIR"/. "$HOME/.local/share/blesh/"
 fi
 
-BLE_VER=$(grep -o "BLE_VERSION='[^']*'" ~/.local/share/blesh/ble.sh 2>/dev/null | head -1 || echo "unknown")
-echo "Done! Version: $BLE_VER"
-echo "Run: exec bash"
+BLE_VER=$(grep -o "BLE_VERSION=[^ ;]*" ~/.local/share/blesh/ble.sh 2>/dev/null | head -1 || echo "unknown")
+echo "Done! Installed: ~/.local/share/blesh/ble.sh (${BLE_VER:-nightly})"
+echo "Run: exec bash && echo \$BLE_VERSION"
