@@ -626,9 +626,10 @@ fi
 mkdir -p "$HOME/.config/atuin"
 ln -sf "$DOTFILES_DIR/.config/atuin/config.toml" "$HOME/.config/atuin/config.toml"
 
-# Neovim Setup
+# Neovim Setup (LazyVim distribution)
 mkdir -p "$HOME/.config/nvim"
 ln -sf "$DOTFILES_DIR/.config/nvim/init.lua" "$HOME/.config/nvim/init.lua"
+ln -sf "$DOTFILES_DIR/.config/nvim/lua" "$HOME/.config/nvim/lua"
 echo "Neovim configured with LazyVim. Plugins will auto-install on first run (Internet required)."
 
 # Run Neovim plugin installation if online
