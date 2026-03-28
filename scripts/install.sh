@@ -615,6 +615,8 @@ chmod +x "$DOTFILES_DIR/.config/tmux/scripts/get_network_status.sh"
 
 # Bat (Better Cat) Theme Setup
 mkdir -p "$HOME/.config/bat"
+# Remove any existing themes dir/symlink to avoid circular symlink
+rm -rf "$HOME/.config/bat/themes"
 ln -sf "$DOTFILES_DIR/.config/bat/themes" "$HOME/.config/bat/themes"
 if command -v bat > /dev/null 2>&1; then
     bat cache --build
@@ -629,18 +631,15 @@ ln -sf "$DOTFILES_DIR/.config/atuin/config.toml" "$HOME/.config/atuin/config.tom
 # Neovim Setup (LazyVim distribution)
 mkdir -p "$HOME/.config/nvim"
 ln -sf "$DOTFILES_DIR/.config/nvim/init.lua" "$HOME/.config/nvim/init.lua"
+# Remove existing lua dir/symlink to avoid circular symlink on re-install
+rm -rf "$HOME/.config/nvim/lua"
 ln -sf "$DOTFILES_DIR/.config/nvim/lua" "$HOME/.config/nvim/lua"
 echo "Neovim configured with LazyVim. Plugins will auto-install on first run (Internet required)."
 
 # Run Neovim plugin installation if online
-if [ "$IS_ONLINE" = true ] && command -v nvim >/dev/null 2>&1; then
-    echo "Syncing Neovim plugins (this may take a minute)..."
-    # Using headless mode to pre-download plugins. 
-    # Redirecting all output to /dev/null to hide transient "module not found" errors 
-    # that occur before Treesitter is fully settled.
-    nvim --headless "+Lazy! install" +qa > /dev/null 2>&1 || true
-    echo "Neovim plugins synchronized."
-fi
+# NOTE: Skipped — LazyVim auto-installs all plugins on first real nvim launch.
+# Headless sync can hang indefinitely on slow systems.
+echo "Neovim ready. Run 'nvim' to auto-install plugins on first launch."
 
 # Fastfetch Config
 mkdir -p "$HOME/.config/fastfetch"
