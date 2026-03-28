@@ -1,161 +1,123 @@
-format = """
-[](#3B4252)\
+# Starship Prompt — Pure-inspired minimal style with Catppuccin Mocha colors
+# Two-line: info on top, prompt char below
+
+format = """\
 $os\
 $username\
 $hostname\
-[](bg:#434C5E fg:#3B4252)\
 $directory\
-[](fg:#434C5E bg:#4C566A)\
 $git_branch\
 $git_status\
-[](fg:#4C566A bg:#86BBD8)\
-$c\
-$elixir\
-$elm\
-$golang\
-$haskell\
-$java\
-$julia\
+$python\
 $nodejs\
-$nim\
+$golang\
 $rust\
-[](fg:#86BBD8 bg:#06969A)\
+$java\
 $docker_context\
-[](fg:#06969A bg:#33658A)\
-$time\
-[ ](fg:#33658A)\
-"""
+$cmd_duration\
+$line_break\
+$character"""
+
+add_newline = true
 command_timeout = 5000
-# Disable the blank line at the start of the prompt
-# add_newline = false
 
-# You can also replace your username with a neat symbol like  to save some space
-[username]
-show_always = true
-style_user = "bg:#3B4252"
-style_root = "bg:#3B4252 fg:#BF616A"
-format = '[$user]($style)'
-
-[hostname]
-ssh_only = false
-style = "bg:#3B4252"
-format = '[@$hostname ]($style)'
+[character]
+success_symbol = "[❯](mauve)"
+error_symbol = "[❯](red)"
+vimcmd_symbol = "[❮](green)"
 
 [os]
 disabled = false
-style = "bg:#3B4252 fg:#ffffff"
+style = "fg:#cdd6f4"
 format = '[$symbol]($style)'
 
 [os.symbols]
-Windows = "󰍲 "
-Ubuntu = "\uf31b "
-Debian = "\uf306 "
-Raspbian = "\uf315 "
-Mint = "󰣭 "
-Macos = "\uf179 "
-Manjaro = "\uf312 "
-Linux = "\uf17c "
-Gentoo = "󰣨 "
-Fedora = "\uf30a "
-Alpine = "\uf300 "
-Amazon = "\uf270 "
-Android = "\uf17b "
-Arch = "\uf303 "
-Artix = "\uf31f "
-CentOS = "\uf304 "
-NixOS = "\uf313 "
+Windows = " "
+Ubuntu = " "
+Debian = " "
+Raspbian = " "
+Mint = "󰹮 "
+Macos = " "
+Manjaro = " "
+Linux = " "
+Gentoo = "󰹩 "
+Fedora = " "
+Alpine = " "
+Amazon = " "
+Android = " "
+Arch = " "
+Artix = " "
+CentOS = " "
+NixOS = " "
 Redhat = "󱄛 "
-SUSE = "\uf314 "
+SUSE = " "
+
+[username]
+show_always = false
+style_user = "fg:#cdd6f4"
+style_root = "fg:#f38ba8 bold"
+format = '[$user]($style)'
+
+[hostname]
+ssh_only = true
+style = "fg:#a6adc8"
+format = '[@$hostname]($style) '
+
 [directory]
-style = "bg:#434C5E"
-format = "[ $path ]($style)"
+style = "fg:#89b4fa bold"
+format = '[$path]($style) '
 truncation_length = 3
 truncation_symbol = "…/"
 
-# Here is how you can shorten some long paths by text replacement
-# similar to mapped_locations in Oh My Posh:
 [directory.substitutions]
 "Documents" = "󰈙 "
 "Downloads" = " "
 "Music" = " "
 "Pictures" = " "
-# Keep in mind that the order matters. For example:
-# "Important Documents" = "  "
-# will not be replaced, because "Documents" was already substituted before.
-# So either put "Important Documents" before "Documents" or use the substituted version:
-# "Important  " = "  "
-
-[c]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
-[docker_context]
-symbol = " "
-style = "bg:#06969A"
-format = '[ $symbol $context ]($style)$path'
-
-[elixir]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
-[elm]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
 
 [git_branch]
-symbol = " "
-style = "bg:#4C566A"
-format = '[ $symbol$branch ]($style)'
+symbol = " "
+style = "fg:#a6adc8"
+format = '[$symbol$branch]($style) '
 
 [git_status]
-style = "bg:#4C566A"
-format = '[$all_status$ahead_behind ]($style)'
+style = "fg:#f9e2af"
+format = '[$all_status$ahead_behind]($style)'
 
-[golang]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
-[haskell]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
-[java]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
-[julia]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
-[nodejs]
-symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
-
-[nim]
-symbol = "󰆥 "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
+[cmd_duration]
+min_time = 2_000
+style = "fg:#f9e2af"
+format = '[$duration]($style) '
 
 [python]
 symbol = " "
-style = "bg:#3B4252"
-format = '[ $symbol(\($virtualenv\) )]($style)'
+style = "fg:#a6e3a1"
+format = '[$symbol($virtualenv )]($style)'
+
+[nodejs]
+symbol = " "
+style = "fg:#a6e3a1"
+format = '[$symbol$version]($style) '
+
+[golang]
+symbol = " "
+style = "fg:#a6e3a1"
+format = '[$symbol$version]($style) '
 
 [rust]
 symbol = " "
-style = "bg:#86BBD8"
-format = '[ $symbol ($version) ]($style)'
+style = "fg:#a6e3a1"
+format = '[$symbol$version]($style) '
+
+[java]
+symbol = " "
+style = "fg:#a6e3a1"
+format = '[$symbol$version]($style) '
+
+[docker_context]
+symbol = " "
+style = "fg:#89b4fa"
+format = '[$symbol$context]($style) '
 
 [time]
-disabled = false
-time_format = "%R" # Hour:Minute Format
-style = "bg:#33658A"
-format = '[ $time ]($style)'
+disabled = true
