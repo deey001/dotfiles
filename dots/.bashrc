@@ -15,17 +15,6 @@ case $- in
 esac
 
 # ------------------------------------------------------------------------------
-# ble.sh Early Init (--noattach mode)
-# ------------------------------------------------------------------------------
-# Provides fish-style ghost text autosuggestions + syntax highlighting.
-# --noattach loads ble.sh without hooking the terminal yet. ble-attach at
-# the very end activates it after all other tools (atuin, fzf, carapace) load.
-# Terminal probes that caused 'read' errors are disabled in ~/.blerc.
-if [ -f ~/.local/share/blesh/ble.sh ] && [ -t 1 ]; then
-    source ~/.local/share/blesh/ble.sh --noattach 2>/dev/null
-fi
-
-# ------------------------------------------------------------------------------
 # History Settings
 # ------------------------------------------------------------------------------
 # erasedups: Remove duplicates if they are the same as the previous command
@@ -272,8 +261,3 @@ if command -v fastfetch > /dev/null 2>&1; then
         fastfetch
     fi
 fi
-
-# ------------------------------------------------------------------------------
-# ble.sh Attach (MUST be last)
-# ------------------------------------------------------------------------------
-[[ ${BLE_VERSION-} ]] && ble-attach 2>/dev/null
