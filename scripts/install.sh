@@ -526,15 +526,22 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# Helper Tool Installation (TPM)
+# Helper Tool Installation (ble.sh, TPM)
 # ------------------------------------------------------------------------------
 
-# ble.sh was removed — incompatible with this bash environment.
-# Clean up any existing installation left from previous runs.
-if [ -d "$HOME/.local/share/blesh" ]; then
-    echo "Removing ble.sh (no longer used)..."
-    rm -rf "$HOME/.local/share/blesh"
-    rm -f "$HOME/.blerc"
+# ble.sh (Bash Line Editor) - fish-style autosuggestions + syntax highlighting
+if [ "$IS_ONLINE" = true ] && command -v bash >/dev/null 2>&1; then
+    if command -v make >/dev/null 2>&1; then
+        if [ ! -f "$HOME/.local/share/blesh/ble.sh" ]; then
+            echo "Installing ble.sh (Bash autosuggestions)..."
+            rm -rf ble.sh
+            git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git
+            make -C ble.sh install PREFIX=~/.local
+            rm -rf ble.sh
+        fi
+    else
+        echo "Warning: 'make' not found. Skipping ble.sh installation."
+    fi
 fi
 
 # Base16 Shell - Color Themes
@@ -575,6 +582,7 @@ ln -sf "$DOTFILES_DIR/dots/.bash_functions" "$HOME/.bash_functions"
 ln -sf "$DOTFILES_DIR/dots/.bash_profile" "$HOME/.bash_profile"
 ln -sf "$DOTFILES_DIR/dots/.bash_wrappers" "$HOME/.bash_wrappers"
 ln -sf "$DOTFILES_DIR/dots/.bashrc" "$HOME/.bashrc"
+ln -sf "$DOTFILES_DIR/dots/.blerc" "$HOME/.blerc"
 
 # Zsh config (always symlinked)
 backup_file "$HOME/.zshrc"
