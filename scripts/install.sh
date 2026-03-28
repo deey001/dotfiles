@@ -21,7 +21,7 @@ set -euo pipefail
 # ------------------------------------------------------------------------------
 # Update these versions as needed for new releases
 
-NEOVIM_VERSION="0.11.0"
+NEOVIM_VERSION="0.11.6"
 STARSHIP_VERSION="latest"  # Uses latest from starship.rs installer
 LAZYGIT_VERSION="latest"   # Fetched dynamically from GitHub API
 GLOW_VERSION="latest"      # Fetched dynamically from GitHub API
