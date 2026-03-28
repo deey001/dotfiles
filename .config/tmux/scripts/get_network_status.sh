@@ -133,20 +133,20 @@ fi
 OUTPUT=""
 
 if [ "$PLAIN_MODE" = true ]; then
-    # Compact plain text for catppuccin module
+    # Compact text with icons for catppuccin module
     PARTS=""
     if [ -n "$LOCAL_IP" ]; then
-        PARTS="${LOCAL_IP}"
+        PARTS="${ICON_LAN} ${LOCAL_IP}"
     fi
     if [ -n "$VPN_IP" ]; then
-        PARTS="${PARTS:+$PARTS  }VPN: ${VPN_IP}"
+        PARTS="${PARTS:+$PARTS  }${ICON_VPN} VPN: ${VPN_IP}"
     fi
     if [ -n "$WAN_IP" ] && [ -n "$ISP_SHORT" ]; then
-        PARTS="${PARTS:+$PARTS  }${ISP_SHORT}: ${WAN_IP}"
+        PARTS="${PARTS:+$PARTS  }${ICON_WAN} ${ISP_SHORT}: ${WAN_IP}"
     elif [ -n "$WAN_IP" ]; then
-        PARTS="${PARTS:+$PARTS  }WAN: ${WAN_IP}"
+        PARTS="${PARTS:+$PARTS  }${ICON_WAN} WAN: ${WAN_IP}"
     else
-        PARTS="${PARTS:+$PARTS  }Offline"
+        PARTS="${PARTS:+$PARTS  }${ICON_OFFLINE} Offline"
     fi
     echo "$PARTS"
 else
