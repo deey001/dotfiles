@@ -529,6 +529,14 @@ fi
 # Helper Tool Installation (TPM)
 # ------------------------------------------------------------------------------
 
+# ble.sh was removed — incompatible with this bash environment.
+# Clean up any existing installation left from previous runs.
+if [ -d "$HOME/.local/share/blesh" ]; then
+    echo "Removing ble.sh (no longer used)..."
+    rm -rf "$HOME/.local/share/blesh"
+    rm -f "$HOME/.blerc"
+fi
+
 # Base16 Shell - Color Themes
 if [ "$IS_ONLINE" = true ] && [ ! -d "$HOME/.config/base16-shell" ]; then
     echo "Cloning base16-shell for color themes..."
