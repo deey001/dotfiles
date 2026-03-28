@@ -187,9 +187,14 @@ fi
 
 # Carapace - rich completions with descriptions for CLI tools
 if command -v carapace >/dev/null 2>&1; then
-    # Note: 'bash' removed from bridges — can conflict with readline hooks
-    export CARAPACE_BRIDGES='fish,zsh,inshellisense'
+    # No bridges — use carapace native completions only.
+    # Bridges fall back to system bash-completion scripts which can have bugs
+    # (e.g. Ubuntu's tmux completion has a broken 'read' call).
+    unset CARAPACE_BRIDGES
     source <(carapace _carapace bash)
+    # Remove any stale system completions for tools carapace handles natively.
+    # This prevents the system handler from running alongside carapace's.
+    complete -r tmux git docker kubectl helm 2>/dev/null
 fi
 
 # ------------------------------------------------------------------------------
