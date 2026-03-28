@@ -124,27 +124,50 @@ ISP_SHORT=$(shorten_isp "$ISP")
 # Status Construction
 # ------------------------------------------------------------------------------
 
+# Plain mode for catppuccin tmux plugin (no tmux color codes)
+PLAIN_MODE=false
+if [ "$1" = "--plain" ]; then
+    PLAIN_MODE=true
+fi
+
 OUTPUT=""
 
-# Format: LAN
-if [ -n "$LOCAL_IP" ]; then
-    OUTPUT="#[fg=green]${ICON_LAN} LAN: ${LOCAL_IP}"
+if [ "$PLAIN_MODE" = true ]; then
+    # Compact plain text for catppuccin module
+    PARTS=""
+    if [ -n "$LOCAL_IP" ]; then
+        PARTS="${LOCAL_IP}"
+    fi
+    if [ -n "$VPN_IP" ]; then
+        PARTS="${PARTS:+$PARTS  }VPN: ${VPN_IP}"
+    fi
+    if [ -n "$WAN_IP" ] && [ -n "$ISP_SHORT" ]; then
+        PARTS="${PARTS:+$PARTS  }${ISP_SHORT}: ${WAN_IP}"
+    elif [ -n "$WAN_IP" ]; then
+        PARTS="${PARTS:+$PARTS  }WAN: ${WAN_IP}"
+    else
+        PARTS="${PARTS:+$PARTS  }Offline"
+    fi
+    echo "$PARTS"
 else
-    OUTPUT="#[fg=red]${ICON_LAN} LAN: N/A"
-fi
+    # Formatted output for manual tmux status bar
+    if [ -n "$LOCAL_IP" ]; then
+        OUTPUT="#[fg=green]${ICON_LAN} LAN: ${LOCAL_IP}"
+    else
+        OUTPUT="#[fg=red]${ICON_LAN} LAN: N/A"
+    fi
 
-# Format: VPN
-if [ -n "$VPN_IP" ]; then
-    OUTPUT="${OUTPUT} #[fg=yellow]${ICON_VPN} VPN: ${VPN_IP}"
-fi
+    if [ -n "$VPN_IP" ]; then
+        OUTPUT="${OUTPUT} #[fg=yellow]${ICON_VPN} VPN: ${VPN_IP}"
+    fi
 
-# Format: WAN + ISP
-if [ -n "$WAN_IP" ] && [ -n "$ISP_SHORT" ]; then
-    OUTPUT="${OUTPUT} #[fg=cyan]${ICON_WAN} ${ISP_SHORT}: ${WAN_IP}"
-elif [ -n "$WAN_IP" ]; then
-    OUTPUT="${OUTPUT} #[fg=cyan]${ICON_WAN} WAN: ${WAN_IP}"
-else
-    OUTPUT="${OUTPUT} #[fg=red]${ICON_OFFLINE} Offline"
-fi
+    if [ -n "$WAN_IP" ] && [ -n "$ISP_SHORT" ]; then
+        OUTPUT="${OUTPUT} #[fg=cyan]${ICON_WAN} ${ISP_SHORT}: ${WAN_IP}"
+    elif [ -n "$WAN_IP" ]; then
+        OUTPUT="${OUTPUT} #[fg=cyan]${ICON_WAN} WAN: ${WAN_IP}"
+    else
+        OUTPUT="${OUTPUT} #[fg=red]${ICON_OFFLINE} Offline"
+    fi
 
-echo "$OUTPUT"
+    echo "$OUTPUT"
+fi
