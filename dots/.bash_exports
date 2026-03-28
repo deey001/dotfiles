@@ -38,3 +38,4 @@ fi
 
 # bat theme configuration
 export BAT_THEME="Catppuccin Mocha"
+export BAT_PAGER="less -RF"
