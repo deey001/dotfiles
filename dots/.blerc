@@ -2,9 +2,15 @@
 # Configuration for ble.sh (Bash Line Editor)
 
 # ------------------------------------------------------------------------------
-# Terminal Compatibility
+# Bash 5.2 Compatibility Patch
 # ------------------------------------------------------------------------------
-bleopt input_encoding=UTF-8
+# ble.sh calls 'read' with empty variable names in some code paths.
+# bash 5.1 silently ignored this; bash 5.2 throws 'not a valid identifier'.
+# ble.sh also redirects its internal fd 2 to /dev/tty, so 2>/dev/null inside
+# ble.sh doesn't catch it. Wrapping 'read' in a function intercepts it first.
+if (( BASH_VERSINFO[0] > 5 || (BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 2) )); then
+    read() { builtin read "$@" 2>/dev/null; }
+fi
 
 # ------------------------------------------------------------------------------
 # Paste & Clipboard Settings

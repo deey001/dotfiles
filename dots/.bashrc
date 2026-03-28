@@ -21,6 +21,11 @@ esac
 # variable names which bash 5.2 rejects but 5.1 silently ignores.
 # Exported so it persists for ble.sh's entire runtime (not just init).
 if [ -f ~/.local/share/blesh/ble.sh ] && [ -t 1 ]; then
+    # Wrap 'read' to suppress empty variable name errors (bash 5.2 ble.sh bug).
+    # ble.sh redirects fd 2 to /dev/tty, so internal 2>/dev/null can't catch it.
+    if (( BASH_VERSINFO[0] > 5 || (BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 2) )); then
+        read() { builtin read "$@" 2>/dev/null; }
+    fi
     export BASH_COMPAT=5.1
     source ~/.local/share/blesh/ble.sh --noattach 2>/dev/null
 fi
