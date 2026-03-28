@@ -526,18 +526,16 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# Helper Tool Installation (TPM)
+# Helper Tool Installation (ble.sh, TPM)
 # ------------------------------------------------------------------------------
 
-# ble.sh removed: incompatible with bash 5.x + tmux on this system.
-# The nightly build has the same broken commit (b99cadb) as devel4.
-# Upstream bug: ble.sh calls read with empty fd variable on bash 5.x.
-# Clean up any existing installation.
-if [ -d "$HOME/.local/share/blesh" ]; then
-    echo "Removing incompatible ble.sh installation..."
-    rm -rf "$HOME/.local/share/blesh"
+# ble.sh — build from master source (nightly tarball was stale/broken)
+if [ "$IS_ONLINE" = true ] && command -v bash >/dev/null 2>&1 && command -v make >/dev/null 2>&1; then
+    if [ ! -f "$HOME/.local/share/blesh/ble.sh" ]; then
+        echo "Installing ble.sh from source..."
+        bash "$(dirname "$0")/install-blesh.sh" || echo "Warning: ble.sh install failed, skipping."
+    fi
 fi
-rm -f "$HOME/.blerc"
 
 # Base16 Shell - Color Themes
 if [ "$IS_ONLINE" = true ] && [ ! -d "$HOME/.config/base16-shell" ]; then
