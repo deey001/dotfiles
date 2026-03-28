@@ -21,7 +21,8 @@ esac
 # intercepting keystrokes until ble-attach is called at the very end.
 # ble.sh automatically reads ~/.blerc during this phase.
 # stderr suppressed: ble.sh terminal queries can produce harmless read errors.
-if [ -f ~/.local/share/blesh/ble.sh ]; then
+# Only load in interactive terminals (not pipes, scripts, or SSH without TTY).
+if [ -f ~/.local/share/blesh/ble.sh ] && [ -t 1 ]; then
     source ~/.local/share/blesh/ble.sh --noattach 2>/dev/null
 fi
 
@@ -178,7 +179,8 @@ fi
 
 # Carapace - rich completions with descriptions for CLI tools
 if command -v carapace >/dev/null 2>&1; then
-    export CARAPACE_BRIDGES='bash,fish,zsh,inshellisense'
+    # Note: 'bash' removed from bridges — it conflicts with ble.sh's completion hooks
+    export CARAPACE_BRIDGES='fish,zsh,inshellisense'
     source <(carapace _carapace bash)
 fi
 
