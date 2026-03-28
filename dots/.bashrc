@@ -15,16 +15,6 @@ case $- in
 esac
 
 # ------------------------------------------------------------------------------
-# ble.sh Early Init (--noattach mode)
-# ------------------------------------------------------------------------------
-# Load early so ble.sh can wrap readline before other tools init.
-# --noattach delays terminal hookup until ble-attach at the very end.
-# Requires a real TTY — skip in pipes/cron/non-interactive SSH.
-if [ -f ~/.local/share/blesh/ble.sh ] && [ -t 1 ]; then
-    source ~/.local/share/blesh/ble.sh --noattach 2>/dev/null
-fi
-
-# ------------------------------------------------------------------------------
 # History Settings
 # ------------------------------------------------------------------------------
 # erasedups: Remove duplicates if they are the same as the previous command
@@ -271,8 +261,3 @@ if command -v fastfetch > /dev/null 2>&1; then
         fastfetch
     fi
 fi
-
-# ------------------------------------------------------------------------------
-# ble.sh Attach (MUST be last — hooks terminal after all other tools loaded)
-# ------------------------------------------------------------------------------
-[[ ${BLE_VERSION-} ]] && ble-attach 2>/dev/null

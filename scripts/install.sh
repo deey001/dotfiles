@@ -526,23 +526,8 @@ else
 fi
 
 # ------------------------------------------------------------------------------
-# Helper Tool Installation (ble.sh, TPM)
+# Helper Tool Installation (TPM)
 # ------------------------------------------------------------------------------
-
-# ble.sh (Bash Line Editor) - Highlighting and Auto-suggestions
-# Only install if bash is available (it's bash-specific)
-if [ "$IS_ONLINE" = true ] && [ ! -d "$HOME/.local/share/blesh/ble.sh" ] && command -v bash >/dev/null 2>&1; then
-    if command -v make >/dev/null 2>&1; then
-        echo "Installing ble.sh (Bash Line Editor)..."
-        # Remove existing ble.sh dir if it exists from a failed attempt
-        rm -rf ble.sh
-        git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git
-        make -C ble.sh install PREFIX=~/.local
-        rm -rf ble.sh
-    else
-        echo "Warning: 'make' not found. Skipping ble.sh installation."
-    fi
-fi
 
 # Base16 Shell - Color Themes
 if [ "$IS_ONLINE" = true ] && [ ! -d "$HOME/.config/base16-shell" ]; then
@@ -576,14 +561,12 @@ backup_file "$HOME/.bash_functions"
 backup_file "$HOME/.bash_profile"
 backup_file "$HOME/.bash_wrappers"
 backup_file "$HOME/.bashrc"
-backup_file "$HOME/.blerc"
 ln -sf "$DOTFILES_DIR/dots/.bash_aliases" "$HOME/.bash_aliases"
 ln -sf "$DOTFILES_DIR/dots/.bash_exports" "$HOME/.bash_exports"
 ln -sf "$DOTFILES_DIR/dots/.bash_functions" "$HOME/.bash_functions"
 ln -sf "$DOTFILES_DIR/dots/.bash_profile" "$HOME/.bash_profile"
 ln -sf "$DOTFILES_DIR/dots/.bash_wrappers" "$HOME/.bash_wrappers"
 ln -sf "$DOTFILES_DIR/dots/.bashrc" "$HOME/.bashrc"
-ln -sf "$DOTFILES_DIR/dots/.blerc" "$HOME/.blerc"
 
 # Zsh config (always symlinked)
 backup_file "$HOME/.zshrc"
