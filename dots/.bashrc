@@ -20,8 +20,9 @@ esac
 # Must load early so it can wrap readline, but --noattach prevents it from
 # intercepting keystrokes until ble-attach is called at the very end.
 # ble.sh automatically reads ~/.blerc during this phase.
+# stderr suppressed: ble.sh terminal queries can produce harmless read errors.
 if [ -f ~/.local/share/blesh/ble.sh ]; then
-    source ~/.local/share/blesh/ble.sh --noattach
+    source ~/.local/share/blesh/ble.sh --noattach 2>/dev/null
 fi
 
 # ------------------------------------------------------------------------------
@@ -261,4 +262,4 @@ fi
 # ------------------------------------------------------------------------------
 # Now that starship, atuin, fzf, completions, and local config are all loaded,
 # attach ble.sh to the terminal so it can intercept keystrokes safely.
-[[ ${BLE_VERSION-} ]] && ble-attach
+[[ ${BLE_VERSION-} ]] && ble-attach 2>/dev/null
