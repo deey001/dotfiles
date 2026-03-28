@@ -582,8 +582,40 @@ fi
 echo "Stowing dotfiles..."
 echo "Active shell: $ACTIVE_SHELL"
 
-# Backup any real (non-symlink) files that would conflict with stow
-# stow's dry-run detects conflicts; we back them up first
+# ── Migration: remove old-style symlinks pointing to dots/ or .config/ ────────
+# Before stow was used, install.sh created symlinks pointing to dots/.file and
+# .config/app/file. Stow refuses to replace symlinks it doesn't own. Detect and
+# remove any symlink whose target is inside the old paths so stow can take over.
+echo "Checking for legacy symlinks to migrate..."
+_old_paths=("$DOTFILES_DIR/dots" "$DOTFILES_DIR/.config")
+_stow_targets=(
+    "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.bash_aliases"
+    "$HOME/.bash_exports" "$HOME/.bash_functions" "$HOME/.bash_wrappers"
+    "$HOME/.blerc" "$HOME/.zshrc" "$HOME/.tmux.conf" "$HOME/.inputrc"
+    "$HOME/.gitconfig" "$HOME/.gitattributes" "$HOME/.editorconfig"
+    "$HOME/.config/starship.toml"
+    "$HOME/.config/nvim/init.lua" "$HOME/.config/nvim/lua"
+    "$HOME/.config/tmux/scripts"
+    "$HOME/.config/bat/themes"
+    "$HOME/.config/atuin/config.toml"
+    "$HOME/.config/fastfetch/config.jsonc"
+    "$HOME/.config/alacritty/alacritty.toml" "$HOME/.config/alacritty/alacritty.yml"
+)
+for target in "${_stow_targets[@]}"; do
+    if [ -L "$target" ]; then
+        link_dest=$(readlink "$target")
+        for old_path in "${_old_paths[@]}"; do
+            if [[ "$link_dest" == "$old_path"* ]]; then
+                echo "  Removing legacy symlink: $target -> $link_dest"
+                rm "$target"
+                break
+            fi
+        done
+    fi
+done
+unset _old_paths _stow_targets target link_dest old_path
+
+# ── Backup real (non-symlink) files that would conflict with stow ──────────────
 for dotfile in .bashrc .bash_profile .bash_aliases .bash_exports .bash_functions \
                .bash_wrappers .blerc .zshrc .tmux.conf .inputrc .gitconfig .editorconfig; do
     if [ -f "$HOME/$dotfile" ] && [ ! -L "$HOME/$dotfile" ]; then

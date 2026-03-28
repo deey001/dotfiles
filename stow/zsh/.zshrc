@@ -177,8 +177,11 @@ fi
 [ -f ~/.bash_local ] && source ~/.bash_local
 
 # ------------------------------------------------------------------------------
-# Login Summary
+# Login Summary (once per session, not inside tmux)
 # ------------------------------------------------------------------------------
-if [[ -z "$TMUX" ]] && command -v fastfetch > /dev/null 2>&1; then
+if command -v fastfetch >/dev/null 2>&1 \
+    && [[ -z "${TMUX:-}" ]] \
+    && [[ -z "${_FASTFETCH_RAN:-}" ]]; then
+    export _FASTFETCH_RAN=1
     fastfetch
 fi
