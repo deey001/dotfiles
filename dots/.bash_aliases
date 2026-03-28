@@ -37,12 +37,12 @@ alias vim='nvim'
 # ==============================================================================
 # These override standard commands with modern alternatives if available
 
-# cat -> bat/batcat (syntax highlighting)
+# cat -> bat/batcat (syntax highlighting, no pager)
 if command -v bat >/dev/null 2>&1; then
-    alias cat='bat'
+    alias cat='bat --paging=never'
     alias oldcat='/bin/cat'
 elif command -v batcat >/dev/null 2>&1; then
-    alias cat='batcat'
+    alias cat='batcat --paging=never'
     alias oldcat='/bin/cat'
 fi
 

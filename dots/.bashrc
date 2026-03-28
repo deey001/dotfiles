@@ -131,9 +131,9 @@ fi
 # bat alias (Better cat with syntax highlighting)
 # Detects 'bat' or 'batcat' (Ubuntu/Debian)
 if command -v bat > /dev/null 2>&1; then
-    alias cat='bat'
+    alias cat='bat --paging=never'
 elif command -v batcat > /dev/null 2>&1; then
-    alias cat='batcat'
+    alias cat='batcat --paging=never'
 fi
 
 # Fast directory navigation (zoxide)
