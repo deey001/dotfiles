@@ -2,13 +2,9 @@
 # Configuration for ble.sh (Bash Line Editor)
 
 # ------------------------------------------------------------------------------
-# Terminal Compatibility (suppress probes that break on some systems)
+# Terminal Compatibility
 # ------------------------------------------------------------------------------
-# Disable xterm color-change queries — these fire 'read: not a valid identifier'
-# on ARM Linux / Ubuntu inside tmux when the terminal doesn't respond correctly.
 bleopt input_encoding=UTF-8
-bleopt term_csi_xtermcc=
-bleopt term_stty_restore_iwsig=
 
 # ------------------------------------------------------------------------------
 # Paste & Clipboard Settings

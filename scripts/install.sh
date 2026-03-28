@@ -530,11 +530,17 @@ fi
 # ------------------------------------------------------------------------------
 
 # ble.sh (Bash Line Editor) - fish-style autosuggestions + syntax highlighting
+# Force-reinstall if the version is old (devel4 has broken terminal queries).
 if [ "$IS_ONLINE" = true ] && command -v bash >/dev/null 2>&1; then
     if command -v make >/dev/null 2>&1; then
-        if [ ! -f "$HOME/.local/share/blesh/ble.sh" ]; then
-            echo "Installing ble.sh (Bash autosuggestions)..."
-            rm -rf ble.sh
+        _ble_ver=$(cat "$HOME/.local/share/blesh/ble.sh" 2>/dev/null | grep -o 'BLE_VERSION=[^ ]*' | head -1 || echo "")
+        _ble_needs_install=false
+        [ ! -f "$HOME/.local/share/blesh/ble.sh" ] && _ble_needs_install=true
+        # Reinstall if version contains 'devel4' (known broken version)
+        echo "$_ble_ver" | grep -q 'devel4' && _ble_needs_install=true
+        if [ "$_ble_needs_install" = true ]; then
+            echo "Installing/upgrading ble.sh..."
+            rm -rf ble.sh "$HOME/.local/share/blesh"
             git clone --recursive --depth 1 --shallow-submodules https://github.com/akinomyoga/ble.sh.git
             make -C ble.sh install PREFIX=~/.local
             rm -rf ble.sh
