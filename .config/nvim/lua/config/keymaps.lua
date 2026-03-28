@@ -1,0 +1,3 @@
+-- Keymaps are automatically loaded on the VeryLazy event
+-- https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/keymaps.lua
+-- LazyVim already provides: C-h/j/k/l window nav, <leader>e explorer, etc.
