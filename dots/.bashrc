@@ -17,10 +17,12 @@ esac
 # ------------------------------------------------------------------------------
 # ble.sh Early Init (--noattach mode)
 # ------------------------------------------------------------------------------
-# BASH_COMPAT=5.1: ble.sh has a bash 5.2 incompatibility where 'read' is
-# called with an empty variable name. 5.1 compat mode silences this.
+# BASH_COMPAT=5.1 fixes ble.sh on bash 5.2: ble.sh calls 'read' with empty
+# variable names which bash 5.2 rejects but 5.1 silently ignores.
+# Exported so it persists for ble.sh's entire runtime (not just init).
 if [ -f ~/.local/share/blesh/ble.sh ] && [ -t 1 ]; then
-    BASH_COMPAT=5.1 source ~/.local/share/blesh/ble.sh --noattach 2>/dev/null
+    export BASH_COMPAT=5.1
+    source ~/.local/share/blesh/ble.sh --noattach 2>/dev/null
 fi
 
 # ------------------------------------------------------------------------------
@@ -274,7 +276,4 @@ fi
 # ------------------------------------------------------------------------------
 # ble.sh Attach (MUST be last)
 # ------------------------------------------------------------------------------
-# BASH_COMPAT=5.1 for the same bash 5.2 'read' compatibility reason.
-if [[ ${BLE_VERSION-} ]]; then
-    BASH_COMPAT=5.1 ble-attach 2>/dev/null
-fi
+[[ ${BLE_VERSION-} ]] && ble-attach 2>/dev/null
