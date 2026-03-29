@@ -9,6 +9,15 @@
 #
 # Install/update ble.sh: bash ~/dotfiles/scripts/install-blesh.sh
 
+# ── read() wrapper ────────────────────────────────────────────────────────────
+# Bash 5.2 added strict validation for `read` variable names. Older versions
+# of bash-completion (2.11) and fzf (< 0.61) pass empty strings to `read`, 
+# causing noise on every keystroke when ble.sh is active. This wrapper silences
+# those specific errors while preserving functionality.
+if ((BASH_VERSINFO[0] > 5)) || [[ ${BASH_VERSINFO[0]} -eq 5 && ${BASH_VERSINFO[1]} -ge 2 ]]; then
+    read() { builtin read "$@" 2>/dev/null; }
+fi
+
 # ------------------------------------------------------------------------------
 # Paste & Clipboard Settings
 # ------------------------------------------------------------------------------
