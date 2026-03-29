@@ -9,6 +9,27 @@
 # ── 1. Interactive-only guard ──────────────────────────────────────────────────
 case $- in *i*) ;; *) return ;; esac
 
+# Helper: detect bash-completion version (prefer local install in ~/.local)
+_dotfiles_get_bc_version() {
+    local _local_bc="${HOME}/.local/share/bash-completion/bash_completion"
+    local _ver=
+    if [[ -r "$_local_bc" ]]; then
+        _ver=$(grep -m1 -Eo 'BASH_COMPLETION_VERSINFO=\([0-9]+ [0-9]+' "$_local_bc" \
+            | awk -F'[() ]+' '{print $2 "." $3}')
+        if [[ -z "$_ver" ]]; then
+            _ver=$(grep -m1 -Eo 'version[[:space:]]+[0-9]+\.[0-9]+(\.[0-9]+)?' "$_local_bc" \
+                | awk '{print $2}')
+        fi
+        if [[ -n "$_ver" ]]; then
+            printf '%s\n' "$_ver"
+            return 0
+        fi
+    fi
+    pkg-config --modversion bash-completion 2>/dev/null \
+        || dpkg -l bash-completion 2>/dev/null | awk '/^ii/{print $3}' | head -1 | cut -d: -f2 | cut -d- -f1 \
+        || echo "0"
+}
+
 # ── 2. ble.sh — Bash Line Editor (syntax highlighting, vim mode, menu complete) ─
 # Requires bash-completion >= 2.12. That release fixed SSH completion passing
 # empty variable names to 'read' (bash 5.2 rejects this; older bash silently
@@ -18,8 +39,7 @@ case $- in *i*) ;; *) return ;; esac
 # _DOTFILES_BLE_COMPAT controls whether section 20 may attach ble in this shell.
 _DOTFILES_BLE_COMPAT=0
 if [[ -f ~/.local/share/blesh/ble.sh && $- == *i* ]]; then
-    _bc_ver=$(pkg-config --modversion bash-completion 2>/dev/null \
-              || dpkg -l bash-completion 2>/dev/null | awk '/^ii/{print $3}' | head -1 | cut -d: -f2 | cut -d- -f1)
+    _bc_ver=$(_dotfiles_get_bc_version)
     _bc_maj=${_bc_ver%%.*}
     _bc_min=${_bc_ver#*.}; _bc_min=${_bc_min%%.*}
     if [[ -z "$_bc_maj" ]] \
@@ -149,7 +169,9 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 
 # ── 11. System bash-completion ────────────────────────────────────────────────
 if ! shopt -oq posix; then
-    if [[ -f /usr/share/bash-completion/bash_completion ]]; then
+    if [[ -f "${HOME}/.local/share/bash-completion/bash_completion" ]]; then
+        source "${HOME}/.local/share/bash-completion/bash_completion"
+    elif [[ -f /usr/share/bash-completion/bash_completion ]]; then
         source /usr/share/bash-completion/bash_completion
     elif [[ -f /etc/bash_completion ]]; then
         source /etc/bash_completion
@@ -199,10 +221,18 @@ fi
 # Workaround: remove SSH-related completions on affected versions.
 # Permanent fix: bash ~/dotfiles/scripts/install.sh (upgrades both tools).
 {
-    _bc_ver=$(pkg-config --modversion bash-completion 2>/dev/null)
-    _bc_maj=${_bc_ver%%.*}
-    _bc_min=${_bc_ver#*.}; _bc_min=${_bc_min%%.*}
-    _fzf_ver=$(fzf --version 2>/dev/null | awk '{print $1}')
+    if [[ ${BASH_COMPLETION_VERSINFO+x} ]]; then
+        _bc_maj=${BASH_COMPLETION_VERSINFO[0]:-0}
+        _bc_min=${BASH_COMPLETION_VERSINFO[1]:-0}
+    else
+        _bc_ver=$(_dotfiles_get_bc_version)
+        _bc_maj=${_bc_ver%%.*}
+        _bc_min=${_bc_ver#*.}; _bc_min=${_bc_min%%.*}
+    fi
+    _fzf_ver=
+    if command -v fzf >/dev/null 2>&1; then
+        _fzf_ver=$(fzf --version 2>/dev/null | awk '{print $1}')
+    fi
     _fzf_min=${_fzf_ver#*.}; _fzf_min=${_fzf_min%%.*}
     _need_fix=0
     [[ -n "$_bc_maj" && ("$_bc_maj" -lt 2 || ("$_bc_maj" -eq 2 && "${_bc_min:-0}" -lt 12)) ]] \
@@ -262,14 +292,12 @@ fi
 # they apply every time .bashrc is sourced (e.g. source ~/.bashrc in-session).
 if [[ ${_DOTFILES_BLE_COMPAT:-0} == 1 && ${BLE_VERSION-} ]]; then
     ble-attach
-    # Disable completion-triggered features — bash-completion < 2.12 and
-    # fzf < 0.61 pass empty strings as read variable names, causing
-    # "read: '': not a valid identifier" on bash 5.2 on every keystroke.
-    # Re-enable after: bash ~/dotfiles/scripts/install.sh
+    # Keep history prediction enabled; leave command auto-complete off for stability.
     bleopt complete_auto_complete=0  2>/dev/null
-    bleopt complete_auto_history=0   2>/dev/null
+    bleopt complete_auto_history=1   2>/dev/null
 elif [[ ${_DOTFILES_BLE_COMPAT:-0} != 1 && ${BLE_VERSION-} ]] && type ble-detach >/dev/null 2>&1; then
     ble-detach >/dev/null 2>&1
     stty sane 2>/dev/null || true
 fi
+unset -f _dotfiles_get_bc_version 2>/dev/null || true
 unset _DOTFILES_BLE_COMPAT

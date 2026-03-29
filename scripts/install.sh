@@ -259,29 +259,39 @@ elif [ "$OS" = "Linux" ]; then
 
             # Ensure bash-completion >= 2.12 (fixes "read: '': not a valid identifier" on bash 5.2)
             # Ubuntu 22.04 and Debian Bookworm ship 2.11 which has the bug.
-            _bc_ver=$(pkg-config --modversion bash-completion 2>/dev/null || \
-                      bash-completion --version 2>/dev/null | grep -oP '[\d.]+' | head -1 || echo "0")
+            # Detect via sourced file first (works for ~/.local installs), then pkg-config/dpkg.
+            _bc_local_file="$HOME/.local/share/bash-completion/bash_completion"
+            _bc_ver=""
+            if [ -r "$_bc_local_file" ]; then
+                _bc_ver=$(grep -m1 -Eo 'BASH_COMPLETION_VERSINFO=\([0-9]+ [0-9]+' "$_bc_local_file" \
+                    | awk -F'[() ]+' '{print $2 "." $3}')
+            fi
+            if [ -z "$_bc_ver" ]; then
+                _bc_ver=$(pkg-config --modversion bash-completion 2>/dev/null || \
+                          dpkg -l bash-completion 2>/dev/null | awk '/^ii/{print $3}' | head -1 | cut -d: -f2 | cut -d- -f1 || \
+                          echo "0")
+            fi
             _bc_major=$(echo "$_bc_ver" | cut -d. -f1)
             _bc_minor=$(echo "$_bc_ver" | cut -d. -f2)
             if [ "${_bc_major:-0}" -lt 2 ] || { [ "${_bc_major:-0}" -eq 2 ] && [ "${_bc_minor:-0}" -lt 12 ]; }; then
                 echo "bash-completion ${_bc_ver} < 2.12 detected — upgrading from GitHub..."
                 _bc_tmpdir=$(mktemp -d)
-                trap "rm -rf $_bc_tmpdir" RETURN
                 curl -fsSL https://github.com/scop/bash-completion/releases/download/2.14.0/bash-completion-2.14.0.tar.xz \
                     -o "$_bc_tmpdir/bc.tar.xz" && \
                 tar -xJf "$_bc_tmpdir/bc.tar.xz" -C "$_bc_tmpdir" && \
                 cd "$_bc_tmpdir/bash-completion-2.14.0" && \
-                autoreconf -i 2>/dev/null || ./configure --prefix="$HOME/.local" --datadir="$HOME/.local/share" && \
+                autoreconf -i 2>/dev/null || true && \
                 ./configure --prefix="$HOME/.local" --datadir="$HOME/.local/share" && \
                 make && make install && \
                 echo "bash-completion 2.14.0 installed to ~/.local" || \
                 echo "Warning: bash-completion upgrade failed (system version may still work)"
                 cd - >/dev/null
+                rm -rf "$_bc_tmpdir"
                 unset _bc_tmpdir
             else
                 echo "bash-completion ${_bc_ver} >= 2.12 ✓"
             fi
-            unset _bc_ver _bc_major _bc_minor
+            unset _bc_ver _bc_major _bc_minor _bc_local_file
             
             # Install Latest Neovim (AppImage/Tarball is better than apt usually)
             echo "Installing Neovim v${NEOVIM_VERSION} for ${NVIM_ARCH}..."
