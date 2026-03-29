@@ -46,29 +46,23 @@ No Makefile — removed as unnecessary complexity.
 
 ---
 
-## ble.sh (Bash 5.2 / ARM64 Ubuntu)
+## ble.sh — REMOVED
 
-**Issue**: bash 5.2 strict `read` validation rejects empty variable names.
-ble.sh b99cadb passes empty strings as var name args from completion functions.
-Error shown: `bash: read: '': not a valid identifier`
+ble.sh was removed from bash config due to an incompatibility with bash 5.2
+on ARM64 Linux. bash 5.2 added strict `read` validation that rejected empty
+variable names. ble.sh's completion engine triggered this on every keystroke.
 
-**Fix** (in `stow/bash/.blerc`): Two-path patch applied at `ble-attach` time:
-1. `declare-f | sed | eval` on `ble/builtin/read/.read-arguments` — main parser path
-2. Override of `ble/bash/read()` — hook fallback path (limit-exceeded completion)
-3. `read()` wrapper in `.bashrc` section 21 — belt-and-suspenders
+Standard bash + readline (`.inputrc`) is used instead. TAB completion, history
+search (atuin Ctrl+R), and starship prompt all work without ble.sh.
 
-**To re-apply patches without restarting shell**:
-```bash
-source ~/.blerc
-```
-
-**To install/reinstall ble.sh**:
+To re-enable ble.sh later (e.g., on a system where it works):
 ```bash
 bash scripts/install-blesh.sh
+# Then add to .bashrc: source ~/.local/share/blesh/ble.sh --noattach
+# And at end of .bashrc: ble-attach
 ```
-Version installed: `0.4.0-devel4+b99cadb`
 
-**DO NOT**: `exec bash` (disconnects SSH), `source ~/.bashrc` (re-sources ble.sh, resets patches).
+---
 
 ---
 
@@ -84,8 +78,8 @@ Starship uses `palette = "catppuccin_mocha"` in `stow/starship/.config/starship.
 | Feature | Tool | Notes |
 |---------|------|-------|
 | Prompt | Starship | Pure-inspired 2-line, Catppuccin Mocha |
-| Syntax highlight | ble.sh | Bash only |
-| Autosuggestions | ble.sh | Ghost text, Right arrow to accept |
+| Syntax highlight | — | Removed (ble.sh had bash 5.2 incompatibility) |
+| Autosuggestions | — | Removed with ble.sh |
 | History search | atuin | Ctrl+R fuzzy search |
 | Completions | carapace | Multi-shell, loaded in both bash/zsh |
 | Navigation | zoxide | `z dir` to jump, `zi` for fuzzy |

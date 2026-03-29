@@ -3,18 +3,11 @@
 # ==============================================================================
 # Executed by bash(1) for interactive shells.
 # Load order: .bash_profile → .bashrc → .bash_exports → .bash_aliases
-#             → .bash_functions → .bash_wrappers → .bash_local → ble-attach
+#             → .bash_functions → .bash_wrappers → .bash_local
 # ==============================================================================
 
 # ── 1. Interactive-only guard ──────────────────────────────────────────────────
 case $- in *i*) ;; *) return ;; esac
-
-# ── 2. ble.sh early init (before anything that touches readline) ───────────────
-# BLE_VERSION is set after --noattach; used below to gate conflicting bind calls.
-if [[ -f ~/.local/share/blesh/ble.sh ]] && [[ -t 1 ]]; then
-    export BASH_COMPAT=5.1
-    source ~/.local/share/blesh/ble.sh --noattach 2>/dev/null
-fi
 
 # ── 3. History ─────────────────────────────────────────────────────────────────
 HISTCONTROL=ignoredups:ignorespace
@@ -69,17 +62,14 @@ shopt -s no_empty_cmd_completion  # don't complete on an empty line (slow)
 shopt -s checkhash             # verify hashed command paths before using them
 stty -ixon 2>/dev/null         # enable Ctrl-S/Ctrl-Q for fzf history search
 
-# ── 7. Readline bindings (only when ble.sh is NOT active) ─────────────────────
-# ble.sh replaces readline's completion UI entirely; these bind calls fight it.
-if [[ -z "${BLE_VERSION-}" ]]; then
-    bind "set completion-ignore-case on"       2>/dev/null
-    bind "set show-all-if-ambiguous on"        2>/dev/null
-    bind "set menu-complete-display-prefix on" 2>/dev/null
-    bind "set colored-stats on"                2>/dev/null
-    bind "set colored-completion-prefix on"    2>/dev/null
-    bind "TAB:menu-complete"                   2>/dev/null
-    bind '"\e[Z":menu-complete-backward'       2>/dev/null
-fi
+# ── 7. Readline bindings ───────────────────────────────────────────────────────
+bind "set completion-ignore-case on"       2>/dev/null
+bind "set show-all-if-ambiguous on"        2>/dev/null
+bind "set menu-complete-display-prefix on" 2>/dev/null
+bind "set colored-stats on"                2>/dev/null
+bind "set colored-completion-prefix on"    2>/dev/null
+bind "TAB:menu-complete"                   2>/dev/null
+bind '"\e[Z":menu-complete-backward'       2>/dev/null
 
 # ── 8. Terminal utilities ──────────────────────────────────────────────────────
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
@@ -181,13 +171,9 @@ if command -v zoxide >/dev/null 2>&1; then
     alias cdi='zi'
 fi
 
-# ── 15. Atuin (disable Up arrow when ble.sh active to avoid conflict) ──────────
+# ── 15. Atuin (shell history) ──────────────────────────────────────────────────
 if command -v atuin >/dev/null 2>&1; then
-    if [[ -n "${BLE_VERSION-}" ]]; then
-        eval "$(atuin init bash --disable-up-arrow)"
-    else
-        eval "$(atuin init bash)"
-    fi
+    eval "$(atuin init bash)"
 fi
 
 # ── 16. direnv (per-directory environment) ────────────────────────────────────
@@ -217,41 +203,3 @@ if command -v fastfetch >/dev/null 2>&1 \
     fastfetch
 fi
 
-# ── 20. ble.sh attach ─────────────────────────────────────────────────────────
-[[ ${BLE_VERSION-} ]] && ble-attach 2>/dev/null
-
-# ── 21. bash 5.2 + ble.sh: filter empty variable names from 'read' calls ──────
-# bash 5.2 strict: rejects empty var names → "read: '': not a valid identifier".
-# Some bash-completion functions pass empty strings as variable name args.
-# FIX: wrap 'read' to filter empty positional names, then call ble/builtin/read
-# (NOT builtin read) so ble.sh's completion state machine (_ble_builtin_read_hook)
-# is preserved. Defined AFTER ble-attach so it can't be overridden by ble.sh init.
-if (( BASH_VERSINFO[0] > 5 || (BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 2) )); then
-    if declare -f 'ble/builtin/read' >/dev/null 2>&1; then
-        read() {
-            local -a _safe=()
-            local _in_name_arg=0 _in_opt_arg=0 _arg
-            for _arg in "$@"; do
-                if (( _in_name_arg )); then
-                    # After -a: next arg is array name — skip if empty
-                    _in_name_arg=0; [[ -n "$_arg" ]] && _safe+=("$_arg")
-                elif (( _in_opt_arg )); then
-                    # After -d/-p/-t/-etc: option value — never skip (e.g. -d "" = NUL delim)
-                    _in_opt_arg=0; _safe+=("$_arg")
-                elif [[ "$_arg" == -- ]]; then
-                    _safe+=("$_arg")
-                elif [[ "$_arg" == -* ]]; then
-                    _safe+=("$_arg")
-                    case "$_arg" in
-                        *a*) _in_name_arg=1 ;;        # -a takes array var name
-                        *[dinNptu]*) _in_opt_arg=1 ;;  # others take non-name values
-                    esac
-                else
-                    # Positional variable name — skip if empty
-                    [[ -n "$_arg" ]] && _safe+=("$_arg")
-                fi
-            done
-            ble/builtin/read "${_safe[@]}"
-        }
-    fi
-fi
