@@ -9,40 +9,7 @@
 # ── 1. Interactive-only guard ──────────────────────────────────────────────────
 case $- in *i*) ;; *) return ;; esac
 
-# ── 2. ble.sh — Bash Line Editor (syntax highlighting, auto-suggest, menu) ────
-# Install: bash ~/dotfiles/scripts/install-blesh.sh
-if [[ -f ~/.local/share/blesh/ble.sh && $- == *i* ]]; then
-    source ~/.local/share/blesh/ble.sh --attach=none
-
-    # ── Bash 5.2 read compatibility shim ──────────────────────────────────────
-    # bash 5.2 added C-level validation rejecting empty variable names in read.
-    # Multiple upstream tools (bash-completion < 2.12, fzf < 0.61) pass empty
-    # strings as variable names to read. ble.sh intercepts all read calls during
-    # completion via _ble_builtin_read_hook and passes them to ble/bash/read,
-    # which calls builtin read — triggering the error.
-    #
-    # Fix: override ble/bash/read to silently drop empty variable name args.
-    # Option values (e.g. -d '') are preserved; only bare empty args are dropped.
-    if [[ ${BASH_VERSINFO[0]:-0} -ge 5 ]]; then
-        ble/bash/read() {
-            local -a _a=()
-            local _x _valnext=0
-            for _x in "$@"; do
-                if (( _valnext )); then
-                    _a+=("$_x"); _valnext=0
-                elif [[ "$_x" == -* ]]; then
-                    _a+=("$_x")
-                    case "${_x: -1}" in [dnNptu]) _valnext=1 ;; esac
-                elif [[ -n "$_x" ]]; then
-                    _a+=("$_x")
-                fi
-            done
-            builtin read "${_ble_bash_tmout_wa[@]}" -r "${_a[@]}"
-        }
-    fi
-fi
-
-# ── 3. History ─────────────────────────────────────────────────────────────────
+# ── 2. History ─────────────────────────────────────────────────────────────────
 HISTCONTROL=ignoredups:ignorespace
 HISTSIZE=50000
 HISTFILESIZE=100000
@@ -54,7 +21,7 @@ shopt -s lithist       # preserve newlines (not semicolons) in multiline history
 # Append pattern: preserves PROMPT_COMMAND already set by system or other tools
 PROMPT_COMMAND="history -a${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
 
-# ── 4. Environment detection ───────────────────────────────────────────────────
+# ── 3. Environment detection ──────────────────────────────────────────────────
 [[ -n "${SSH_CLIENT:-}${SSH_TTY:-}" ]] && export IS_SSH=1 || export IS_SSH=0
 grep -qEi "(Microsoft|WSL)" /proc/version 2>/dev/null && export IS_WSL=1 || export IS_WSL=0
 _detect_container() {
@@ -69,9 +36,7 @@ _detect_container && export IS_DOCKER=1 || export IS_DOCKER=0
 unset -f _detect_container
 [[ -n "${TMUX:-}" ]] && export IS_TMUX=1 || export IS_TMUX=0
 
-# ── 5. Connectivity check (file-cached, one ping per 5 minutes across all shells)
-# tmux panes are children of the tmux server process — they don't inherit the
-# login shell's exported env. Cache file lets all shells read IS_ONLINE cheaply.
+# ── 4. Connectivity check (file-cached, one ping per 5 minutes) ───────────────
 _online_cache="${HOME}/.cache/is_online"
 mkdir -p "${HOME}/.cache"
 if [[ ! -f "$_online_cache" ]] || \
@@ -83,7 +48,7 @@ fi
 export IS_ONLINE=$(< "$_online_cache")
 unset _online_cache
 
-# ── 6. Shell options ───────────────────────────────────────────────────────────
+# ── 5. Shell options ──────────────────────────────────────────────────────────
 shopt -s checkwinsize          # keep LINES/COLUMNS accurate on resize
 shopt -s globstar              # **/*.sh recursive glob (like zsh)
 shopt -s extglob               # !(*.txt) @(a|b) +(pat) extended patterns
@@ -95,7 +60,7 @@ shopt -s no_empty_cmd_completion  # don't complete on an empty line (slow)
 shopt -s checkhash             # verify hashed command paths before using them
 stty -ixon 2>/dev/null         # enable Ctrl-S/Ctrl-Q for fzf history search
 
-# ── 7. Readline bindings ───────────────────────────────────────────────────────
+# ── 6. Readline bindings ──────────────────────────────────────────────────────
 bind "set completion-ignore-case on"       2>/dev/null
 bind "set show-all-if-ambiguous on"        2>/dev/null
 bind "set menu-complete-display-prefix on" 2>/dev/null
@@ -104,18 +69,16 @@ bind "set colored-completion-prefix on"    2>/dev/null
 bind "TAB:menu-complete"                   2>/dev/null
 bind '"\e[Z":menu-complete-backward'       2>/dev/null
 
-# ── 8. Terminal utilities ──────────────────────────────────────────────────────
+# ── 7. Terminal utilities ─────────────────────────────────────────────────────
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)
 fi
-# Set LS_COLORS via dircolors — aliases are the single source of truth below
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
 fi
 
-# ── 9. Core aliases (single source of truth — NOT duplicated in .bash_aliases) ─
-# ls: eza → ls --color fallback
+# ── 8. Core aliases ───────────────────────────────────────────────────────────
 if command -v eza >/dev/null 2>&1; then
     alias ls='eza --color=auto --icons'
     alias ll='eza -alF --icons --git'
@@ -131,7 +94,6 @@ fi
 alias grep='grep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias egrep='egrep --color=auto'
-# cat: bat → batcat → system cat
 if command -v bat >/dev/null 2>&1; then
     alias cat='bat --paging=never'
     alias oldcat='/bin/cat'
@@ -145,31 +107,25 @@ elif command -v batcat >/dev/null 2>&1; then
 fi
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
-# ── 10. Modular config files ───────────────────────────────────────────────────
+# ── 9. Modular config files ──────────────────────────────────────────────────
 [[ -f ~/.bash_exports   ]] && source ~/.bash_exports
 [[ -f ~/.bash_aliases   ]] && source ~/.bash_aliases
 [[ -f ~/.bash_functions ]] && source ~/.bash_functions
 [[ -f ~/.bash_wrappers  ]] && source ~/.bash_wrappers
 
-# ── 11. System bash-completion ────────────────────────────────────────────────
+# ── 10. System bash-completion ────────────────────────────────────────────────
 if ! shopt -oq posix; then
-    if [[ -f "${HOME}/.local/share/bash-completion/bash_completion" ]]; then
-        source "${HOME}/.local/share/bash-completion/bash_completion"
-    elif [[ -f /usr/share/bash-completion/bash_completion ]]; then
+    if [[ -f /usr/share/bash-completion/bash_completion ]]; then
         source /usr/share/bash-completion/bash_completion
     elif [[ -f /etc/bash_completion ]]; then
         source /etc/bash_completion
     fi
 fi
 
-# ── 12. Carapace (order matters: clear stale completions FIRST, then register) ─
-# bash-completion loaded above may register handlers for tmux, git, etc.
-# Those must be cleared BEFORE carapace registers its own, or the next
-# complete -r call (the old bug) would delete carapace's registrations.
+# ── 11. Carapace ──────────────────────────────────────────────────────────────
 if command -v carapace >/dev/null 2>&1; then
     unset CARAPACE_BRIDGES
     complete -r tmux git docker kubectl helm 2>/dev/null
-    # Cache carapace init output; regenerate only when the binary changes.
     _cc="${HOME}/.cache/carapace_init.bash"
     if [[ ! -f "$_cc" ]] || [[ "$(command -v carapace)" -nt "$_cc" ]]; then
         carapace _carapace bash > "$_cc" 2>/dev/null
@@ -177,7 +133,7 @@ if command -v carapace >/dev/null 2>&1; then
     source "$_cc"; unset _cc
 fi
 
-# ── 13. fzf ────────────────────────────────────────────────────────────────────
+# ── 12. fzf ───────────────────────────────────────────────────────────────────
 if command -v fzf >/dev/null 2>&1; then
     eval "$(fzf --bash 2>/dev/null)" || {
         [[ -f /usr/share/doc/fzf/examples/key-bindings.bash ]] \
@@ -198,105 +154,35 @@ if command -v fzf >/dev/null 2>&1; then
     fi
 fi
 
-# ── 13b. Bash 5.2 completion bug monkey-patches ──────────────────────────────
-# bash-completion < 2.12: _known_hosts_real uses ${ipvx-} which expands to ""
-# when ipvx is uninitialized, causing 'read -r "" key' → bash 5.2 rejects it.
-# The system /etc/bash.bashrc loads bash-completion before our .bashrc, so we
-# can't prevent loading — we patch the function in memory instead.
-# fzf < 0.61: __fzf_list_hosts uses globs without failglob/noglob guards.
-if [[ ${BASH_VERSINFO[0]:-0} -eq 5 && ${BASH_VERSINFO[1]:-0} -ge 2 ]] \
-|| [[ ${BASH_VERSINFO[0]:-0} -gt 5 ]]; then
-    # Patch _known_hosts_real: fix empty variable name passed to read
-    if declare -f _known_hosts_real >/dev/null 2>&1; then
-        _dotfiles_patched=$(declare -f _known_hosts_real \
-            | sed 's/local ipvx;/local ipvx=;/g' \
-            | sed 's/\${ipvx-}/${ipvx:+"$ipvx"}/g')
-        eval "$_dotfiles_patched" 2>/dev/null
-        unset _dotfiles_patched
-    fi
-    # Patch __fzf_list_hosts: guard globs against failglob
-    if declare -f __fzf_list_hosts >/dev/null 2>&1; then
-        __fzf_list_hosts() {
-            command cat <(command tail -n +1 ~/.ssh/config ~/.ssh/config.d/* 2>/dev/null | command grep -i '^\s*host\(name\)\? ' | awk '{for (i = 2; i <= NF; i++) print $1 " " $i}' | command grep -v '[*?]') \
-                <(command grep -oE '^[[a-z0-9.,:-]+' ~/.ssh/known_hosts 2>/dev/null | tr ',' '\n' | tr -d '[' | awk '{ print $1 " " $1 }') \
-                <(command grep -v '^\s*\(#\|$\)' /etc/hosts 2>/dev/null | command grep -Fv '0.0.0.0') 2>/dev/null
-        }
-    fi
-fi
-
-# ── 14. zoxide ────────────────────────────────────────────────────────────────
-# Don't alias cd=z — scripts rely on 'cd' behaving as the builtin.
-# Use 'z' directly for frecency-based jumps; 'cdi' for interactive fzf picker.
+# ── 13. zoxide ────────────────────────────────────────────────────────────────
 if command -v zoxide >/dev/null 2>&1; then
     eval "$(zoxide init bash)" 2>/dev/null
     alias cdi='zi'
 fi
 
-# ── 15. Atuin (shell history) ──────────────────────────────────────────────────
+# ── 14. Atuin (shell history with search) ─────────────────────────────────────
 if command -v atuin >/dev/null 2>&1; then
     eval "$(atuin init bash)"
 fi
 
-# ── 16. direnv (per-directory environment) ────────────────────────────────────
+# ── 15. direnv ────────────────────────────────────────────────────────────────
 if command -v direnv >/dev/null 2>&1; then
     eval "$(direnv hook bash)"
 fi
 
-# ── 17. Starship prompt (after atuin/direnv so they don't clobber it) ──────────
+# ── 16. Starship prompt ──────────────────────────────────────────────────────
 if command -v starship >/dev/null 2>&1; then
     eval "$(starship init bash)"
 fi
 
-# ── 18. Local/private config ──────────────────────────────────────────────────
-# Machine-specific overrides, API keys, custom PATH additions.
-# Created from templates/.bash_local.template — NOT tracked in git.
+# ── 17. Local/private config ─────────────────────────────────────────────────
 [[ -f ~/.bash_local ]] && source ~/.bash_local
 
-# ── 19. Login summary (exactly once per SSH session, never inside tmux) ────────
-# _FASTFETCH_RAN is exported so nested login shells (bash -l) also skip it.
-# Root cause of double-run: .bash_profile sources .bashrc both via .profile
-# AND directly, so shopt -q login_shell alone fires twice.
+# ── 18. Login summary (once per SSH session, never inside tmux) ───────────────
 if command -v fastfetch >/dev/null 2>&1 \
     && shopt -q login_shell \
     && [[ -z "${TMUX:-}" ]] \
     && [[ -z "${_FASTFETCH_RAN:-}" ]]; then
     export _FASTFETCH_RAN=1
     fastfetch
-fi
-
-# ── 20. ble.sh attach (must be last — after all completions/prompts are set up) ─
-if [[ ${BLE_VERSION-} ]]; then
-    ble-attach
-    bleopt complete_auto_complete=1  2>/dev/null
-    bleopt complete_auto_history=1   2>/dev/null
-    bleopt complete_ambiguous=1      2>/dev/null
-
-    # ── Bash 5.2 read shim (MUST be after ble-attach) ────────────────────────
-    # The error path is: completion function calls `read -r "" key` → ble.sh's
-    # `ble/builtin/read` → `.read-arguments` validates var names → deliberately
-    # calls `builtin read -r ""` to reproduce the error → bash 5.2 rejects it.
-    #
-    # Fix: wrap ble/builtin/read to filter empty variable names from "$@" before
-    # they reach .read-arguments. The original function is saved once; on repeat
-    # source, the wrapper just updates in place.
-    if [[ ${BASH_VERSINFO[0]:-0} -ge 5 ]]; then
-        if ! declare -f _dotfiles_ble_read_orig >/dev/null 2>&1; then
-            eval "$(declare -f ble/builtin/read | sed '1s/ble\/builtin\/read/_dotfiles_ble_read_orig/')"
-        fi
-        ble/builtin/read() {
-            local -a __fa=()
-            local __x __vn=0
-            for __x in "$@"; do
-                if (( __vn )); then
-                    __fa+=("$__x"); __vn=0
-                elif [[ "$__x" == -* ]]; then
-                    __fa+=("$__x")
-                    case "${__x: -1}" in [adeinNpstu]) __vn=1 ;; esac
-                elif [[ -n "$__x" ]]; then
-                    __fa+=("$__x")
-                fi
-            done
-            _dotfiles_ble_read_orig "${__fa[@]}"
-        }
-    fi
 fi
