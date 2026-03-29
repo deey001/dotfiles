@@ -62,10 +62,11 @@ stty -ixon 2>/dev/null         # enable Ctrl-S/Ctrl-Q for fzf history search
 
 # ── 6. Readline bindings ──────────────────────────────────────────────────────
 bind "set completion-ignore-case on"       2>/dev/null
-bind "set show-all-if-ambiguous on"        2>/dev/null
 bind "set menu-complete-display-prefix on" 2>/dev/null
 bind "set colored-stats on"                2>/dev/null
 bind "set colored-completion-prefix on"    2>/dev/null
+bind "set show-all-if-ambiguous off"       2>/dev/null
+bind "set show-all-if-unmodified on"       2>/dev/null
 bind "TAB:menu-complete"                   2>/dev/null
 bind '"\e[Z":menu-complete-backward'       2>/dev/null
 
