@@ -271,7 +271,7 @@ You **MUST** run the local setup script first to install Nerd Fonts, or icons wi
 
 ```bash
 git clone https://github.com/deey001/dotfiles.git ~/dotfiles
-cd ~/dotfiles && ./scripts/install.sh
+cd ~/dotfiles && bash scripts/install.sh
 ```
 
 **Post-install:**
@@ -279,16 +279,6 @@ cd ~/dotfiles && ./scripts/install.sh
 - **Neovim**: Open `nvim` — LazyVim auto-installs ~40 plugins on first launch
 - **macOS**: Run `brew bundle --file=~/dotfiles/Brewfile` for all CLI tools
 - **Reload Shell**: `exec $SHELL`
-
-### Using Makefile
-
-```bash
-cd ~/dotfiles
-make install      # Install dotfiles
-make test         # Validate installation
-make update       # Update from git and reinstall
-make help         # Show all available commands
-```
 
 ---
 
@@ -329,7 +319,6 @@ make help         # Show all available commands
 | `scripts/install.sh` | Main installer (shell detection, cross-platform) |
 | `scripts/uninstall.sh` | Full cleanup/factory reset |
 | `scripts/test.sh` | Installation validation |
-| `Makefile` | Convenient management commands |
 | `Brewfile` | macOS Homebrew package declarations |
 
 ---
