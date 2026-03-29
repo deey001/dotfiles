@@ -1,3 +1,41 @@
+# ==============================================================================
+# .stowrc — GNU Stow Configuration
+# ==============================================================================
+# This file configures GNU Stow's default behavior when run from the dotfiles
+# repo root. Stow reads .stowrc automatically from the current directory.
+#
+# USAGE:
+#   cd ~/dotfiles && stow bash     # Symlinks stow/bash/* into ~
+#   cd ~/dotfiles && stow -D bash  # Removes symlinks for the bash package
+#   cd ~/dotfiles && stow -R bash  # Restow (remove then re-create symlinks)
+#
+# HOW STOW WORKS:
+#   Stow creates symlinks in --target for every file found in --dir/<package>.
+#   Example: stow/bash/.bashrc → ~/.bashrc
+#
+# SEE ALSO:
+#   man stow, https://www.gnu.org/software/stow/
+# ==============================================================================
+
+# --dir=stow
+#   Tells stow to look for packages inside the "stow/" subdirectory rather than
+#   the repo root. This keeps stow packages cleanly separated from repo files
+#   like README.md, Brewfile, scripts/, etc.
+
+# --target=~
+#   Symlinks are created in the user's home directory. This is the standard
+#   destination for dotfiles (.bashrc, .tmux.conf, .config/*, etc.).
+
+# --no-folding
+#   CRITICAL: Prevents stow from "folding" a directory into a single symlink.
+#   Without this, stow would make ~/.config/nvim a symlink pointing to the
+#   stow package directory. That breaks LazyVim because lazy.nvim writes
+#   lazy-lock.json and plugin caches into ~/.config/nvim/ — if the whole
+#   directory is a symlink, those writes go into the git repo, polluting it
+#   with generated files. With --no-folding, stow creates individual symlinks
+#   for each file inside the directory, leaving the directory itself as a real
+#   directory that can contain both tracked symlinks and untracked local files.
+
 --dir=stow
 --target=~
 --no-folding
