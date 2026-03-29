@@ -1,63 +1,13 @@
 # ~/.blerc
 # Configuration for ble.sh (Bash Line Editor)
-
-# ------------------------------------------------------------------------------
-# Bash 5.2 Compatibility: Fix ble.sh's read calls
-# ------------------------------------------------------------------------------
-# bash 5.2 rejects empty variable names: "read: '': not a valid identifier".
-# bash-completion functions pass empty strings as variable name args to read.
-# Two separate code paths in ble.sh both need patching:
 #
-#  PATH 1 — ble/builtin/read/.read-arguments (main parser)
-#    Called for every read. We patch the one line that pushes args without
-#    filtering: add [[ $arg ]] && guard via declare-f|sed|eval.
-#    Safe: only modifies one internal function, no hardcoded body.
+# Prerequisites to avoid "read: '': not a valid identifier" on bash 5.2:
+#   • bash-completion >= 2.12  (upstream fix: github.com/scop/bash-completion/pull/889)
+#   • fzf >= 0.61              (upstream fix: github.com/junegunn/fzf/pull/4405)
+#   These were upstream bugs in bash-completion/fzf that passed empty strings as
+#   variable names to `read`. Fixed upstream; no ble.sh patches required.
 #
-#  PATH 2 — ble/bash/read (lower-level fallback)
-#    Called from _ble_builtin_read_hook when completion limits are exceeded:
-#      ble/bash/read "$@" < /dev/null
-#    "$@" may include "" from the original read call. Override to filter first.
-#
-# These patches live here (not in .bashrc) because ble-attach re-sources .blerc
-# on each attach, keeping the patches in sync with ble.sh's function definitions.
-# ------------------------------------------------------------------------------
-if (( BASH_VERSINFO[0] > 5 || (BASH_VERSINFO[0] == 5 && BASH_VERSINFO[1] >= 2) )); then
-
-    # PATH 1: patch ble/builtin/read/.read-arguments
-    # Use address-based sed: find the line containing the push, replace just
-    # the push token — works regardless of arg format ($arg, ${arg}, etc.)
-    if declare -f 'ble/builtin/read/.read-arguments' >/dev/null 2>&1; then
-        _ble_patch=$(declare -f 'ble/builtin/read/.read-arguments' | \
-            sed '/ble\/array#push vars/s/ble\/array#push vars/[[ $arg ]] \&\& ble\/array#push vars/')
-        eval "$_ble_patch"
-        unset _ble_patch
-    fi
-
-    # PATH 2: override ble/bash/read to filter empty variable names
-    ble/bash/read() {
-        local -a _safe=()
-        local _in_name_arg=0 _in_opt_arg=0 _arg
-        for _arg in "$@"; do
-            if (( _in_name_arg )); then
-                _in_name_arg=0; [[ -n "$_arg" ]] && _safe+=("$_arg")
-            elif (( _in_opt_arg )); then
-                _in_opt_arg=0; _safe+=("$_arg")
-            elif [[ "$_arg" == -- ]]; then
-                _safe+=("$_arg")
-            elif [[ "$_arg" == -* ]]; then
-                _safe+=("$_arg")
-                case "$_arg" in
-                    *a*) _in_name_arg=1 ;;
-                    *[dinNptu]*) _in_opt_arg=1 ;;
-                esac
-            else
-                [[ -n "$_arg" ]] && _safe+=("$_arg")
-            fi
-        done
-        builtin read "${_safe[@]}"
-    }
-
-fi
+# Install/update ble.sh: bash ~/dotfiles/scripts/install-blesh.sh
 
 # ------------------------------------------------------------------------------
 # Paste & Clipboard Settings
@@ -72,7 +22,7 @@ bleopt history_share=
 # Accept pasted lines immediately (no C-j confirmation)
 bleopt accept_line_threshold=0
 
-# Suppress mode markers (only options that exist in ble.sh 0.4)
+# Suppress mode markers
 bleopt edit_marker=
 
 bleopt term_bracketed_paste_mode=1
@@ -85,26 +35,19 @@ bleopt complete_auto_delay=100
 bleopt complete_auto_complete=1
 bleopt complete_ambiguous=1
 
+# Suppress auto-complete while typing inside a word to reduce completion storms
+# (new option in ble.sh nightly — ignored silently on older versions)
+bleopt complete_auto_complete_opts=suppress-inside-word 2>/dev/null || true
+
 # ------------------------------------------------------------------------------
 # Completion Menu (dropdown with keyboard navigation)
 # ------------------------------------------------------------------------------
-# Menu style: dense = clean compact list, desc = shows descriptions (can show action names)
 bleopt complete_menu_style=dense
-
-# Auto-show menu after this delay (ms) when there are multiple completions
 bleopt complete_auto_menu=200
-
-# Allow menu to use full terminal height (-1 = no limit)
 bleopt complete_menu_maxlines=-1
-
-# Enable menu completion (cycles through items)
 bleopt complete_menu_complete=1
-
-# Highlight matching prefix in menu items
 bleopt complete_menu_color=on
 bleopt complete_menu_color_match=on
-
-# Filter menu items as you keep typing
 bleopt complete_menu_filter=1
 
 # ------------------------------------------------------------------------------
@@ -127,11 +70,9 @@ ble-bind -m auto_complete -f 'M-right' 'auto_complete/insert-word'
 ble-bind -m auto_complete -f 'M-f'     'auto_complete/insert-word'
 
 # TAB: cycle through completions with menu visible
-# Shift-TAB: cycle backwards
 ble-bind -m emacs -f 'TAB'   'menu-complete'
 ble-bind -m emacs -f 'S-TAB' 'menu-complete backward'
 
-# Also bind TAB within the menu to keep cycling
 ble-bind -m menu_complete -f 'TAB'   'menu-complete'
 ble-bind -m menu_complete -f 'S-TAB' 'menu-complete backward'
 ble-bind -m menu_complete -f 'RET'   'menu-complete accept'
@@ -146,3 +87,4 @@ ble-face command_builtin='fg=cyan'
 ble-face command_function='fg=blue'
 ble-face command_file='fg=green'
 ble-face syntax_error='bg=red,fg=white'
+

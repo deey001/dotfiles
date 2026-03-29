@@ -9,6 +9,14 @@
 # ── 1. Interactive-only guard ──────────────────────────────────────────────────
 case $- in *i*) ;; *) return ;; esac
 
+# ── 2. ble.sh — Bash Line Editor (syntax highlighting, auto-complete, vim mode) ─
+# Requires: bash-completion >= 2.12, fzf >= 0.61 (fixes read: '': not a valid
+# identifier on bash 5.2 — upstream bugs in bash-completion/fzf, not ble.sh).
+# Install: bash ~/dotfiles/scripts/install-blesh.sh
+if [[ -f ~/.local/share/blesh/ble.sh && $- == *i* ]]; then
+    source ~/.local/share/blesh/ble.sh --attach=none
+fi
+
 # ── 3. History ─────────────────────────────────────────────────────────────────
 HISTCONTROL=ignoredups:ignorespace
 HISTSIZE=50000
@@ -203,3 +211,5 @@ if command -v fastfetch >/dev/null 2>&1 \
     fastfetch
 fi
 
+# ── 20. ble.sh attach (must be last — after all completions/prompts are set up) ─
+[[ ${BLE_VERSION-} ]] && ble-attach
