@@ -15,6 +15,8 @@ case $- in *i*) ;; *) return ;; esac
 # ignored it). With ble.sh active, even the syntax highlighter triggers the
 # broken read path. Skip ble.sh on affected systems with a clear message.
 # Fix: bash ~/dotfiles/scripts/install.sh  (upgrades bash-completion to 2.14)
+# _DOTFILES_BLE_COMPAT controls whether section 20 may attach ble in this shell.
+_DOTFILES_BLE_COMPAT=0
 if [[ -f ~/.local/share/blesh/ble.sh && $- == *i* ]]; then
     _bc_ver=$(pkg-config --modversion bash-completion 2>/dev/null \
               || dpkg -l bash-completion 2>/dev/null | awk '/^ii/{print $3}' | head -1 | cut -d: -f2 | cut -d- -f1)
@@ -24,8 +26,13 @@ if [[ -f ~/.local/share/blesh/ble.sh && $- == *i* ]]; then
     || [[ "$_bc_maj" -gt 2 ]] \
     || [[ "$_bc_maj" -eq 2 && "${_bc_min:-0}" -ge 12 ]]; then
         source ~/.local/share/blesh/ble.sh --attach=none
+        _DOTFILES_BLE_COMPAT=1
     else
         printf '\e[33m[dotfiles] ble.sh skipped: bash-completion %s < 2.12 (run: bash ~/dotfiles/scripts/install.sh)\e[0m\n' "$_bc_ver" >&2
+        # If ble was already active in this shell, detach it immediately.
+        if [[ ${BLE_VERSION-} ]] && type ble-detach >/dev/null 2>&1; then
+            ble-detach >/dev/null 2>&1
+        fi
     fi
     unset _bc_ver _bc_maj _bc_min
 fi
@@ -252,7 +259,7 @@ fi
 # ── 20. ble.sh attach (must be last — after all completions/prompts are set up) ─
 # NOTE: .blerc is only read on first ble-attach. Set critical options HERE so
 # they apply every time .bashrc is sourced (e.g. source ~/.bashrc in-session).
-if [[ ${BLE_VERSION-} ]]; then
+if [[ ${_DOTFILES_BLE_COMPAT:-0} == 1 && ${BLE_VERSION-} ]]; then
     ble-attach
     # Disable completion-triggered features — bash-completion < 2.12 and
     # fzf < 0.61 pass empty strings as read variable names, causing
@@ -260,4 +267,7 @@ if [[ ${BLE_VERSION-} ]]; then
     # Re-enable after: bash ~/dotfiles/scripts/install.sh
     bleopt complete_auto_complete=0  2>/dev/null
     bleopt complete_auto_history=0   2>/dev/null
+elif [[ ${_DOTFILES_BLE_COMPAT:-0} != 1 && ${BLE_VERSION-} ]] && type ble-detach >/dev/null 2>&1; then
+    ble-detach >/dev/null 2>&1
 fi
+unset _DOTFILES_BLE_COMPAT
