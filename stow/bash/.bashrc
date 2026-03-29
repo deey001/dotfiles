@@ -171,6 +171,31 @@ if command -v fzf >/dev/null 2>&1; then
     fi
 fi
 
+# ── 13b. Completion version guard ─────────────────────────────────────────────
+# bash-completion < 2.12 passes empty ${ipvx-} as a read variable name.
+# fzf < 0.61 has __fzf_list_hosts using failglob unsafely.
+# Both cause "read: '': not a valid identifier" on bash 5.2.
+# Workaround: remove SSH-related completions on affected versions.
+# Permanent fix: bash ~/dotfiles/scripts/install.sh (upgrades both tools).
+{
+    _bc_ver=$(pkg-config --modversion bash-completion 2>/dev/null)
+    _bc_maj=${_bc_ver%%.*}
+    _bc_min=${_bc_ver#*.}; _bc_min=${_bc_min%%.*}
+    _fzf_ver=$(fzf --version 2>/dev/null | awk '{print $1}')
+    _fzf_min=${_fzf_ver#*.}; _fzf_min=${_fzf_min%%.*}
+    _need_fix=0
+    [[ -n "$_bc_maj" && ("$_bc_maj" -lt 2 || ("$_bc_maj" -eq 2 && "${_bc_min:-0}" -lt 12)) ]] \
+        && _need_fix=1
+    [[ -n "$_fzf_ver" && "${_fzf_ver%%.*}" -eq 0 && "${_fzf_min:-99}" -lt 61 ]] \
+        && _need_fix=1
+    if [[ "$_need_fix" -eq 1 ]]; then
+        complete -r ssh scp sftp 2>/dev/null
+        unset -f _ssh _scp _sftp _known_hosts_real \
+                 __fzf_list_hosts __fzf_complete_ssh 2>/dev/null
+    fi
+    unset _bc_ver _bc_maj _bc_min _fzf_ver _fzf_min _need_fix
+}
+
 # ── 14. zoxide ────────────────────────────────────────────────────────────────
 # Don't alias cd=z — scripts rely on 'cd' behaving as the builtin.
 # Use 'z' directly for frecency-based jumps; 'cdi' for interactive fzf picker.
