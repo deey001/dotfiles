@@ -9,51 +9,10 @@
 # ── 1. Interactive-only guard ──────────────────────────────────────────────────
 case $- in *i*) ;; *) return ;; esac
 
-# Helper: detect bash-completion version (prefer local install in ~/.local)
-_dotfiles_get_bc_version() {
-    local _local_bc="${HOME}/.local/share/bash-completion/bash_completion"
-    local _ver=
-    if [[ -r "$_local_bc" ]]; then
-        _ver=$(grep -m1 -Eo 'BASH_COMPLETION_VERSINFO=\([0-9]+ [0-9]+' "$_local_bc" \
-            | awk -F'[() ]+' '{print $2 "." $3}')
-        if [[ -z "$_ver" ]]; then
-            _ver=$(grep -m1 -Eo 'version[[:space:]]+[0-9]+\.[0-9]+(\.[0-9]+)?' "$_local_bc" \
-                | awk '{print $2}')
-        fi
-        if [[ -n "$_ver" ]]; then
-            printf '%s\n' "$_ver"
-            return 0
-        fi
-    fi
-    pkg-config --modversion bash-completion 2>/dev/null \
-        || dpkg -l bash-completion 2>/dev/null | awk '/^ii/{print $3}' | head -1 | cut -d: -f2 | cut -d- -f1 \
-        || echo "0"
-}
-
-# ── 2. ble.sh — Bash Line Editor (syntax highlighting, vim mode, menu complete) ─
-# Requires bash-completion >= 2.12. That release fixed SSH completion passing
-# empty variable names to 'read' (bash 5.2 rejects this; older bash silently
-# ignored it). With ble.sh active, even the syntax highlighter triggers the
-# broken read path. Skip ble.sh on affected systems with a clear message.
-# Fix: bash ~/dotfiles/scripts/install.sh  (upgrades bash-completion to 2.14)
-# _DOTFILES_BLE_COMPAT: full mode (safe programmable completion path)
-# _DOTFILES_BLE_LIMITED: prediction-only mode for older bash-completion.
-_DOTFILES_BLE_COMPAT=0
-_DOTFILES_BLE_LIMITED=0
+# ── 2. ble.sh — Bash Line Editor (syntax highlighting, auto-suggest, menu) ────
+# Install: bash ~/dotfiles/scripts/install-blesh.sh
 if [[ -f ~/.local/share/blesh/ble.sh && $- == *i* ]]; then
-    _bc_ver=$(_dotfiles_get_bc_version)
-    _bc_maj=${_bc_ver%%.*}
-    _bc_min=${_bc_ver#*.}; _bc_min=${_bc_min%%.*}
     source ~/.local/share/blesh/ble.sh --attach=none
-    if [[ -z "$_bc_maj" ]] \
-    || [[ "$_bc_maj" -gt 2 ]] \
-    || [[ "$_bc_maj" -eq 2 && "${_bc_min:-0}" -ge 12 ]]; then
-        _DOTFILES_BLE_COMPAT=1
-    else
-        _DOTFILES_BLE_LIMITED=1
-        printf '\e[33m[dotfiles] ble.sh limited mode: prediction only (bash-completion %s < 2.12)\e[0m\n' "$_bc_ver" >&2
-    fi
-    unset _bc_ver _bc_maj _bc_min
 fi
 
 # ── 3. History ─────────────────────────────────────────────────────────────────
@@ -166,7 +125,7 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 [[ -f ~/.bash_wrappers  ]] && source ~/.bash_wrappers
 
 # ── 11. System bash-completion ────────────────────────────────────────────────
-if ! shopt -oq posix && [[ ${_DOTFILES_BLE_LIMITED:-0} != 1 ]]; then
+if ! shopt -oq posix; then
     if [[ -f "${HOME}/.local/share/bash-completion/bash_completion" ]]; then
         source "${HOME}/.local/share/bash-completion/bash_completion"
     elif [[ -f /usr/share/bash-completion/bash_completion ]]; then
@@ -193,17 +152,12 @@ fi
 
 # ── 13. fzf ────────────────────────────────────────────────────────────────────
 if command -v fzf >/dev/null 2>&1; then
-    if [[ ${_DOTFILES_BLE_LIMITED:-0} == 1 ]]; then
+    eval "$(fzf --bash 2>/dev/null)" || {
         [[ -f /usr/share/doc/fzf/examples/key-bindings.bash ]] \
             && source /usr/share/doc/fzf/examples/key-bindings.bash
-    else
-        eval "$(fzf --bash 2>/dev/null)" || {
-            [[ -f /usr/share/doc/fzf/examples/key-bindings.bash ]] \
-                && source /usr/share/doc/fzf/examples/key-bindings.bash
-            [[ -f /usr/share/doc/fzf/examples/completion.bash ]] \
-                && source /usr/share/doc/fzf/examples/completion.bash
-        }
-    fi
+        [[ -f /usr/share/doc/fzf/examples/completion.bash ]] \
+            && source /usr/share/doc/fzf/examples/completion.bash
+    }
     export FZF_DEFAULT_OPTS="
         --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8
         --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc
@@ -217,39 +171,30 @@ if command -v fzf >/dev/null 2>&1; then
     fi
 fi
 
-# ── 13b. Completion version guard ─────────────────────────────────────────────
-# bash-completion < 2.12 passes empty ${ipvx-} as a read variable name.
-# fzf < 0.61 has __fzf_list_hosts using failglob unsafely.
-# Both cause "read: '': not a valid identifier" on bash 5.2.
-# Workaround: remove SSH-related completions on affected versions.
-# Permanent fix: bash ~/dotfiles/scripts/install.sh (upgrades both tools).
-if [[ ${_DOTFILES_BLE_LIMITED:-0} != 1 ]]; then
-{
-    if [[ ${BASH_COMPLETION_VERSINFO+x} ]]; then
-        _bc_maj=${BASH_COMPLETION_VERSINFO[0]:-0}
-        _bc_min=${BASH_COMPLETION_VERSINFO[1]:-0}
-    else
-        _bc_ver=$(_dotfiles_get_bc_version)
-        _bc_maj=${_bc_ver%%.*}
-        _bc_min=${_bc_ver#*.}; _bc_min=${_bc_min%%.*}
+# ── 13b. Bash 5.2 completion bug monkey-patches ──────────────────────────────
+# bash-completion < 2.12: _known_hosts_real uses ${ipvx-} which expands to ""
+# when ipvx is uninitialized, causing 'read -r "" key' → bash 5.2 rejects it.
+# The system /etc/bash.bashrc loads bash-completion before our .bashrc, so we
+# can't prevent loading — we patch the function in memory instead.
+# fzf < 0.61: __fzf_list_hosts uses globs without failglob/noglob guards.
+if [[ ${BASH_VERSINFO[0]:-0} -eq 5 && ${BASH_VERSINFO[1]:-0} -ge 2 ]] \
+|| [[ ${BASH_VERSINFO[0]:-0} -gt 5 ]]; then
+    # Patch _known_hosts_real: fix empty variable name passed to read
+    if declare -f _known_hosts_real >/dev/null 2>&1; then
+        _dotfiles_patched=$(declare -f _known_hosts_real \
+            | sed 's/local ipvx;/local ipvx=;/g' \
+            | sed 's/\${ipvx-}/${ipvx:+"$ipvx"}/g')
+        eval "$_dotfiles_patched" 2>/dev/null
+        unset _dotfiles_patched
     fi
-    _fzf_ver=
-    if command -v fzf >/dev/null 2>&1; then
-        _fzf_ver=$(fzf --version 2>/dev/null | awk '{print $1}')
+    # Patch __fzf_list_hosts: guard globs against failglob
+    if declare -f __fzf_list_hosts >/dev/null 2>&1; then
+        __fzf_list_hosts() {
+            command cat <(command tail -n +1 ~/.ssh/config ~/.ssh/config.d/* 2>/dev/null | command grep -i '^\s*host\(name\)\? ' | awk '{for (i = 2; i <= NF; i++) print $1 " " $i}' | command grep -v '[*?]') \
+                <(command grep -oE '^[[a-z0-9.,:-]+' ~/.ssh/known_hosts 2>/dev/null | tr ',' '\n' | tr -d '[' | awk '{ print $1 " " $1 }') \
+                <(command grep -v '^\s*\(#\|$\)' /etc/hosts 2>/dev/null | command grep -Fv '0.0.0.0') 2>/dev/null
+        }
     fi
-    _fzf_min=${_fzf_ver#*.}; _fzf_min=${_fzf_min%%.*}
-    _need_fix=0
-    [[ -n "$_bc_maj" && ("$_bc_maj" -lt 2 || ("$_bc_maj" -eq 2 && "${_bc_min:-0}" -lt 12)) ]] \
-        && _need_fix=1
-    [[ -n "$_fzf_ver" && "${_fzf_ver%%.*}" -eq 0 && "${_fzf_min:-99}" -lt 61 ]] \
-        && _need_fix=1
-    if [[ "$_need_fix" -eq 1 ]]; then
-        complete -r ssh scp sftp 2>/dev/null
-        unset -f _ssh _scp _sftp _known_hosts_real \
-                 __fzf_list_hosts __fzf_complete_ssh 2>/dev/null
-    fi
-    unset _bc_ver _bc_maj _bc_min _fzf_ver _fzf_min _need_fix
-}
 fi
 
 # ── 14. zoxide ────────────────────────────────────────────────────────────────
@@ -293,16 +238,9 @@ if command -v fastfetch >/dev/null 2>&1 \
 fi
 
 # ── 20. ble.sh attach (must be last — after all completions/prompts are set up) ─
-# NOTE: .blerc is only read on first ble-attach. Set critical options HERE so
-# they apply every time .bashrc is sourced (e.g. source ~/.bashrc in-session).
 if [[ ${BLE_VERSION-} ]]; then
     ble-attach
-    # Keep history prediction enabled; disable all completion-triggered paths.
-    # complete_ambiguous can still invoke completion while typing "vi G", which
-    # hits old bash-completion/fzf read bugs on some systems.
-    bleopt complete_auto_complete=0  2>/dev/null
+    bleopt complete_auto_complete=1  2>/dev/null
     bleopt complete_auto_history=1   2>/dev/null
-    bleopt complete_ambiguous=0      2>/dev/null
+    bleopt complete_ambiguous=1      2>/dev/null
 fi
-unset -f _dotfiles_get_bc_version 2>/dev/null || true
-unset _DOTFILES_BLE_COMPAT _DOTFILES_BLE_LIMITED
