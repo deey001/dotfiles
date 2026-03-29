@@ -9,12 +9,6 @@
 #
 # Install/update ble.sh: bash ~/dotfiles/scripts/install-blesh.sh
 
-# ── modules ───────────────────────────────────────────────────────────────────
-# Load standard and contrib modules for better integration
-ble-import -d core-complete
-ble-import -d core-history
-ble-import -d contrib/fzf
-
 # ── read() wrapper ────────────────────────────────────────────────────────────
 # Bash 5.2 added strict validation for `read` variable names. Older versions
 # of bash-completion (2.11) and fzf (< 0.61) pass empty strings to `read`, 
