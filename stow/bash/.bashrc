@@ -29,9 +29,10 @@ if [[ -f ~/.local/share/blesh/ble.sh && $- == *i* ]]; then
         _DOTFILES_BLE_COMPAT=1
     else
         printf '\e[33m[dotfiles] ble.sh skipped: bash-completion %s < 2.12 (run: bash ~/dotfiles/scripts/install.sh)\e[0m\n' "$_bc_ver" >&2
-        # If ble was already active in this shell, detach it immediately.
+        # If ble was already active in this shell, detach once and recover TTY.
         if [[ ${BLE_VERSION-} ]] && type ble-detach >/dev/null 2>&1; then
             ble-detach >/dev/null 2>&1
+            stty sane 2>/dev/null || true
         fi
     fi
     unset _bc_ver _bc_maj _bc_min
@@ -269,5 +270,6 @@ if [[ ${_DOTFILES_BLE_COMPAT:-0} == 1 && ${BLE_VERSION-} ]]; then
     bleopt complete_auto_history=0   2>/dev/null
 elif [[ ${_DOTFILES_BLE_COMPAT:-0} != 1 && ${BLE_VERSION-} ]] && type ble-detach >/dev/null 2>&1; then
     ble-detach >/dev/null 2>&1
+    stty sane 2>/dev/null || true
 fi
 unset _DOTFILES_BLE_COMPAT
