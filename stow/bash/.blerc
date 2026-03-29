@@ -36,7 +36,7 @@ bleopt complete_auto_delay=100
 # directly (not here) so the settings take effect on 'source ~/.bashrc'.
 # Re-enable after: bash ~/dotfiles/scripts/install.sh
 bleopt complete_auto_complete=0
-bleopt complete_ambiguous=1
+bleopt complete_ambiguous=0
 
 # ------------------------------------------------------------------------------
 # Completion Menu (dropdown with keyboard navigation)
@@ -86,4 +86,3 @@ ble-face command_builtin='fg=cyan'
 ble-face command_function='fg=blue'
 ble-face command_file='fg=green'
 ble-face syntax_error='bg=red,fg=white'
-

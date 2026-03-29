@@ -297,9 +297,12 @@ fi
 # they apply every time .bashrc is sourced (e.g. source ~/.bashrc in-session).
 if [[ ${BLE_VERSION-} ]]; then
     ble-attach
-    # Keep history prediction enabled; leave command auto-complete off for stability.
+    # Keep history prediction enabled; disable all completion-triggered paths.
+    # complete_ambiguous can still invoke completion while typing "vi G", which
+    # hits old bash-completion/fzf read bugs on some systems.
     bleopt complete_auto_complete=0  2>/dev/null
     bleopt complete_auto_history=1   2>/dev/null
+    bleopt complete_ambiguous=0      2>/dev/null
 fi
 unset -f _dotfiles_get_bc_version 2>/dev/null || true
 unset _DOTFILES_BLE_COMPAT _DOTFILES_BLE_LIMITED
