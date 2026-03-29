@@ -13,6 +13,33 @@ case $- in *i*) ;; *) return ;; esac
 # Install: bash ~/dotfiles/scripts/install-blesh.sh
 if [[ -f ~/.local/share/blesh/ble.sh && $- == *i* ]]; then
     source ~/.local/share/blesh/ble.sh --attach=none
+
+    # ── Bash 5.2 read compatibility shim ──────────────────────────────────────
+    # bash 5.2 added C-level validation rejecting empty variable names in read.
+    # Multiple upstream tools (bash-completion < 2.12, fzf < 0.61) pass empty
+    # strings as variable names to read. ble.sh intercepts all read calls during
+    # completion via _ble_builtin_read_hook and passes them to ble/bash/read,
+    # which calls builtin read — triggering the error.
+    #
+    # Fix: override ble/bash/read to silently drop empty variable name args.
+    # Option values (e.g. -d '') are preserved; only bare empty args are dropped.
+    if [[ ${BASH_VERSINFO[0]:-0} -ge 5 ]]; then
+        ble/bash/read() {
+            local -a _a=()
+            local _x _valnext=0
+            for _x in "$@"; do
+                if (( _valnext )); then
+                    _a+=("$_x"); _valnext=0
+                elif [[ "$_x" == -* ]]; then
+                    _a+=("$_x")
+                    case "${_x: -1}" in [dnNptu]) _valnext=1 ;; esac
+                elif [[ -n "$_x" ]]; then
+                    _a+=("$_x")
+                fi
+            done
+            builtin read "${_ble_bash_tmout_wa[@]}" -r "${_a[@]}"
+        }
+    fi
 fi
 
 # ── 3. History ─────────────────────────────────────────────────────────────────
