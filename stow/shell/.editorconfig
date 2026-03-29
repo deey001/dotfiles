@@ -9,9 +9,14 @@
 #   - Supported by most modern editors (VS Code, Vim, Sublime, Atom, etc.)
 #   - Ensures consistent formatting across team members and machines
 #
+# WHEN LOADED:
+#   - Editors search for .editorconfig starting in the file's directory and
+#     walking up to the filesystem root. The first file with `root = true`
+#     stops the search, so this file should live at the project root.
+#
 # SUPPORTED EDITORS:
 #   - VS Code: Built-in support
-#   - Neovim/Vim: Install editorconfig plugin
+#   - Neovim/Vim: Built-in since Neovim 0.9 / Vim 9; or install editorconfig plugin
 #   - Sublime Text: Install EditorConfig package
 #   - IntelliJ/PyCharm: Built-in support
 #   - Atom: Install editorconfig package
@@ -27,10 +32,20 @@
 #   charset: file encoding (usually "utf-8")
 #   trim_trailing_whitespace: remove whitespace at end of lines
 #   insert_final_newline: ensure file ends with newline
-#   max_line_length: maximum line length (soft limit)
+#   max_line_length: maximum line length (soft limit — not enforced by all editors)
+#
+# FILE TYPES COVERED:
+#   Shell (.sh/.bash/.zsh), YAML, JSON, TOML, INI, Markdown, Makefiles,
+#   Lua, Python, JavaScript/TypeScript, HTML/CSS, Git configs, Docker,
+#   and minified/lock files.
+#
+# FILE TYPES NOT COVERED (add sections below if needed):
+#   Rust (.rs), Go (.go), Ruby (.rb), C/C++ (.c/.cpp/.h), Java (.java),
+#   XML (.xml), Terraform (.tf/.hcl), SQL (.sql), GraphQL (.graphql),
+#   Protocol Buffers (.proto), Nix (.nix)
 # ==============================================================================
 
-# Top-most EditorConfig file
+# Top-most EditorConfig file — stops the upward directory search here
 root = true
 
 # ------------------------------------------------------------------------------
@@ -125,6 +140,7 @@ max_line_length = 100
 [*.py]
 indent_style = space
 indent_size = 4
+# 88 matches Black formatter's default line length
 max_line_length = 88
 
 # ------------------------------------------------------------------------------
@@ -170,11 +186,53 @@ indent_size = 2
 # Special Files
 # ------------------------------------------------------------------------------
 
-# Don't enforce rules on auto-generated or binary files
+# Don't enforce rules on auto-generated or binary-like files
+# These are machine-managed and should not be reformatted
 [*.{min.js,min.css,lock}]
 insert_final_newline = unset
 trim_trailing_whitespace = unset
 
-# Package manager files
+# Package manager lock files — keep their existing formatting
 [{package.json,package-lock.json,yarn.lock,pnpm-lock.yaml}]
 indent_size = 2
+
+# ------------------------------------------------------------------------------
+# Suggested Additions (Uncomment as Needed)
+# ------------------------------------------------------------------------------
+# Rust — follows rustfmt defaults (4-space indent, 100-char lines)
+# [*.rs]
+# indent_style = space
+# indent_size = 4
+# max_line_length = 100
+#
+# Go — gofmt enforces tabs; editors should match
+# [*.go]
+# indent_style = tab
+# indent_size = 4
+#
+# Ruby — community standard is 2-space indent
+# [*.rb]
+# indent_style = space
+# indent_size = 2
+# max_line_length = 120
+#
+# C/C++ — 4-space indent is common; adjust to match your project's clang-format
+# [*.{c,cpp,h,hpp}]
+# indent_style = space
+# indent_size = 4
+# max_line_length = 100
+#
+# XML / XSLT — 2-space indent for readability
+# [*.{xml,xsl,xslt,svg}]
+# indent_style = space
+# indent_size = 2
+#
+# Terraform / HCL — HashiCorp standard is 2-space indent
+# [*.{tf,tfvars,hcl}]
+# indent_style = space
+# indent_size = 2
+#
+# Protocol Buffers — Google style is 2-space indent
+# [*.proto]
+# indent_style = space
+# indent_size = 2

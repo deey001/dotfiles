@@ -1,53 +1,78 @@
 # ==============================================================================
 # .bash_exports — Exported Environment Variables
 # ==============================================================================
-# Variables exported to child processes: PATH, EDITOR, tool-specific settings.
-# HISTTIMEFORMAT and HIST* settings live in .bashrc (bash builtins).
+# Sourced by: .bashrc (early in the load order, before aliases and functions)
+# Purpose:    Variables exported to child processes: PATH, EDITOR, tool config.
+#
+# NOTE: HISTTIMEFORMAT and HIST* settings live in .bashrc because they are
+#       bash builtins that only affect the current shell, not child processes.
+#
+# Dependencies: None — this file must work even on a minimal system.
 # ==============================================================================
 
 # ── PATH — user bins first so user-installed tools shadow system tools ─────────
-# XDG user bin and local bin take priority over /usr/local/bin and /usr/bin.
+# XDG user bin (~/.local/bin) and ~/bin take priority over /usr/local/bin and
+# /usr/bin. This lets user-installed versions of tools (e.g., Neovim, Starship)
+# take precedence over system packages.
 export PATH="${HOME}/.local/bin:${HOME}/bin:${PATH}"
 
-# Deduplicate PATH entries (re-sourcing .bash_exports won't accumulate dupes)
+# Deduplicate PATH entries (re-sourcing .bash_exports won't accumulate dupes).
+# Uses awk's associative array to keep only the first occurrence of each entry.
 if [[ -n "$PATH" ]]; then
     export PATH=$(awk -v RS=':' -v ORS=':' '!seen[$0]++' <<< "$PATH" | sed 's/:$//')
 fi
 
 # ── CDPATH — quick cd from anywhere ───────────────────────────────────────────
-# Leading colon = current directory first (prevents CDPATH from shadowing ./foo)
+# Leading colon = current directory first (prevents CDPATH from shadowing ./foo).
+# With this set, `cd projects` works from any directory — bash searches these
+# directories in order when the target isn't found in CWD.
 export CDPATH=":${HOME}:${HOME}/projects:${HOME}/work:${HOME}/src"
 
 # ── Editor ─────────────────────────────────────────────────────────────────────
-# Safe fallback chain: nvim → vim → vi → nano
+# Safe fallback chain: nvim → vim → vi → nano.
+# EDITOR is used by: git commit, crontab -e, sudoedit, fc, etc.
+# VISUAL is used by: programs that expect a full-screen editor (same here).
 for _editor in nvim vim vi nano; do
     if command -v "$_editor" >/dev/null 2>&1; then
         export EDITOR="$_editor"
         export VISUAL="$_editor"
-        break
+        break                         # Stop at the first available editor
     fi
 done
-unset _editor
+unset _editor                         # Clean up loop variable from global scope
 
 # ── Pager ──────────────────────────────────────────────────────────────────────
-export LESS='-R'
-export LESSOPEN='|~/.lessfilter %s'
+# Affects: less, git log/diff, man pages, bat preview, and any tool using $LESS.
+export LESS='-R'                      # -R passes ANSI color codes through
+export LESSOPEN='|~/.lessfilter %s'   # Pre-processor for syntax-highlighted less
 
 # ── Go ─────────────────────────────────────────────────────────────────────────
+# Affects: go build, go install — GOPATH sets where `go get` installs binaries.
 export GOPATH="${HOME}/gocode"
 export PATH="${GOPATH}/bin:/usr/local/go/bin:${PATH}"
 
 # ── rbenv (lazy-loaded — only adds to PATH, defers eval until first use) ───────
 # Full 'rbenv init' runs on first invocation of 'rbenv', saving ~50ms per shell.
+# This is a "thunk" pattern: the function replaces itself with the real rbenv on
+# first call, so subsequent invocations run at full speed.
 if [[ -d "${HOME}/.rbenv" ]]; then
     export PATH="${HOME}/.rbenv/bin:${HOME}/.rbenv/plugins/ruby-build/bin:${PATH}"
     rbenv() {
-        unset -f rbenv
-        eval "$(command rbenv init - bash)"
-        rbenv "$@"
+        unset -f rbenv                # Remove this wrapper function
+        eval "$(command rbenv init - bash)"  # Load the real rbenv shims
+        rbenv "$@"                    # Re-run with the real rbenv
     }
 fi
 
 # ── bat ────────────────────────────────────────────────────────────────────────
-export BAT_THEME="Catppuccin Mocha"
-export BAT_PAGING="never"
+# Affects: bat, batcat, and any tool using bat as a previewer (fzf, delta, etc.)
+export BAT_THEME="Catppuccin Mocha"   # Consistent color scheme across all bat usage
+export BAT_PAGING="never"             # Disable bat's built-in pager — let the caller decide
+
+# ── Suggested additions (uncomment to enable) ─────────────────────────────────
+# export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'  # fzf appearance
+# export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'  # fzf uses fd
+# export RIPGREP_CONFIG_PATH="${HOME}/.ripgreprc"  # rg config file location
+# export MANPAGER='nvim +Man!'        # Use Neovim as the man page viewer
+# export LANG='en_US.UTF-8'           # Ensure consistent locale across systems
+# export LC_ALL='en_US.UTF-8'         # Override per-category locale settings

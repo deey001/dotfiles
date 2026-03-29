@@ -1,15 +1,31 @@
-# Alacritty configuration for riced terminal
-# See https://alacritty.org/config-alacritty.html for full options
+# ==============================================================================
+# alacritty.yml — Legacy Alacritty Terminal Configuration (YAML format)
+# ==============================================================================
+# ⚠ LEGACY FORMAT: This YAML config is for Alacritty versions < 0.13.
+#   Alacritty 0.13+ uses TOML format — see alacritty.toml for the active config.
+#   This file is kept for backward compatibility with older Alacritty versions.
+#
+# LOCATION: ~/.config/alacritty/alacritty.yml (symlinked by install.sh)
+# DOCS:     https://alacritty.org/config-alacritty.html
+#
+# NOTE: Alacritty auto-detects which config file to use:
+#   - 0.13+: reads alacritty.toml (preferred)
+#   - <0.13: reads alacritty.yml (this file)
+# ==============================================================================
 
-# Window settings
+# --- Window Appearance --------------------------------------------------------
+# Controls window transparency, padding, and decorations.
 window:
-  opacity: 0.95
+  opacity: 0.95           # Slight transparency (1.0 = fully opaque)
   padding:
-    x: 10
-    y: 10
-  decorations: none  # Borderless for ricing
+    x: 10                 # Horizontal padding in pixels — breathing room for text
+    y: 10                 # Vertical padding in pixels
+  decorations: none       # Borderless window for a cleaner riced look
 
-# Font settings (uses installed Nerd Font)
+# --- Font Configuration -------------------------------------------------------
+# JetBrainsMono Nerd Font includes programming ligatures and icon glyphs
+# needed by Starship prompt, Neovim, and tmux status bar.
+# Install via: brew install --cask font-jetbrains-mono-nerd-font (macOS)
 font:
   normal:
     family: "JetBrainsMono Nerd Font"
@@ -23,46 +39,86 @@ font:
   bold_italic:
     family: "JetBrainsMono Nerd Font"
     style: Bold Italic
-  size: 14.0
+  size: 14.0              # Font size in points — adjust for your display DPI
 
-# Catppuccin Mocha
+# --- Catppuccin Mocha Color Scheme --------------------------------------------
+# Consistent with starship.toml and bat theme across the dotfiles.
+# Palette reference: https://github.com/catppuccin/catppuccin
+# Uses 0x prefix (YAML format) instead of # prefix (TOML format).
 colors:
   primary:
-    background: '0x1e1e2e'
-    foreground: '0xcdd6f4'
+    background: '0x1e1e2e'  # Base — dark background
+    foreground: '0xcdd6f4'  # Text — light foreground
   cursor:
-    text: '0x1e1e2e'
-    cursor: '0xf5e0dc'
+    text: '0x1e1e2e'        # Cursor text inherits base background
+    cursor: '0xf5e0dc'      # Rosewater cursor color
   normal:
-    black:   '0x45475a'
-    red:     '0xf38ba8'
-    green:   '0xa6e3a1'
-    yellow:  '0xf9e2af'
-    blue:    '0x89b4fa'
-    magenta: '0xf5c2e7'
-    cyan:    '0x94e2d5'
-    white:   '0xbac2de'
+    black:   '0x45475a'     # Surface1
+    red:     '0xf38ba8'     # Red
+    green:   '0xa6e3a1'     # Green
+    yellow:  '0xf9e2af'     # Yellow
+    blue:    '0x89b4fa'     # Blue
+    magenta: '0xf5c2e7'     # Pink
+    cyan:    '0x94e2d5'     # Teal
+    white:   '0xbac2de'     # Subtext1
   bright:
-    black:   '0x585b70'
-    red:     '0xf38ba8'
+    black:   '0x585b70'     # Surface2
+    red:     '0xf38ba8'     # Same as normal (Catppuccin doesn't distinguish)
     green:   '0xa6e3a1'
     yellow:  '0xf9e2af'
     blue:    '0x89b4fa'
     magenta: '0xf5c2e7'
     cyan:    '0x94e2d5'
-    white:   '0xa6adc8'
+    white:   '0xa6adc8'     # Subtext0
 
-# Key bindings (optional ricing shortcuts)
+# --- Key Bindings -------------------------------------------------------------
+# Custom shortcuts beyond Alacritty defaults.
 key_bindings:
-  - { key: N, mods: Control|Shift, action: SpawnNewInstance }
-  - { key: Q, mods: Control|Shift, action: Quit }
+  - { key: N, mods: Control|Shift, action: SpawnNewInstance }  # Open a new terminal window
+  - { key: Q, mods: Control|Shift, action: Quit }             # Quit Alacritty entirely
 
-# Performance
+# --- Scrollback ---------------------------------------------------------------
+# Number of lines to keep in the scrollback buffer.
+# 10000 is generous — increase if you frequently scroll through long output.
 scrolling:
   history: 10000
 
-# Shell (Defaults to system shell for portability)
+# --- Shell Override -----------------------------------------------------------
+# Defaults to the system login shell ($SHELL) for portability.
+# Uncomment to force a specific shell:
 # shell:
 #   program: /bin/bash
 #   args:
 #     - --login
+
+# ==============================================================================
+# SUGGESTED ADDITIONS (not currently configured):
+# ==============================================================================
+#
+# --- Cursor customization ---
+# cursor:
+#   style:
+#     shape: Block          # Options: Block, Underline, Beam
+#     blinking: On          # Options: Never, Off, On, Always
+#   vi_mode_style: Block    # Cursor shape in vi mode
+#
+# --- Selection behavior ---
+# selection:
+#   save_to_clipboard: true # Auto-copy selections to system clipboard
+#
+# --- Mouse behavior ---
+# mouse:
+#   hide_when_typing: true  # Hide cursor while typing
+#
+# --- Live config reload ---
+# live_config_reload: true  # Apply changes without restarting Alacritty
+#
+# --- URL launcher (click to open) ---
+# hints:
+#   enabled:
+#     - regex: "(https?://)[^\u0000-\u001F\u007F-\u009F<>\"\\s{-}\\^⟨⟩`]+"
+#       action: Copy
+#       post_processing: true
+#       mouse:
+#         enabled: true
+# ==============================================================================

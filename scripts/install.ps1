@@ -20,25 +20,49 @@
     - Full idiot-proof status messages
 
     Philosophy: KISS — everything via one simple one-liner.
+
+    DIFFERENCES FROM LINUX INSTALLER (scripts/install.sh):
+    - Linux installer: full dotfiles setup (symlinks, packages, shell config, ble.sh, etc.)
+    - This script: Windows-side companion focused on font + terminal configuration so
+      that icons from the Linux dotfiles render correctly in Windows SSH clients.
+    - This script uses winget for package management (vs apt/dnf/pacman/brew on Linux).
+    - Symlink creation requires Administrator privileges on Windows (not needed on Linux).
+    - Neovim on Windows lives in $env:LOCALAPPDATA\nvim (not ~/.config/nvim).
+
+    SUGGESTED ADDITIONS (not yet implemented):
+    TODO: Export/import Windows Terminal settings.json from the repo (full theme, keybindings)
+    TODO: Install additional winget packages: Microsoft.WindowsTerminal, JanDeDobbeleer.OhMyPosh
+    TODO: Configure Windows Defender exclusions for ~/.local and ~/dotfiles (performance)
+    TODO: Set up SSH agent service (ssh-agent) auto-start on Windows
+    TODO: Add winget package list export/import for reproducible Windows dev environments
 #>
 
 # ========================================================================================
 # Section 0: Critical Pre-flight Checks (TLS & Admin)
 # ========================================================================================
+# These checks MUST run before anything else because:
+# 1. TLS 1.2 is required for GitHub API/raw downloads (older Windows defaults to TLS 1.0)
+# 2. Font installation and registry changes require Administrator privileges
+# ========================================================================================
 
-# 1. Force TLS 1.2 (Fixes "Could not create SSL/TLS secure channel" on older Windows)
+# Force TLS 1.2 — without this, Invoke-WebRequest fails on older Windows 10 builds
+# with "Could not create SSL/TLS secure channel" because they default to TLS 1.0
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
 # 2. Define the exact command used to run this script (for auto-elevation reliability)
 # $RepoParams removed as it was unused in the new file-based approach
 
-# 3. Helper Function: Check for Admin Privileges
+# Helper: Check if the current user has Administrator privileges.
+# Font installation writes to C:\Windows\Fonts and HKLM registry, both of which
+# require elevation. We check early to avoid mid-install failures.
 function Test-AdminPrivileges {
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     return $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
-# 4. Auto-Elevate if not Admin
+# Auto-Elevate: If not running as Admin, download the script to a temp file and
+# relaunch in an elevated PowerShell window. The temp file approach avoids the
+# quoting/escaping nightmare of passing a URL through Start-Process -ArgumentList.
 if (-not (Test-AdminPrivileges)) {
     Write-Host "█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█" -ForegroundColor Red
     Write-Host "█  ADMINISTRATOR PRIVILEGES REQUIRED - AUTO-ELEVATING    █" -ForegroundColor Yellow
@@ -65,6 +89,11 @@ if (-not (Test-AdminPrivileges)) {
 
 # ========================================================================================
 # Section 1: PowerShell Version Check and Auto-Upgrade
+# ========================================================================================
+# PowerShell 5 (bundled with Windows) lacks modern features used by this script:
+# ANSI escape codes, improved JSON handling, and better error messages.
+# This section auto-upgrades to PowerShell 7 using winget (primary) or the
+# official Microsoft install script (fallback).
 # ========================================================================================
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     Write-Host "Detected PowerShell $($PSVersionTable.PSVersion.Major). Installing PowerShell 7 automatically..." -ForegroundColor Yellow
@@ -132,6 +161,10 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
 # ========================================================================================
 # Section 2: Enable ANSI Color Support
 # ========================================================================================
+# PowerShell 7 supports ANSI escape sequences natively, but we need UTF-8 encoding
+# for Nerd Font icons. If the console doesn't support it, fall back to Write-Host
+# -ForegroundColor (no icons, but still readable).
+# ========================================================================================
 try {
     [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
     $script:UseColors = $true
@@ -142,17 +175,26 @@ try {
 # ========================================================================================
 # Section 3: Configuration Variables
 # ========================================================================================
+# Centralized paths and URLs used throughout the script.
+# FONT_DOWNLOAD_URL: GitHub Releases always has the latest Nerd Fonts version.
+# BACKUP_DIR: Timestamped backups of PuTTY/WT settings live here.
+# LOG_FILE: Saved to Documents so it's easy to find and share for debugging.
+# ========================================================================================
 $FONT_DOWNLOAD_URL = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
 $TEMP_DIR = "$env:TEMP\nerd-fonts-install"
 $BACKUP_DIR = "$env:USERPROFILE\.dotfiles-backup"
 $BACKUP_TIMESTAMP = Get-Date -Format "yyyyMMdd_HHmmss"
 $LOG_FILE = "$env:USERPROFILE\Documents\dotfiles-install-log-$BACKUP_TIMESTAMP.txt"
 
+# Script-scoped arrays to accumulate log entries and action summaries
 $script:InstallationLog = @()
 $script:ActionsPerformed = @()
 
 # ========================================================================================
 # Section 4: ANSI Color Definitions
+# ========================================================================================
+# Uses `e (backtick-e) escape sequences — only works in PowerShell 7+.
+# Section 2 sets $script:UseColors=false if the console doesn't support ANSI.
 # ========================================================================================
 $colors = @{
     Reset   = "`e[0m"
@@ -168,7 +210,14 @@ $colors = @{
 # ========================================================================================
 # Section 5: Helper Functions
 # ========================================================================================
+# Write-Log:       Appends timestamped entries to the in-memory log (saved at exit)
+# Add-Action:      Records a user-visible action for the installation summary
+# Write-ColorText: Wraps Write-Host with ANSI color support and automatic logging
+# Write-Status:    Prints a status icon (✓/✗/→/!/i) with contextual coloring
+# Test-FontInstalled: Checks Windows font registry + user font directory
+# ========================================================================================
 
+# Append a timestamped log entry to the in-memory log array
 function Write-Log {
     param([string]$Message, [string]$Level = "INFO")
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -176,12 +225,14 @@ function Write-Log {
     $script:InstallationLog += $logEntry
 }
 
+# Record a user-facing action for the final summary report
 function Add-Action {
     param([string]$Action)
     $script:ActionsPerformed += $Action
     Write-Log $Action "ACTION"
 }
 
+# Print colored text — uses ANSI escapes when available, falls back to -ForegroundColor
 function Write-ColorText {
     param(
         [Parameter(Mandatory=$true)][string]$Message,
@@ -204,6 +255,7 @@ function Write-ColorText {
     }
 }
 
+# Print a status line with icon prefix (✓ Success, ✗ Error, → Progress, ! Warning, i Info)
 function Write-Status {
     param(
         [Parameter(Mandatory=$true)][string]$Message,
@@ -225,6 +277,9 @@ function Write-Status {
     Write-ColorText $formatted $status.Color
 }
 
+# Check if JetBrainsMono Nerd Font is already installed.
+# Searches both the system font registry (HKLM) and user-local font directory.
+# Returns $true if found in either location to avoid redundant installs.
 function Test-FontInstalled {
     param([string]$FontName = "JetBrainsMono Nerd Font")
     # Check Registry for standard install
@@ -250,7 +305,12 @@ function Test-FontInstalled {
 # ========================================================================================
 # Section 6: Backup and Restore
 # ========================================================================================
+# Creates timestamped backups of PuTTY registry settings and Windows Terminal
+# settings.json before making any changes. Backups are stored in
+# $env:USERPROFILE\.dotfiles-backup\<timestamp>\ with a metadata.json manifest.
+# ========================================================================================
 
+# Create a timestamped backup of current terminal settings
 function Backup-Settings {
     try {
         $timestampDir = Join-Path $BACKUP_DIR $BACKUP_TIMESTAMP
@@ -283,6 +343,7 @@ function Backup-Settings {
     }
 }
 
+# Restore settings from a previous backup (interactive selection)
 function Restore-Settings {
     try {
         $backups = Get-ChildItem -Path $BACKUP_DIR -Directory | Sort-Object Name -Descending
@@ -330,7 +391,16 @@ function Restore-Settings {
 # ========================================================================================
 # Section 7: Installation Functions
 # ========================================================================================
+# Each function handles one installation task and can be run independently from
+# the interactive menu. All functions follow the pattern:
+#   1. Download/detect resources
+#   2. Apply changes (with error handling)
+#   3. Record the action via Add-Action for the summary
+# ========================================================================================
 
+# Download and install JetBrainsMono Nerd Font system-wide.
+# Uses Shell.Application COM object (primary) with manual registry fallback.
+# Installs to C:\Windows\Fonts so all users and applications can see the font.
 function Install-NerdFont {
     try {
         Write-Host "Downloading JetBrainsMono Nerd Font..." -ForegroundColor Cyan
@@ -378,6 +448,11 @@ function Install-NerdFont {
     }
 }
 
+# Configure Windows Terminal to use JetBrainsMono Nerd Font.
+# Updates profiles.defaults.font.face (modern) and fontFace (legacy) in settings.json.
+# Handles both stable and preview versions of Windows Terminal.
+# This is critical because without the correct font, Nerd Font icons (used by
+# starship prompt, eza, nvim) appear as empty boxes or question marks.
 function Configure-WindowsTerminal {
     try {
         Write-Host "Configuring Windows Terminal..." -ForegroundColor Cyan
@@ -465,6 +540,10 @@ function Configure-WindowsTerminal {
     }
 }
 
+# Configure PuTTY's Default Settings to use JetBrainsMono Nerd Font.
+# IMPORTANT: This sets the "Default Settings" session in the registry, which is
+# what KeePass uses when launching SSH connections. Without this, KeePass-launched
+# PuTTY sessions show broken icons because they use the Default Settings profile.
 function Configure-PuTTY {
     try {
         Write-Host "Configuring PuTTY Default Settings..." -ForegroundColor Cyan
@@ -489,6 +568,11 @@ function Configure-PuTTY {
     }
 }
 
+# Install core developer tools via winget (Windows Package Manager).
+# These mirror the tools installed by scripts/install.sh on Linux:
+# neovim, git, ripgrep, fd, starship, eza, fastfetch.
+# Note: tmux, bat, btop, lazygit, fzf are not included yet — they're either
+# Linux-only or have limited Windows support.
 function Install-CoreTools {
     try {
         Write-Host "Installing Core Developer Tools via Winget..." -ForegroundColor Cyan
@@ -516,6 +600,10 @@ function Install-CoreTools {
     }
 }
 
+# Create symbolic links from the dotfiles repo into the Windows user home.
+# Enables Git Bash (and WSL) to use the same dotfiles as Linux.
+# Windows symlinks require Administrator privileges (unlike Linux).
+# Also links Neovim config to $env:LOCALAPPDATA\nvim (Windows-native path).
 function Symlink-Dotfiles {
     try {
         Write-Host "Symlinking dotfiles to User Home..." -ForegroundColor Cyan
@@ -592,7 +680,11 @@ function Symlink-Dotfiles {
 # ========================================================================================
 # Section 8: Summary and Remote Guidance
 # ========================================================================================
+# Save-InstallationSummary: Writes the action log and summary to Documents/ folder
+# Install-RemoteDotfiles: Shows the one-liner to install dotfiles on Linux servers
+# ========================================================================================
 
+# Save the installation log and a human-readable summary to the Documents folder
 function Save-InstallationSummary {
     try {
         $summary = @"
@@ -628,6 +720,8 @@ NEXT STEPS:
     }
 }
 
+# Display the one-liner for installing dotfiles on remote Linux servers.
+# This bridges the Windows setup to the Linux setup workflow.
 function Install-RemoteDotfiles {
     Write-ColorText "`nREMOTE SERVER SETUP" "Cyan"
     Write-Host "Connect to your server, then run:"
@@ -641,9 +735,14 @@ function Install-RemoteDotfiles {
 }
 
 # ========================================================================================
-# Section 9: Menu and Main Loop
+# Section 9: Interactive Menu and Main Loop
+# ========================================================================================
+# Chris Titus-style menu: numbered choices, color-coded, with descriptions.
+# Options 1-4 are individual tasks, 5 is "full local setup", 6 is symlinks,
+# 7-8 bridge to remote server setup, 9-10 handle reset/restore.
 # ========================================================================================
 
+# Display the interactive menu — called in a loop by Main
 function Show-Menu {
     Clear-Host
     Write-ColorText "╔══════════════════════════════════════════════════╗" "Cyan"
@@ -669,6 +768,9 @@ function Show-Menu {
     Write-Host "Enter choice: " -NoNewline
 }
 
+# Main entry point — creates a backup, then loops the interactive menu until exit.
+# Option 8 ("Complete Workflow") runs all tasks in sequence: font → WT → PuTTY →
+# tools → symlinks → remote server guide.
 function Main {
     try {
         Backup-Settings

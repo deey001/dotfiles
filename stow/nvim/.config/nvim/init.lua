@@ -1,2 +1,22 @@
--- bootstrap lazy.nvim, LazyVim and your plugins
+-- ============================================================================
+-- init.lua — Neovim Entry Point
+-- ============================================================================
+-- Description: The very first file Neovim sources on startup. Its sole job is
+--   to hand off control to the lazy.nvim plugin manager bootstrap in
+--   lua/config/lazy.lua, which in turn loads LazyVim and all user plugins.
+--
+-- Load order (LazyVim convention):
+--   1. init.lua            (this file — bootstrap only)
+--   2. config/lazy.lua     (installs lazy.nvim, sets up plugin specs)
+--   3. config/options.lua  (loaded BEFORE plugins by LazyVim)
+--   4. config/keymaps.lua  (loaded on VeryLazy event)
+--   5. config/autocmds.lua (loaded on VeryLazy event)
+--   6. plugins/*.lua       (each file returns a table of plugin specs)
+--
+-- Note: Do NOT put options, keymaps, or autocmds here — LazyVim loads those
+--   from their dedicated files under lua/config/. Anything placed here runs
+--   before the plugin manager is even available.
+-- ============================================================================
+
+-- Bootstrap lazy.nvim, LazyVim and all user plugins
 require("config.lazy")

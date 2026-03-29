@@ -204,3 +204,51 @@
 # 	smudge = git-lfs smudge -- %f
 # 	process = git-lfs filter-process
 # 	required = true
+
+# ==============================================================================
+# SUGGESTED ADDITIONS (not currently configured):
+# ==============================================================================
+#
+# --- Additional useful aliases ---
+# [alias]
+# 	stash-all = stash save --include-untracked  # Stash everything including new files
+# 	wip = !git add -A && git commit -m "WIP"    # Quick work-in-progress commit
+# 	conflicts = diff --name-only --diff-filter=U # List files with merge conflicts
+# 	authors = shortlog -sne                      # List all contributors by commit count
+# 	cleanup = !git branch --merged | grep -v '\\*\\|main\\|master' | xargs -n 1 git branch -d
+#                                                  # Delete local branches merged into current
+#
+# --- Reuse recorded resolution (auto-resolve repeated conflicts) ---
+# [rerere]
+# 	enabled = true          # Remember how you resolved conflicts and auto-apply
+#
+# --- Column layout for branch/tag listing ---
+# [column]
+# 	ui = auto               # Use columns for git branch, git tag, etc.
+#
+# --- Diff tool alternatives ---
+# Use difftastic (structural diff) instead of line-based diff:
+# [diff]
+# 	external = difft        # Requires: cargo install difftastic
+#
+# --- Transfer settings ---
+# [transfer]
+# 	fsckobjects = true      # Validate objects on push/fetch (catches corruption)
+#
+# --- Submodule convenience ---
+# [submodule]
+# 	recurse = true          # Auto-update submodules on checkout/pull
+#
+# --- Rebase improvements ---
+# [rebase]
+# 	autoStash = true        # Auto-stash before rebase, restore after
+# 	autoSquash = true       # Auto-squash fixup!/squash! commits
+#
+# --- Signing commits (GPG or SSH) ---
+# [commit]
+# 	gpgsign = true          # Sign all commits with GPG key
+# [gpg]
+# 	format = ssh            # Use SSH keys for signing (simpler than GPG)
+# [user]
+# 	signingkey = ~/.ssh/id_ed25519.pub  # SSH key to use for signing
+# ==============================================================================

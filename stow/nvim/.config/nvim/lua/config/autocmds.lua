@@ -1,2 +1,75 @@
--- Autocmds are automatically loaded on the VeryLazy event
--- https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/autocmds.lua
+-- ============================================================================
+-- autocmds.lua — Custom Auto Commands
+-- ============================================================================
+-- Description: Defines Neovim autocommands that fire on specific events.
+--   This file is automatically loaded by LazyVim on the VeryLazy event,
+--   so it runs after the UI is ready — safe for any autocmd here.
+--
+-- LazyVim defaults (already active — do NOT redefine):
+--   • Highlight text on yank (TextYankPost)
+--   • Resize splits when terminal window is resized (VimResized)
+--   • Go to last cursor position when opening a buffer (BufReadPost)
+--   • Close certain filetypes with <q> (FileType for help, man, qf, etc.)
+--   • Auto-create parent directories when saving a file (BufWritePre)
+--   • Wrap and spell-check in text filetypes (FileType)
+--
+-- Reference: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/autocmds.lua
+-- ============================================================================
+
+-- ============================================================================
+-- Suggested Autocmds (uncomment to enable)
+-- ============================================================================
+
+-- -- ---- Trim trailing whitespace on save ----
+-- -- Removes invisible trailing spaces that clutter diffs and annoy linters.
+-- vim.api.nvim_create_autocmd("BufWritePre", {
+--   group = vim.api.nvim_create_augroup("TrimWhitespace", { clear = true }),
+--   pattern = "*",
+--   callback = function()
+--     local save = vim.fn.winsaveview()
+--     vim.cmd([[%s/\s\+$//e]])       -- silent substitution to avoid error on no match
+--     vim.fn.winrestview(save)       -- restore cursor position after the substitution
+--   end,
+-- })
+
+-- -- ---- Auto-format on save (if conform.nvim is installed) ----
+-- -- LazyVim's extras/formatting already handles this if you enable the extra.
+-- -- Only add this if you're NOT using the LazyVim formatting extra.
+-- vim.api.nvim_create_autocmd("BufWritePre", {
+--   group = vim.api.nvim_create_augroup("AutoFormat", { clear = true }),
+--   callback = function(args)
+--     require("conform").format({ bufnr = args.buf })
+--   end,
+-- })
+
+-- -- ---- Set filetype-specific indentation ----
+-- -- Override the global 4-space indent for languages that prefer 2-space.
+-- vim.api.nvim_create_autocmd("FileType", {
+--   group = vim.api.nvim_create_augroup("IndentOverrides", { clear = true }),
+--   pattern = { "lua", "yaml", "json", "html", "css", "javascript", "typescript" },
+--   callback = function()
+--     vim.opt_local.shiftwidth = 2
+--     vim.opt_local.tabstop = 2
+--   end,
+-- })
+
+-- -- ---- Disable line numbers in terminal buffers ----
+-- -- Terminal buffers don't need line numbers; they just waste space.
+-- vim.api.nvim_create_autocmd("TermOpen", {
+--   group = vim.api.nvim_create_augroup("TerminalSettings", { clear = true }),
+--   callback = function()
+--     vim.opt_local.number = false
+--     vim.opt_local.relativenumber = false
+--   end,
+-- })
+
+-- -- ---- Auto-reload files changed outside Neovim ----
+-- -- LazyVim already sets 'autoread', but this triggers a check on focus gain.
+-- vim.api.nvim_create_autocmd({ "FocusGained", "TermClose", "TermLeave" }, {
+--   group = vim.api.nvim_create_augroup("AutoReload", { clear = true }),
+--   callback = function()
+--     if vim.o.buftype ~= "nofile" then
+--       vim.cmd("checktime")
+--     end
+--   end,
+-- })

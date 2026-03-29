@@ -1,5 +1,62 @@
-# Ignore local/private bash configuration
+# ==============================================================================
+# .gitignore — Global Git Ignore Patterns
+# ==============================================================================
+# Patterns listed here are ignored across ALL Git repositories on this machine.
+# Symlinked to ~/.gitignore by install.sh; referenced by core.excludesfile
+# in .gitconfig (if configured).
+#
+# PURPOSE:
+#   Keeps machine-specific and sensitive files out of version control globally,
+#   so you don't need to add them to every repo's .gitignore.
+# ==============================================================================
+
+# --- Machine-Specific Bash Config --------------------------------------------
+# .bash_local holds secrets (API tokens, passwords) and per-machine overrides.
+# Generated from templates/.bash_local.template — NEVER commit this file.
 .bash_local
 
-# Ignore backup directories created during installation
+# --- Dotfiles Installer Backups ----------------------------------------------
+# install.sh creates timestamped backup dirs when it finds existing configs.
+# These are safety nets, not something to track in version control.
 dotfiles_backup_*/
+
+# ==============================================================================
+# SUGGESTED ADDITIONS (not currently configured):
+# ==============================================================================
+#
+# --- OS-generated files ---
+# .DS_Store              # macOS Finder metadata
+# .DS_Store?
+# ._*                    # macOS resource forks
+# Thumbs.db              # Windows Explorer thumbnail cache
+# ehthumbs.db
+# Desktop.ini            # Windows folder settings
+# .Spotlight-V100        # macOS Spotlight index
+# .Trashes               # macOS trash
+#
+# --- IDE / Editor files ---
+# .idea/                 # JetBrains (IntelliJ, PyCharm, WebStorm)
+# .vscode/settings.json  # VS Code user settings (keep .vscode/extensions.json)
+# *.swp                  # Vim swap files
+# *.swo
+# *~                     # Emacs backup files
+# .project               # Eclipse
+# .classpath             # Eclipse
+#
+# --- Language / Build artifacts ---
+# __pycache__/           # Python bytecode cache
+# *.pyc                  # Python compiled files
+# *.pyo
+# node_modules/          # Node.js dependencies (use package-lock.json instead)
+# target/                # Rust/Java build output
+# dist/                  # Generic build output
+# *.o                    # C/C++ object files
+# *.so                   # Shared libraries
+#
+# --- Environment / Secrets ---
+# .env                   # Environment variable files (often contain secrets)
+# .env.local
+# .env.*.local
+# *.pem                  # SSL certificates / private keys
+# *.key
+# ==============================================================================

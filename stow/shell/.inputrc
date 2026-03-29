@@ -11,6 +11,11 @@
 #   - Tab completion
 #   - Keyboard shortcuts (Ctrl+A, Ctrl+E, etc.)
 #
+# WHEN LOADED:
+#   - Automatically by Bash on startup (before .bashrc)
+#   - Also used by: python REPL, gdb, psql, mysql, irb, node REPL
+#   - NOT used by: Zsh (uses its own ZLE), Fish
+#
 # USAGE:
 #   1. Symlink this file to ~/.inputrc (done automatically by install.sh)
 #   2. Restart your shell or run: bind -f ~/.inputrc
@@ -22,6 +27,17 @@
 #   - Press Alt+. → insert last argument from previous command
 #   - Press Up → cycle through history matching current input
 #   - Type "git st" and press Up → only shows "git st*" commands
+#
+# OVERLAP WITH .bashrc:
+#   Bash's `bind` builtin can also configure readline at runtime.
+#   If .bashrc contains `bind` commands, they run AFTER this file loads
+#   and will override any conflicting settings here. Keep all readline
+#   config in this file for clarity; use `bind -P` to verify active bindings.
+#
+# DEPENDENCIES:
+#   - GNU Readline 6.3+ (for colored-stats, colored-completion-prefix)
+#   - Bash 4.4+ for full color completion support
+#   - A terminal that sends standard ANSI escape sequences
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
@@ -45,12 +61,15 @@ set editing-mode emacs
 # General Behavior Settings
 # ------------------------------------------------------------------------------
 
-# Enable 8-bit input (allows international characters)
+# Enable 8-bit input — allows typing accented/international characters
+# without converting them to ASCII escape sequences
 set input-meta on
 set output-meta on
+# Don't strip the 8th bit from input characters (needed for UTF-8)
 set convert-meta off
 
-# Don't ring bell on completion errors
+# Silence the terminal bell on completion errors and ambiguous matches
+# Options: none, visible (flash), audible (beep)
 set bell-style none
 
 # Show all completions immediately (no need to press tab twice)
@@ -60,6 +79,7 @@ set show-all-if-ambiguous on
 set completion-ignore-case on
 
 # Treat hyphens and underscores as equivalent when completing
+# e.g., typing "my_file" also matches "my-file" and vice versa
 set completion-map-case on
 
 # Show file type indicators in completion (/, @, *, =)
@@ -69,25 +89,28 @@ set visible-stats on
 set mark-directories on
 set mark-symlinked-directories on
 
-# Append character to completion to indicate file type
+# Colorize file type indicators in completions (uses LS_COLORS)
 set colored-stats on
 
-# Enable colors in completion menu (requires bash 4.4+)
+# Highlight the common prefix of possible completions in a different color
+# so you can see what you've typed vs. what will be completed (Bash 4.4+)
 set colored-completion-prefix on
 
-# Show common prefix in different color
+# Display the common prefix before cycling through menu completions
 set menu-complete-display-prefix on
 
 # ------------------------------------------------------------------------------
 # History Configuration
 # ------------------------------------------------------------------------------
 
-# Enable incremental history search with up/down arrows
-# Start typing a command, then press Up/Down to find matching commands
+# Enable prefix-based history search with Up/Down arrows
+# Type a partial command, then press Up/Down to cycle through only matching
+# history entries (e.g., type "git" then Up to find previous git commands)
 "\e[A": history-search-backward
 "\e[B": history-search-forward
 
-# Enable Ctrl+Up/Down for regular history navigation
+# Ctrl+Up/Down for plain sequential history (ignores typed prefix)
+# Useful when you want to browse all history regardless of current input
 "\e[1;5A": previous-history
 "\e[1;5B": next-history
 
@@ -95,19 +118,22 @@ set menu-complete-display-prefix on
 # Completion Enhancements
 # ------------------------------------------------------------------------------
 
-# Use TAB to cycle through completions
+# TAB cycles through completions one by one (instead of listing all)
+# This replaces the default "complete" action with "menu-complete"
 TAB: menu-complete
 
-# Use Shift+TAB to cycle backwards through completions
+# Shift+TAB cycles backwards through the same completion menu
 "\e[Z": menu-complete-backward
 
-# Show all completions on first TAB if ambiguous
+# Show all completions on first TAB if ambiguous (duplicate of line above
+# in General Behavior, but kept here for grouping with completion bindings)
 set show-all-if-ambiguous on
 
-# Don't paginate completion results (show them all at once)
+# Don't paginate completion results — show them all at once even if the
+# list is long; avoids the "--More--" prompt
 set page-completions off
 
-# First TAB suggests, second TAB shows all matches
+# Display the common prefix before cycling through completions
 set menu-complete-display-prefix on
 
 # ------------------------------------------------------------------------------
@@ -143,11 +169,13 @@ set menu-complete-display-prefix on
 # Special Sequences
 # ------------------------------------------------------------------------------
 
-# Make Ctrl+W delete up to slash (useful for paths)
-# Example: /usr/local/bin → /usr/local → /usr
+# Make Ctrl+W delete up to the previous slash (useful for editing paths)
+# Default Ctrl+W uses unix-word-rubout which stops at whitespace only
+# Example: /usr/local/bin → Ctrl+W → /usr/local/ → Ctrl+W → /usr/
 "\C-w": unix-filename-rubout
 
-# Make Alt+Backspace delete word (alternative to Ctrl+W)
+# Alt+Backspace: delete the previous word (stops at word boundaries, not slashes)
+# This gives you both path-aware (Ctrl+W) and word-aware (Alt+Backspace) deletion
 "\e\C-h": backward-kill-word
 
 # ------------------------------------------------------------------------------
@@ -172,6 +200,36 @@ set menu-complete-display-prefix on
 # - ? searches history backward
 # - n/N repeat search forward/backward
 # - v opens current line in $EDITOR
+
+# ------------------------------------------------------------------------------
+# Suggested Additions (Uncomment to Enable)
+# ------------------------------------------------------------------------------
+# Additional word manipulation bindings:
+#
+# Ctrl+T: Transpose (swap) the character before the cursor with the one under it
+# "\C-t": transpose-chars
+#
+# Alt+T: Transpose (swap) the word before the cursor with the one after it
+# "\et": transpose-words
+#
+# Alt+U: Uppercase the current word (from cursor to end of word)
+# "\eu": upcase-word
+#
+# Alt+L: Lowercase the current word
+# "\el": downcase-word
+#
+# Alt+C: Capitalize the current word
+# "\ec": capitalize-word
+#
+# Ctrl+X Ctrl+E: Edit the current command line in $EDITOR (already default)
+#
+# Ctrl+]: Character search — jump forward to next occurrence of a typed char
+# (built-in, no config needed — similar to Vim's f command)
+#
+# Vi mode indicator in prompt (if using vi editing-mode):
+# set show-mode-in-prompt on
+# set vi-ins-mode-string "(ins)"
+# set vi-cmd-mode-string "(cmd)"
 
 # ------------------------------------------------------------------------------
 # Notes and Tips

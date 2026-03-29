@@ -1,16 +1,35 @@
-# Alacritty configuration for riced terminal (TOML format for 0.13+)
-# See https://alacritty.org/config-alacritty.toml for full options
+# ==============================================================================
+# alacritty.toml — Alacritty Terminal Emulator Configuration (TOML format)
+# ==============================================================================
+# Active config for Alacritty 0.13+ (the current/supported format).
+# The YAML config (alacritty.yml) is kept as a legacy fallback for older versions.
+#
+# LOCATION: ~/.config/alacritty/alacritty.toml (symlinked by install.sh)
+# DOCS:     https://alacritty.org/config-alacritty.toml
+#
+# THEME: Catppuccin Mocha — consistent with starship.toml, bat, and tmux.
+# FONT:  JetBrainsMono Nerd Font — required for Starship icons and Neovim glyphs.
+#
+# RELOAD: Alacritty auto-reloads this file on save — no restart needed.
+# ==============================================================================
 
+# --- Window Appearance --------------------------------------------------------
 [window]
-opacity = 0.95
-decorations = "full"
+opacity = 0.95              # Slight transparency (0.0–1.0). Set to 1.0 if distracting.
+decorations = "full"        # "full" = native title bar; "none" = borderless (ricing)
 
+# Inner padding prevents text from touching the window edges.
 [window.padding]
-x = 10
-y = 10
+x = 10                      # Horizontal padding in pixels
+y = 10                      # Vertical padding in pixels
 
+# --- Font Configuration -------------------------------------------------------
+# JetBrainsMono Nerd Font provides programming ligatures and the icon glyphs
+# used by Starship, Neovim, tmux status line, and fastfetch.
+# Install via: brew install --cask font-jetbrains-mono-nerd-font (macOS)
+#   or: sudo apt install fonts-jetbrains-mono (Debian/Ubuntu, without Nerd Font patch)
 [font]
-size = 14.0
+size = 14.0                  # Font size in points — adjust for your display DPI
 
 [font.normal]
 family = "JetBrainsMono Nerd Font"
@@ -28,65 +47,73 @@ style = "Italic"
 family = "JetBrainsMono Nerd Font"
 style = "Bold Italic"
 
+# --- Catppuccin Mocha Color Scheme --------------------------------------------
+# Full Catppuccin Mocha palette for Alacritty.
+# Reference: https://github.com/catppuccin/alacritty
+# All hex values match the palette in starship.toml and the bat Catppuccin theme.
+
 # Catppuccin Mocha
 [colors.primary]
-background = "#1e1e2e"
-foreground = "#cdd6f4"
-dim_foreground = "#7f849c"
-bright_foreground = "#cdd6f4"
+background = "#1e1e2e"      # Base — main background color
+foreground = "#cdd6f4"      # Text — main foreground color
+dim_foreground = "#7f849c"  # Overlay1 — dimmed text for faded content
+bright_foreground = "#cdd6f4"  # Same as foreground (Mocha doesn't brighten)
 
 [colors.cursor]
-text = "#1e1e2e"
-cursor = "#f5e0dc"
+text = "#1e1e2e"            # Text under cursor uses background color for contrast
+cursor = "#f5e0dc"          # Rosewater — warm cursor color
 
 [colors.vi_mode_cursor]
-text = "#1e1e2e"
-cursor = "#b4befe"
+text = "#1e1e2e"            # Same contrast trick as normal cursor
+cursor = "#b4befe"          # Lavender — distinct color signals vi mode is active
 
 [colors.search.matches]
-foreground = "#1e1e2e"
-background = "#a6adc8"
+foreground = "#1e1e2e"      # Dark text on light background for search hits
+background = "#a6adc8"      # Subtext0 — subtle highlight for non-focused matches
 
 [colors.search.focused_match]
 foreground = "#1e1e2e"
-background = "#a6e3a1"
+background = "#a6e3a1"      # Green — clearly distinguishes the active match
 
 [colors.footer_bar]
 foreground = "#1e1e2e"
-background = "#a6adc8"
+background = "#a6adc8"      # Subtext0 — matches search highlight style
 
 [colors.hints.start]
 foreground = "#1e1e2e"
-background = "#f9e2af"
+background = "#f9e2af"      # Yellow — high-visibility for hint start characters
 
 [colors.hints.end]
 foreground = "#1e1e2e"
-background = "#a6adc8"
+background = "#a6adc8"      # Subtext0 — lower-visibility for hint end
 
 [colors.selection]
-text = "#1e1e2e"
-background = "#f5e0dc"
+text = "#1e1e2e"            # Selected text uses background for contrast
+background = "#f5e0dc"      # Rosewater — warm highlight for selections
 
+# Standard 8 ANSI colors (0–7)
 [colors.normal]
-black = "#45475a"
+black = "#45475a"            # Surface1 (not true black — easier on the eyes)
 red = "#f38ba8"
 green = "#a6e3a1"
 yellow = "#f9e2af"
 blue = "#89b4fa"
-magenta = "#f5c2e7"
-cyan = "#94e2d5"
-white = "#bac2de"
+magenta = "#f5c2e7"          # Pink (Catppuccin uses pink instead of magenta)
+cyan = "#94e2d5"             # Teal
+white = "#bac2de"            # Subtext1
 
+# Bright ANSI colors (8–15) — Catppuccin uses identical hues with subtle shifts
 [colors.bright]
-black = "#585b70"
+black = "#585b70"            # Surface2 — slightly lighter than normal black
 red = "#f38ba8"
 green = "#a6e3a1"
 yellow = "#f9e2af"
 blue = "#89b4fa"
 magenta = "#f5c2e7"
 cyan = "#94e2d5"
-white = "#a6adc8"
+white = "#a6adc8"            # Subtext0 — slightly dimmer than normal white
 
+# Dim ANSI colors — used by programs requesting "dim" text attribute
 [colors.dim]
 black = "#45475a"
 red = "#f38ba8"
@@ -97,5 +124,56 @@ magenta = "#f5c2e7"
 cyan = "#94e2d5"
 white = "#bac2de"
 
+# --- Scrollback ---------------------------------------------------------------
 [scrolling]
-history = 10000
+history = 10000              # Lines of scrollback buffer. Increase for log-heavy work.
+
+# ==============================================================================
+# SUGGESTED ADDITIONS (not currently configured):
+# ==============================================================================
+#
+# --- Cursor style ---
+# [cursor]
+# style = { shape = "Block", blinking = "On" }  # Block, Underline, or Beam
+# vi_mode_style = { shape = "Block" }            # Cursor shape in vi mode
+# blink_interval = 750                           # Blink speed in ms
+# unfocused_hollow = true                        # Hollow cursor when window unfocused
+#
+# --- Scrollback tuning ---
+# [scrolling]
+# history = 100000          # Increase for long-running builds or log tailing
+# multiplier = 3            # Lines scrolled per mouse wheel tick
+#
+# --- Shell integration ---
+# [terminal]
+# shell = { program = "/bin/bash", args = ["--login"] }  # Override default shell
+#
+# --- Regex hints (clickable URLs) ---
+# [[hints.enabled]]
+# regex = '(https?://)[^\s"]+'
+# hyperlinks = true
+# action = "Copy"
+# post_processing = true
+# binding = { key = "U", mods = "Control|Shift" }
+#
+# --- Vi mode (navigate terminal output with vim keys) ---
+# Built-in — press Ctrl+Shift+Space to toggle.
+# No config needed, but you can customize the cursor style above.
+#
+# --- Window class / title ---
+# [window]
+# title = "Alacritty"
+# dynamic_title = true       # Update title with running program name
+# startup_mode = "Windowed"  # Windowed, Maximized, Fullscreen
+#
+# --- Keyboard bindings ---
+# [[keyboard.bindings]]
+# key = "N"
+# mods = "Control|Shift"
+# action = "SpawnNewInstance"
+#
+# [[keyboard.bindings]]
+# key = "Return"
+# mods = "Control|Shift"
+# action = "ToggleFullscreen"
+# ==============================================================================

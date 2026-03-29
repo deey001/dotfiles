@@ -3,13 +3,20 @@
 # ==============================================================================
 # Executed by bash(1) for interactive shells.
 # Load order: .bash_profile → .bashrc → .bash_exports → .bash_aliases
-#             → .bash_functions → .bash_wrappers → .bash_local
+#             → .bash_functions → .bash_wrappers → .bash_local → ble-attach
 # ==============================================================================
 
 # ── 1. Interactive-only guard ──────────────────────────────────────────────────
 case $- in *i*) ;; *) return ;; esac
 
-# ── 2. History ─────────────────────────────────────────────────────────────────
+# ── 2. ble.sh early load (--attach=none defers activation until section 20) ───
+# ble.sh provides fish-style autosuggestions, syntax highlighting, and enhanced
+# completion for bash. Requires bash-completion >= 2.12 (install.sh handles this).
+if [[ -f "${HOME}/.local/share/blesh/ble.sh" ]]; then
+    source "${HOME}/.local/share/blesh/ble.sh" --attach=none
+fi
+
+# ── 3. History ─────────────────────────────────────────────────────────────────
 HISTCONTROL=ignoredups:ignorespace
 HISTSIZE=50000
 HISTFILESIZE=100000
@@ -21,7 +28,7 @@ shopt -s lithist       # preserve newlines (not semicolons) in multiline history
 # Append pattern: preserves PROMPT_COMMAND already set by system or other tools
 PROMPT_COMMAND="history -a${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
 
-# ── 3. Environment detection ──────────────────────────────────────────────────
+# ── 4. Environment detection ──────────────────────────────────────────────────
 [[ -n "${SSH_CLIENT:-}${SSH_TTY:-}" ]] && export IS_SSH=1 || export IS_SSH=0
 grep -qEi "(Microsoft|WSL)" /proc/version 2>/dev/null && export IS_WSL=1 || export IS_WSL=0
 _detect_container() {
@@ -36,7 +43,7 @@ _detect_container && export IS_DOCKER=1 || export IS_DOCKER=0
 unset -f _detect_container
 [[ -n "${TMUX:-}" ]] && export IS_TMUX=1 || export IS_TMUX=0
 
-# ── 4. Connectivity check (file-cached, one ping per 5 minutes) ───────────────
+# ── 5. Connectivity check (file-cached, one ping per 5 minutes) ───────────────
 _online_cache="${HOME}/.cache/is_online"
 mkdir -p "${HOME}/.cache"
 if [[ ! -f "$_online_cache" ]] || \
@@ -48,7 +55,7 @@ fi
 export IS_ONLINE=$(< "$_online_cache")
 unset _online_cache
 
-# ── 5. Shell options ──────────────────────────────────────────────────────────
+# ── 6. Shell options ──────────────────────────────────────────────────────────
 shopt -s checkwinsize          # keep LINES/COLUMNS accurate on resize
 shopt -s globstar              # **/*.sh recursive glob (like zsh)
 shopt -s extglob               # !(*.txt) @(a|b) +(pat) extended patterns
@@ -60,17 +67,19 @@ shopt -s no_empty_cmd_completion  # don't complete on an empty line (slow)
 shopt -s checkhash             # verify hashed command paths before using them
 stty -ixon 2>/dev/null         # enable Ctrl-S/Ctrl-Q for fzf history search
 
-# ── 6. Readline bindings ──────────────────────────────────────────────────────
-bind "set completion-ignore-case on"       2>/dev/null
-bind "set menu-complete-display-prefix on" 2>/dev/null
-bind "set colored-stats on"                2>/dev/null
-bind "set colored-completion-prefix on"    2>/dev/null
-bind "set show-all-if-ambiguous off"       2>/dev/null
-bind "set show-all-if-unmodified on"       2>/dev/null
-bind "TAB:menu-complete"                   2>/dev/null
-bind '"\e[Z":menu-complete-backward'       2>/dev/null
+# ── 7. Readline bindings (skipped when ble.sh is active — it has its own) ─────
+if [[ ! ${BLE_VERSION-} ]]; then
+    bind "set completion-ignore-case on"       2>/dev/null
+    bind "set menu-complete-display-prefix on" 2>/dev/null
+    bind "set colored-stats on"                2>/dev/null
+    bind "set colored-completion-prefix on"    2>/dev/null
+    bind "set show-all-if-ambiguous off"       2>/dev/null
+    bind "set show-all-if-unmodified on"       2>/dev/null
+    bind "TAB:menu-complete"                   2>/dev/null
+    bind '"\e[Z":menu-complete-backward'       2>/dev/null
+fi
 
-# ── 7. Terminal utilities ─────────────────────────────────────────────────────
+# ── 8. Terminal utilities ─────────────────────────────────────────────────────
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
 if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)
@@ -79,7 +88,7 @@ if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
 fi
 
-# ── 8. Core aliases ───────────────────────────────────────────────────────────
+# ── 9. Core aliases ───────────────────────────────────────────────────────────
 if command -v eza >/dev/null 2>&1; then
     alias ls='eza --color=auto --icons'
     alias ll='eza -alF --icons --git'
@@ -108,22 +117,24 @@ elif command -v batcat >/dev/null 2>&1; then
 fi
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
-# ── 9. Modular config files ──────────────────────────────────────────────────
+# ── 10. Modular config files ──────────────────────────────────────────────────
 [[ -f ~/.bash_exports   ]] && source ~/.bash_exports
 [[ -f ~/.bash_aliases   ]] && source ~/.bash_aliases
 [[ -f ~/.bash_functions ]] && source ~/.bash_functions
 [[ -f ~/.bash_wrappers  ]] && source ~/.bash_wrappers
 
-# ── 10. System bash-completion ────────────────────────────────────────────────
+# ── 11. Bash-completion (prefer local >= 2.12 over system 2.11) ───────────────
 if ! shopt -oq posix; then
-    if [[ -f /usr/share/bash-completion/bash_completion ]]; then
+    if [[ -f "${HOME}/.local/share/bash-completion/bash_completion" ]]; then
+        source "${HOME}/.local/share/bash-completion/bash_completion"
+    elif [[ -f /usr/share/bash-completion/bash_completion ]]; then
         source /usr/share/bash-completion/bash_completion
     elif [[ -f /etc/bash_completion ]]; then
         source /etc/bash_completion
     fi
 fi
 
-# ── 11. Carapace ──────────────────────────────────────────────────────────────
+# ── 12. Carapace ──────────────────────────────────────────────────────────────
 if command -v carapace >/dev/null 2>&1; then
     unset CARAPACE_BRIDGES
     complete -r tmux git docker kubectl helm 2>/dev/null
@@ -134,7 +145,7 @@ if command -v carapace >/dev/null 2>&1; then
     source "$_cc"; unset _cc
 fi
 
-# ── 12. fzf ───────────────────────────────────────────────────────────────────
+# ── 13. fzf ───────────────────────────────────────────────────────────────────
 if command -v fzf >/dev/null 2>&1; then
     eval "$(fzf --bash 2>/dev/null)" || {
         [[ -f /usr/share/doc/fzf/examples/key-bindings.bash ]] \
@@ -155,31 +166,31 @@ if command -v fzf >/dev/null 2>&1; then
     fi
 fi
 
-# ── 13. zoxide ────────────────────────────────────────────────────────────────
+# ── 14. zoxide ────────────────────────────────────────────────────────────────
 if command -v zoxide >/dev/null 2>&1; then
     eval "$(zoxide init bash)" 2>/dev/null
     alias cdi='zi'
 fi
 
-# ── 14. Atuin (shell history with search) ─────────────────────────────────────
+# ── 15. Atuin (shell history with search) ─────────────────────────────────────
 if command -v atuin >/dev/null 2>&1; then
     eval "$(atuin init bash)"
 fi
 
-# ── 15. direnv ────────────────────────────────────────────────────────────────
+# ── 16. direnv ────────────────────────────────────────────────────────────────
 if command -v direnv >/dev/null 2>&1; then
     eval "$(direnv hook bash)"
 fi
 
-# ── 16. Starship prompt ──────────────────────────────────────────────────────
+# ── 17. Starship prompt ──────────────────────────────────────────────────────
 if command -v starship >/dev/null 2>&1; then
     eval "$(starship init bash)"
 fi
 
-# ── 17. Local/private config ─────────────────────────────────────────────────
+# ── 18. Local/private config ─────────────────────────────────────────────────
 [[ -f ~/.bash_local ]] && source ~/.bash_local
 
-# ── 18. Login summary (once per SSH session, never inside tmux) ───────────────
+# ── 19. Login summary (once per SSH session, never inside tmux) ───────────────
 if command -v fastfetch >/dev/null 2>&1 \
     && shopt -q login_shell \
     && [[ -z "${TMUX:-}" ]] \
@@ -187,3 +198,8 @@ if command -v fastfetch >/dev/null 2>&1 \
     export _FASTFETCH_RAN=1
     fastfetch
 fi
+
+# ── 20. ble.sh activation (MUST be last — takes over line editing) ────────────
+# ble.sh was loaded in section 2 with --attach=none. Now that all completions,
+# prompts, and tools are configured, activate it.
+[[ ${BLE_VERSION-} ]] && ble-attach

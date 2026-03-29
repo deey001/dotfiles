@@ -1,92 +1,169 @@
 {
+  // ==========================================================================
+  // config.jsonc — Fastfetch System Info Display Configuration
+  // ==========================================================================
+  // Fastfetch is a fast, modern alternative to neofetch for displaying system
+  // information in the terminal. This config controls which modules are shown
+  // and how they're formatted.
+  //
+  // LOCATION: ~/.config/fastfetch/config.jsonc (symlinked by install.sh)
+  // DOCS:     https://github.com/fastfetch-cli/fastfetch/wiki
+  //
+  // USAGE:
+  //   fastfetch              # Display system info with this config
+  //   fastfetch --list-modules  # See all available modules
+  //   fastfetch --help       # Full CLI options
+  //
+  // LAYOUT:
+  //   The "modules" array defines what's shown and in what order.
+  //   Each module is either a string (e.g., "break") or an object with
+  //   type, key (label), keyColor, and optional format overrides.
+  //   The tree-drawing characters (│ ├ └) create a visual hierarchy.
+  // ==========================================================================
+
+  // JSON Schema for editor autocompletion and validation
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+
+  // Logo settings — the ASCII art shown on the left side
   "logo": {
     "padding": {
-      "top": 1
+      "top": 1              // Add 1 line of padding above the logo for spacing
     }
   },
+
+  // Display settings — controls the separator between labels and values
   "display": {
-    "separator": " 󰑃  "
+    "separator": " 󰑃  "    // Nerd Font arrow icon between key and value
   },
+
+  // --- Module List -----------------------------------------------------------
+  // Each module renders one line of system info. Modules are grouped into
+  // categories (DISTRO, SYSTEM, NETWORK) with tree-drawing box characters.
   "modules": [
-    "break",
+    "break",                // Blank line for spacing before first section
+
+    // ── DISTRO Section ── Shows OS and package info
     {
-      "type": "os",
-      "key": " DISTRO",
+      "type": "os",         // Operating system name and version (e.g., "Ubuntu 24.04")
+      "key": " DISTRO",   //  = Nerd Font penguin icon; section header
       "keyColor": "yellow"
     },
     {
-      "type": "kernel",
-      "key": "│ ├",
+      "type": "kernel",     // Kernel version (e.g., "6.8.0-40-generic")
+      "key": "│ ├",        // Tree branch — child of DISTRO section
       "keyColor": "yellow"
     },
     {
-      "type": "packages",
-      "key": "│ ├󰏖",
+      "type": "packages",   // Count of installed packages across all package managers
+      "key": "│ ├󰏖",       // 󰏖 = package icon
       "keyColor": "yellow"
     },
     {
-      "type": "command",
-      "key": "│ ├",
+      "type": "command",    // Custom command — calculates system age in days
+      "key": "│ ├",        //  = calendar icon
       "keyColor": "yellow",
+      // Calculates days since filesystem creation (install date proxy).
+      // Uses stat -c %W for birth time — only works on ext4/btrfs with Linux.
+      // May not work on macOS or older filesystems that lack birth timestamps.
       "text": "birth_install=$(stat -c %W /); current=$(date +%s); time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo $days_difference days"
     },
     {
-      "type": "shell",
-      "key": "│ └",
+      "type": "shell",      // Active shell name and version (e.g., "bash 5.2.21")
+      "key": "│ └",        // Tree end branch (last child of DISTRO section)
       "keyColor": "yellow"
     },
+
+    // ── SYSTEM Section ── Shows hardware info
     {
-      "type": "host",
-      "key": "󰌢 SYSTEM",
+      "type": "host",       // Machine model (e.g., "MacBook Pro" or motherboard name)
+      "key": "󰌢 SYSTEM",   // 󰌢 = computer icon; section header
       "keyColor": "green"
     },
     {
-      "type": "cpu",
-      "key": "│ ├󰻠",
+      "type": "cpu",        // CPU model, core count, and frequency
+      "key": "│ ├󰻠",       // 󰻠 = CPU chip icon
       "keyColor": "green"
     },
     {
-      "type": "gpu",
-      "key": "│ ├󰻑",
-      "format": "{2}",
+      "type": "gpu",        // GPU model — uses {2} format to show only the GPU name
+      "key": "│ ├󰻑",       // 󰻑 = GPU icon
+      "format": "{2}",      // {2} = GPU name only (skips driver/vendor info)
       "keyColor": "green"
     },
     {
-      "type": "display",
-      "key": "│ ├󰍹",
+      "type": "display",    // Screen resolution and refresh rate
+      "key": "│ ├󰍹",       // 󰍹 = monitor icon
       "keyColor": "green",
-      "compactType": "original-with-refresh-rate"
+      "compactType": "original-with-refresh-rate"  // Show resolution + Hz
     },
     {
-      "type": "memory",
-      "key": "│ ├󰾆",
+      "type": "memory",     // RAM usage (used / total, e.g., "4.2 GiB / 16.0 GiB")
+      "key": "│ ├󰾆",       // 󰾆 = memory chip icon
       "keyColor": "green"
     },
     {
-      "type": "swap",
-      "key": "│ ├󰓡",
+      "type": "swap",       // Swap usage — useful for spotting memory pressure
+      "key": "│ ├󰓡",       // 󰓡 = swap icon
       "keyColor": "green"
     },
     {
-      "type": "uptime",
-      "key": "│ ├󰅐",
+      "type": "uptime",     // System uptime (e.g., "3 days, 7 hours")
+      "key": "│ ├󰅐",       // 󰅐 = clock icon
       "keyColor": "green"
     },
     {
-      "type": "disk",
-      "key": "│ └",
+      "type": "disk",       // Disk usage for root partition (used / total)
+      "key": "│ └",        // Tree end branch (last child of SYSTEM section)
       "keyColor": "green"
     },
+
+    // ── NETWORK Section ── Shows network info
     {
-      "type": "localip",
-      "key": " NETWORK",
+      "type": "localip",    // Local IP address of the primary network interface
+      "key": " NETWORK",   //  = globe icon; section header
       "keyColor": "blue"
     },
+
+    // ── Color Palette Bar ── Decorative ANSI color strip
     {
-      "type": "custom",
+      "type": "custom",     // Renders a rainbow of ANSI color blocks for aesthetics
       "format": "\u001b[90m  \u001b[31m  \u001b[32m  \u001b[33m  \u001b[34m  \u001b[35m  \u001b[36m  \u001b[37m  \u001b[38m  \u001b[39m  \u001b[39m    \u001b[38m  \u001b[37m  \u001b[36m  \u001b[35m  \u001b[34m  \u001b[33m  \u001b[32m  \u001b[31m  \u001b[90m "
     },
-    "break"
+    "break"                 // Blank line for spacing after output
   ]
+
+  // ==========================================================================
+  // SUGGESTED MODULES (not currently shown):
+  // ==========================================================================
+  //
+  // --- Battery (useful on laptops) ---
+  // { "type": "battery", "key": "│ ├", "keyColor": "green" }
+  //
+  // --- Terminal font ---
+  // { "type": "terminalfont", "key": "│ ├", "keyColor": "yellow" }
+  //
+  // --- Locale / Language ---
+  // { "type": "locale", "key": "│ ├󰗊", "keyColor": "yellow" }
+  //
+  // --- Disk usage for specific mount points ---
+  // { "type": "disk", "key": "│ ├", "keyColor": "green",
+  //   "folders": "/home" }
+  //
+  // --- Public IP address (requires internet; slower) ---
+  // { "type": "publicip", "key": "│ └󰖟", "keyColor": "blue" }
+  //
+  // --- DNS servers ---
+  // { "type": "dns", "key": "│ ├󰇖", "keyColor": "blue" }
+  //
+  // --- Bluetooth devices ---
+  // { "type": "bluetooth", "key": "│ ├", "keyColor": "blue" }
+  //
+  // --- Uptime format options ---
+  // { "type": "uptime", "key": "│ ├󰅐", "keyColor": "green",
+  //   "format": "{1}d {2}h {3}m" }    // Custom format string
+  //
+  // --- Weather (requires curl; uses wttr.in) ---
+  // { "type": "command", "key": "│ └", "keyColor": "blue",
+  //   "text": "curl -s 'wttr.in/?format=%C+%t'" }
+  // ==========================================================================
 }

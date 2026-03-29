@@ -1,5 +1,26 @@
-# Starship Prompt — Pure-inspired minimal style with Catppuccin Mocha colors
-# Two-line: info on top, prompt char below
+# ==============================================================================
+# starship.toml — Starship Prompt Configuration
+# ==============================================================================
+# A minimal, fast, cross-shell prompt inspired by Pure with Catppuccin Mocha
+# colors. Two-line layout: context info on top, prompt character below.
+#
+# LOCATION: ~/.config/starship.toml (symlinked by install.sh)
+# DOCS:     https://starship.rs/config/
+#
+# USAGE:
+#   Starship activates automatically in .bashrc via: eval "$(starship init bash)"
+#   To test changes: starship explain  (shows which modules are active and why)
+#   To benchmark:    starship timings  (shows render time per module)
+#
+# THEME: Catppuccin Mocha — https://github.com/catppuccin/catppuccin
+#   All color values below reference named palette colors defined in
+#   [palettes.catppuccin_mocha]. This keeps the config DRY and theme-swappable.
+# ==============================================================================
+
+# --- Prompt Layout ------------------------------------------------------------
+# The format string controls which modules appear and in what order.
+# Each $variable corresponds to a [module] section below.
+# Modules that detect nothing (e.g., $golang outside a Go project) are hidden.
 
 format = """\
 $os\
@@ -18,47 +39,70 @@ $cmd_duration\
 $line_break\
 $character"""
 
+# Insert a blank line between each prompt for visual breathing room.
 add_newline = true
+
+# Max time (ms) a module can take before Starship skips it.
+# 5 seconds is generous — prevents slow Git repos from hanging the prompt.
 command_timeout = 5000
+
+# Use Catppuccin Mocha as the named color palette (defined below).
 palette = "catppuccin_mocha"
+
+# --- Catppuccin Mocha Palette -------------------------------------------------
+# Full 26-color Catppuccin Mocha palette. Modules reference these names
+# (e.g., "fg:blue") instead of raw hex codes for readability and easy theming.
+# Swap to a different Catppuccin flavor (Latte, Frappé, Macchiato) by replacing
+# these values. Reference: https://catppuccin.com/palette
 
 [palettes.catppuccin_mocha]
 rosewater = "#f5e0dc"
 flamingo  = "#f2cdcd"
 pink      = "#f5c2e7"
-mauve     = "#cba6f7"
-red       = "#f38ba8"
+mauve     = "#cba6f7"      # Used for success prompt character (❯)
+red       = "#f38ba8"      # Used for error prompt character and root username
 maroon    = "#eba0ac"
 peach     = "#fab387"
-yellow    = "#f9e2af"
-green     = "#a6e3a1"
+yellow    = "#f9e2af"      # Used for git status and cmd_duration
+green     = "#a6e3a1"      # Used for vim mode indicator and language modules
 teal      = "#94e2d5"
 sky       = "#89dceb"
 sapphire  = "#74c7ec"
-blue      = "#89b4fa"
+blue      = "#89b4fa"      # Used for directory path and docker context
 lavender  = "#b4befe"
-text      = "#cdd6f4"
+text      = "#cdd6f4"      # Used for OS icon and username
 subtext1  = "#bac2de"
-subtext0  = "#a6adc8"
+subtext0  = "#a6adc8"      # Used for hostname and git branch (subdued)
 overlay2  = "#9399b2"
 overlay1  = "#7f849c"
 overlay0  = "#6c7086"
 surface2  = "#585b70"
 surface1  = "#45475a"
 surface0  = "#313244"
-base      = "#1e1e2e"
+base      = "#1e1e2e"      # Dark background — matches Alacritty background
 mantle    = "#181825"
 crust     = "#11111b"
 
+# --- Prompt Character ---------------------------------------------------------
+# The symbol shown at the beginning of the input line (line 2 of the prompt).
+# Changes color based on whether the last command succeeded or failed.
+# vimcmd_symbol appears when using vi mode in the shell.
+
 [character]
-success_symbol = "[❯](mauve)"
-error_symbol = "[❯](red)"
-vimcmd_symbol = "[❮](green)"
+success_symbol = "[❯](mauve)"       # Purple chevron on success
+error_symbol = "[❯](red)"           # Red chevron when last command failed
+vimcmd_symbol = "[❮](green)"        # Green reverse chevron in vi normal mode
+
+# --- OS Detection Module ------------------------------------------------------
+# Shows a Nerd Font icon for the detected operating system.
+# Useful on multi-OS setups (SSH into Linux from macOS, WSL, etc.)
 
 [os]
 disabled = false
-style = "fg:#cdd6f4"
+style = "fg:#cdd6f4"                # Text color from the palette
 format = '[$symbol]($style)'
+
+# Nerd Font icons for each supported OS. Requires a Nerd Font installed.
 
 [os.symbols]
 Windows = " "
@@ -81,22 +125,33 @@ NixOS = " "
 Redhat = "󱄛 "
 SUSE = " "
 
+# --- Username Module ----------------------------------------------------------
+# Only shows when running as root (red + bold as a warning) or via SSH.
+# Hidden for normal local sessions to keep the prompt minimal.
 [username]
-show_always = false
-style_user = "fg:#cdd6f4"
-style_root = "fg:#f38ba8 bold"
+show_always = false                  # Only show in SSH sessions or as root
+style_user = "fg:#cdd6f4"           # Normal user: text color (subdued)
+style_root = "fg:#f38ba8 bold"      # Root user: red + bold (visual warning)
 format = '[$user]($style)'
 
+# --- Hostname Module ----------------------------------------------------------
+# Only appears over SSH — helps distinguish local vs remote sessions.
+# Format: @hostname (prepended to directory path)
 [hostname]
-ssh_only = true
-style = "fg:#a6adc8"
+ssh_only = true                      # Hide on local sessions to reduce noise
+style = "fg:#a6adc8"                # Subtext0 — intentionally subdued
 format = '[@$hostname]($style) '
 
+# --- Directory Module ---------------------------------------------------------
+# Shows the current working directory, truncated to 3 segments.
+# Uses known-folder substitutions to replace long paths with icons.
 [directory]
-style = "fg:#89b4fa bold"
+style = "fg:#89b4fa bold"           # Blue + bold — most prominent prompt element
 format = '[$path]($style) '
-truncation_length = 3
-truncation_symbol = "…/"
+truncation_length = 3                # Show at most 3 path segments
+truncation_symbol = "…/"             # Ellipsis prefix when truncated
+
+# Replace well-known directory names with Nerd Font icons to save space.
 
 [directory.substitutions]
 "Documents" = "󰈙 "
@@ -104,49 +159,136 @@ truncation_symbol = "…/"
 "Music" = " "
 "Pictures" = " "
 
+
+# --- Git Branch Module --------------------------------------------------------
+# Shows the current Git branch name with a branch icon.
+# Only appears inside Git repositories.
 [git_branch]
 symbol = " "
-style = "fg:#a6adc8"
+style = "fg:#a6adc8"                # Subtext0 — subdued to not compete with directory
 format = '[$symbol$branch]($style) '
 
+# --- Git Status Module --------------------------------------------------------
+# Shows working tree status: modified, staged, untracked, ahead/behind, etc.
+# Only appears when there are uncommitted changes or remote divergence.
 [git_status]
-style = "fg:#f9e2af"
+style = "fg:#f9e2af"                # Yellow — draws attention to dirty state
 format = '[$all_status$ahead_behind]($style)'
 
+# --- Command Duration Module --------------------------------------------------
+# Shows how long the previous command took to execute.
+# Only appears when the command exceeds min_time threshold.
 [cmd_duration]
-min_time = 2_000
-style = "fg:#f9e2af"
+min_time = 2_000                    # Show only for commands taking >2 seconds
+style = "fg:#f9e2af"                # Yellow — same as git status for consistency
 format = '[$duration]($style) '
 
+# --- Language Detection Modules -----------------------------------------------
+# These modules auto-detect project languages by checking for config files
+# (e.g., Cargo.toml for Rust, go.mod for Go) and show the active version.
+# All use green (fg:#a6e3a1) to form a consistent "language" visual group.
+
+# Python — activates when pyproject.toml, setup.py, or .python-version is found.
+# Shows virtualenv name if one is active (crucial for knowing which env you are in).
 [python]
 symbol = " "
 style = "fg:#a6e3a1"
 format = '[$symbol($virtualenv )]($style)'
 
+# Node.js — activates when package.json or .node-version is found.
 [nodejs]
 symbol = " "
 style = "fg:#a6e3a1"
 format = '[$symbol$version]($style) '
 
+# Go — activates when go.mod or .go files are found.
 [golang]
 symbol = " "
 style = "fg:#a6e3a1"
 format = '[$symbol$version]($style) '
 
+# Rust — activates when Cargo.toml is found.
 [rust]
 symbol = " "
 style = "fg:#a6e3a1"
 format = '[$symbol$version]($style) '
 
+# Java — activates when pom.xml, build.gradle, or .java files are found.
 [java]
 symbol = " "
 style = "fg:#a6e3a1"
 format = '[$symbol$version]($style) '
 
+# --- Docker Context Module ----------------------------------------------------
+# Shows the active Docker context (e.g., "default", "remote-server").
+# Only appears when Docker is installed and a non-default context is set.
 [docker_context]
 symbol = " "
-style = "fg:#89b4fa"
+style = "fg:#89b4fa"                # Blue — matches directory color for infra context
 format = '[$symbol$context]($style) '
 
+# --- Time Module (disabled) ---------------------------------------------------
+# Shows the current time in the prompt. Disabled because tmux status bar
+# already displays the time — showing it twice adds clutter.
 [time]
 disabled = true
+
+# ==============================================================================
+# SUGGESTED MODULES / FEATURES (not currently enabled):
+# ==============================================================================
+#
+# --- Cloud / Infrastructure contexts ---
+# [aws]
+# format = '[( )(\(\) )]()'
+# symbol = "  "
+# style = "fg:peach"
+#
+# [kubernetes]
+# disabled = false
+# format = '[( \(\))]() '
+# symbol = "☸ "
+# style = "fg:blue"
+#
+# [terraform]
+# format = '[]() '
+#
+# --- Additional language modules ---
+# [ruby]
+# symbol = " "
+# format = '[]() '
+#
+# [php]
+# symbol = " "
+# format = '[]() '
+#
+# --- Battery indicator (useful on laptops) ---
+# [[battery.display]]
+# threshold = 20
+# style = "fg:red bold"
+#
+# --- Memory usage (useful on constrained servers) ---
+# [memory_usage]
+# disabled = false
+# threshold = 75                      # Only show when >75% memory used
+# format = '[]() '
+# style = "fg:yellow"
+#
+# --- Command duration threshold tuning ---
+# [cmd_duration]
+# min_time = 500                      # Lower to 500ms for tighter feedback
+# show_milliseconds = true            # Precise timing for benchmarks
+# show_notifications = true           # Desktop notification for long commands
+# min_time_to_notify = 30_000         # Notify for commands >30 seconds
+#
+# --- Custom commands (show anything in the prompt) ---
+# [custom.kube_ns]
+# command = "kubectl config view --minify -o jsonpath='{..namespace}'"
+# when = "command -v kubectl"
+# format = '[]() '
+# style = "fg:blue"
+#
+# --- Transient prompt (clear previous prompts to just ❯) ---
+# Requires Starship 1.11+ and shell integration.
+# Enable in .bashrc: enable_transience
+# This replaces old prompts with a minimal ❯ to reduce scrollback noise.
+# ==============================================================================

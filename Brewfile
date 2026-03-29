@@ -178,3 +178,36 @@ cask "font-jetbrains-mono-nerd-font"
 
 # Example: Tap Homebrew versions for older package versions
 # tap "homebrew/cask-versions"
+
+# ==============================================================================
+# SUGGESTED PACKAGES (not currently included)
+# ==============================================================================
+# These are popular CLI tools that complement the existing setup.
+# Uncomment and run `brew bundle` to install any of them.
+#
+# ---- Data Processing & APIs --------------------------------------------------
+# brew "jq"         # Already included above — command-line JSON processor
+# brew "yq"         # YAML/XML/TOML processor (like jq but for YAML)
+# brew "httpie"     # User-friendly HTTP client with colorized output
+# brew "xh"         # Already included above — fast HTTP client (modern httpie)
+#
+# ---- Benchmarking & Analysis -------------------------------------------------
+# brew "hyperfine"  # Command-line benchmarking tool (compare command speed)
+# brew "tokei"      # Count lines of code by language (fast, accurate)
+#
+# ---- Text & Regex Tools -----------------------------------------------------
+# brew "sd"         # Simpler sed — find & replace with string literals
+# brew "choose"     # Simpler cut/awk — select fields from output
+# brew "grex"       # Generate regexes from test cases (reverse-engineer patterns)
+#
+# ---- Network & DNS -----------------------------------------------------------
+# brew "doggo"      # Modern DNS client with colorized output (dig replacement)
+# brew "bandwhich"  # Terminal bandwidth utilization monitor by process
+#
+# ---- Navigation & Help -------------------------------------------------------
+# brew "broot"      # Interactive tree view with fuzzy search and file operations
+# brew "navi"       # Interactive cheatsheet tool (Ctrl-G to search commands)
+# brew "tealdeer"   # Fast tldr client in Rust (alternative to the tldr above)
+#
+# ---- GitHub -------------------------------------------------------------------
+# brew "gh"         # GitHub CLI — PRs, issues, Actions, Codespaces from terminal

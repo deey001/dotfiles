@@ -1,10 +1,66 @@
-# Force unix line endings for shell scripts and config files
+# ==============================================================================
+# .gitattributes — Git File Attribute Rules
+# ==============================================================================
+# Controls how Git handles line endings, diff behavior, and file types.
+# Symlinked to ~/.gitattributes by install.sh.
+#
+# PURPOSE:
+#   Ensures consistent line endings across macOS, Linux, and Windows (WSL).
+#   Shell scripts MUST use LF — CRLF line endings will break them.
+#
+# HOW IT WORKS:
+#   "text eol=lf" tells Git to always normalize to LF in the repo
+#   and check out as LF on every platform (even Windows).
+# ==============================================================================
+
+# --- Shell Scripts ------------------------------------------------------------
+# Force LF endings so scripts run correctly on all Unix-like systems.
+# Without this, Windows checkouts may introduce CRLF and break shebangs.
 *.sh text eol=lf
 *.bash text eol=lf
+
+# --- Config Files -------------------------------------------------------------
+# Dotfiles and config files sourced by Bash/tmux/etc also need LF.
 *.conf text eol=lf
 *.tmux text eol=lf
+
+# --- Specific Dotfiles --------------------------------------------------------
+# Explicitly list dotfiles that lack extensions — Git can't infer their type.
 .bashrc text eol=lf
 .profile text eol=lf
 .bash_aliases text eol=lf
 .bash_functions text eol=lf
 .bash_exports text eol=lf
+
+# ==============================================================================
+# SUGGESTED ADDITIONS (not currently configured):
+# ==============================================================================
+#
+# --- Binary files (prevent Git from mangling them) ---
+# *.png binary
+# *.jpg binary
+# *.ico binary
+# *.gz binary
+# *.zip binary
+# *.ttf binary
+# *.woff binary
+# *.woff2 binary
+#
+# --- Linguist overrides (for GitHub language stats) ---
+# Exclude vendored or generated files from repo language detection:
+# vendor/** linguist-vendored
+# docs/** linguist-documentation
+#
+# --- Lock file merge strategies ---
+# Avoid merge conflicts in auto-generated lock files by always taking theirs:
+# package-lock.json merge=ours
+# yarn.lock merge=ours
+# Cargo.lock merge=ours
+#
+# --- Additional dotfiles without extensions ---
+# .bash_wrappers text eol=lf
+# .bash_local text eol=lf
+# .blerc text eol=lf
+# .tmux.conf text eol=lf
+# .gitconfig text eol=lf
+# ==============================================================================
