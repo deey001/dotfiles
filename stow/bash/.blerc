@@ -30,12 +30,11 @@ bleopt term_bracketed_paste_mode=1
 # ------------------------------------------------------------------------------
 # Autosuggestion (fish/zsh-style ghost text)
 # ------------------------------------------------------------------------------
-bleopt complete_auto_history=1
+bleopt complete_auto_history=0
 bleopt complete_auto_delay=100
-# complete_auto_complete fires completion on EVERY keystroke — disabled because
-# bash-completion < 2.12 and fzf < 0.61 have bugs that pass empty strings as
-# read variable names, causing "read: '': not a valid identifier" on bash 5.2.
-# Re-enable after running: bash ~/dotfiles/scripts/install.sh
+# complete_auto_complete and complete_auto_history are disabled in .bashrc
+# directly (not here) so the settings take effect on 'source ~/.bashrc'.
+# Re-enable after: bash ~/dotfiles/scripts/install.sh
 bleopt complete_auto_complete=0
 bleopt complete_ambiguous=1
 

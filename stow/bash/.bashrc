@@ -237,4 +237,14 @@ if command -v fastfetch >/dev/null 2>&1 \
 fi
 
 # ── 20. ble.sh attach (must be last — after all completions/prompts are set up) ─
-[[ ${BLE_VERSION-} ]] && ble-attach
+# NOTE: .blerc is only read on first ble-attach. Set critical options HERE so
+# they apply every time .bashrc is sourced (e.g. source ~/.bashrc in-session).
+if [[ ${BLE_VERSION-} ]]; then
+    ble-attach
+    # Disable completion-triggered features — bash-completion < 2.12 and
+    # fzf < 0.61 pass empty strings as read variable names, causing
+    # "read: '': not a valid identifier" on bash 5.2 on every keystroke.
+    # Re-enable after: bash ~/dotfiles/scripts/install.sh
+    bleopt complete_auto_complete=0  2>/dev/null
+    bleopt complete_auto_history=0   2>/dev/null
+fi
