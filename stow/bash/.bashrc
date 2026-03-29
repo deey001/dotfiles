@@ -270,4 +270,33 @@ if [[ ${BLE_VERSION-} ]]; then
     bleopt complete_auto_complete=1  2>/dev/null
     bleopt complete_auto_history=1   2>/dev/null
     bleopt complete_ambiguous=1      2>/dev/null
+
+    # ── Bash 5.2 read shim (MUST be after ble-attach) ────────────────────────
+    # The error path is: completion function calls `read -r "" key` → ble.sh's
+    # `ble/builtin/read` → `.read-arguments` validates var names → deliberately
+    # calls `builtin read -r ""` to reproduce the error → bash 5.2 rejects it.
+    #
+    # Fix: wrap ble/builtin/read to filter empty variable names from "$@" before
+    # they reach .read-arguments. The original function is saved once; on repeat
+    # source, the wrapper just updates in place.
+    if [[ ${BASH_VERSINFO[0]:-0} -ge 5 ]]; then
+        if ! declare -f _dotfiles_ble_read_orig >/dev/null 2>&1; then
+            eval "$(declare -f ble/builtin/read | sed '1s/ble\/builtin\/read/_dotfiles_ble_read_orig/')"
+        fi
+        ble/builtin/read() {
+            local -a __fa=()
+            local __x __vn=0
+            for __x in "$@"; do
+                if (( __vn )); then
+                    __fa+=("$__x"); __vn=0
+                elif [[ "$__x" == -* ]]; then
+                    __fa+=("$__x")
+                    case "${__x: -1}" in [adeinNpstu]) __vn=1 ;; esac
+                elif [[ -n "$__x" ]]; then
+                    __fa+=("$__x")
+                fi
+            done
+            _dotfiles_ble_read_orig "${__fa[@]}"
+        }
+    fi
 fi
