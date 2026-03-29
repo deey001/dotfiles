@@ -9,12 +9,25 @@
 # ── 1. Interactive-only guard ──────────────────────────────────────────────────
 case $- in *i*) ;; *) return ;; esac
 
-# ── 2. ble.sh — Bash Line Editor (syntax highlighting, auto-complete, vim mode) ─
-# Requires: bash-completion >= 2.12, fzf >= 0.61 (fixes read: '': not a valid
-# identifier on bash 5.2 — upstream bugs in bash-completion/fzf, not ble.sh).
-# Install: bash ~/dotfiles/scripts/install-blesh.sh
+# ── 2. ble.sh — Bash Line Editor (syntax highlighting, vim mode, menu complete) ─
+# Requires bash-completion >= 2.12. That release fixed SSH completion passing
+# empty variable names to 'read' (bash 5.2 rejects this; older bash silently
+# ignored it). With ble.sh active, even the syntax highlighter triggers the
+# broken read path. Skip ble.sh on affected systems with a clear message.
+# Fix: bash ~/dotfiles/scripts/install.sh  (upgrades bash-completion to 2.14)
 if [[ -f ~/.local/share/blesh/ble.sh && $- == *i* ]]; then
-    source ~/.local/share/blesh/ble.sh --attach=none
+    _bc_ver=$(pkg-config --modversion bash-completion 2>/dev/null \
+              || dpkg -l bash-completion 2>/dev/null | awk '/^ii/{print $3}' | head -1 | cut -d: -f2 | cut -d- -f1)
+    _bc_maj=${_bc_ver%%.*}
+    _bc_min=${_bc_ver#*.}; _bc_min=${_bc_min%%.*}
+    if [[ -z "$_bc_maj" ]] \
+    || [[ "$_bc_maj" -gt 2 ]] \
+    || [[ "$_bc_maj" -eq 2 && "${_bc_min:-0}" -ge 12 ]]; then
+        source ~/.local/share/blesh/ble.sh --attach=none
+    else
+        printf '\e[33m[dotfiles] ble.sh skipped: bash-completion %s < 2.12 (run: bash ~/dotfiles/scripts/install.sh)\e[0m\n' "$_bc_ver" >&2
+    fi
+    unset _bc_ver _bc_maj _bc_min
 fi
 
 # ── 3. History ─────────────────────────────────────────────────────────────────
