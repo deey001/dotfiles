@@ -36,24 +36,22 @@ _dotfiles_get_bc_version() {
 # ignored it). With ble.sh active, even the syntax highlighter triggers the
 # broken read path. Skip ble.sh on affected systems with a clear message.
 # Fix: bash ~/dotfiles/scripts/install.sh  (upgrades bash-completion to 2.14)
-# _DOTFILES_BLE_COMPAT controls whether section 20 may attach ble in this shell.
+# _DOTFILES_BLE_COMPAT: full mode (safe programmable completion path)
+# _DOTFILES_BLE_LIMITED: prediction-only mode for older bash-completion.
 _DOTFILES_BLE_COMPAT=0
+_DOTFILES_BLE_LIMITED=0
 if [[ -f ~/.local/share/blesh/ble.sh && $- == *i* ]]; then
     _bc_ver=$(_dotfiles_get_bc_version)
     _bc_maj=${_bc_ver%%.*}
     _bc_min=${_bc_ver#*.}; _bc_min=${_bc_min%%.*}
+    source ~/.local/share/blesh/ble.sh --attach=none
     if [[ -z "$_bc_maj" ]] \
     || [[ "$_bc_maj" -gt 2 ]] \
     || [[ "$_bc_maj" -eq 2 && "${_bc_min:-0}" -ge 12 ]]; then
-        source ~/.local/share/blesh/ble.sh --attach=none
         _DOTFILES_BLE_COMPAT=1
     else
-        printf '\e[33m[dotfiles] ble.sh skipped: bash-completion %s < 2.12 (run: bash ~/dotfiles/scripts/install.sh)\e[0m\n' "$_bc_ver" >&2
-        # If ble was already active in this shell, detach once and recover TTY.
-        if [[ ${BLE_VERSION-} ]] && type ble-detach >/dev/null 2>&1; then
-            ble-detach >/dev/null 2>&1
-            stty sane 2>/dev/null || true
-        fi
+        _DOTFILES_BLE_LIMITED=1
+        printf '\e[33m[dotfiles] ble.sh limited mode: prediction only (bash-completion %s < 2.12)\e[0m\n' "$_bc_ver" >&2
     fi
     unset _bc_ver _bc_maj _bc_min
 fi
@@ -168,7 +166,7 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 [[ -f ~/.bash_wrappers  ]] && source ~/.bash_wrappers
 
 # ── 11. System bash-completion ────────────────────────────────────────────────
-if ! shopt -oq posix; then
+if ! shopt -oq posix && [[ ${_DOTFILES_BLE_LIMITED:-0} != 1 ]]; then
     if [[ -f "${HOME}/.local/share/bash-completion/bash_completion" ]]; then
         source "${HOME}/.local/share/bash-completion/bash_completion"
     elif [[ -f /usr/share/bash-completion/bash_completion ]]; then
@@ -195,12 +193,17 @@ fi
 
 # ── 13. fzf ────────────────────────────────────────────────────────────────────
 if command -v fzf >/dev/null 2>&1; then
-    eval "$(fzf --bash 2>/dev/null)" || {
+    if [[ ${_DOTFILES_BLE_LIMITED:-0} == 1 ]]; then
         [[ -f /usr/share/doc/fzf/examples/key-bindings.bash ]] \
             && source /usr/share/doc/fzf/examples/key-bindings.bash
-        [[ -f /usr/share/doc/fzf/examples/completion.bash ]] \
-            && source /usr/share/doc/fzf/examples/completion.bash
-    }
+    else
+        eval "$(fzf --bash 2>/dev/null)" || {
+            [[ -f /usr/share/doc/fzf/examples/key-bindings.bash ]] \
+                && source /usr/share/doc/fzf/examples/key-bindings.bash
+            [[ -f /usr/share/doc/fzf/examples/completion.bash ]] \
+                && source /usr/share/doc/fzf/examples/completion.bash
+        }
+    fi
     export FZF_DEFAULT_OPTS="
         --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8
         --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc
@@ -220,6 +223,7 @@ fi
 # Both cause "read: '': not a valid identifier" on bash 5.2.
 # Workaround: remove SSH-related completions on affected versions.
 # Permanent fix: bash ~/dotfiles/scripts/install.sh (upgrades both tools).
+if [[ ${_DOTFILES_BLE_LIMITED:-0} != 1 ]]; then
 {
     if [[ ${BASH_COMPLETION_VERSINFO+x} ]]; then
         _bc_maj=${BASH_COMPLETION_VERSINFO[0]:-0}
@@ -246,6 +250,7 @@ fi
     fi
     unset _bc_ver _bc_maj _bc_min _fzf_ver _fzf_min _need_fix
 }
+fi
 
 # ── 14. zoxide ────────────────────────────────────────────────────────────────
 # Don't alias cd=z — scripts rely on 'cd' behaving as the builtin.
@@ -290,14 +295,11 @@ fi
 # ── 20. ble.sh attach (must be last — after all completions/prompts are set up) ─
 # NOTE: .blerc is only read on first ble-attach. Set critical options HERE so
 # they apply every time .bashrc is sourced (e.g. source ~/.bashrc in-session).
-if [[ ${_DOTFILES_BLE_COMPAT:-0} == 1 && ${BLE_VERSION-} ]]; then
+if [[ ${BLE_VERSION-} ]]; then
     ble-attach
     # Keep history prediction enabled; leave command auto-complete off for stability.
     bleopt complete_auto_complete=0  2>/dev/null
     bleopt complete_auto_history=1   2>/dev/null
-elif [[ ${_DOTFILES_BLE_COMPAT:-0} != 1 && ${BLE_VERSION-} ]] && type ble-detach >/dev/null 2>&1; then
-    ble-detach >/dev/null 2>&1
-    stty sane 2>/dev/null || true
 fi
 unset -f _dotfiles_get_bc_version 2>/dev/null || true
-unset _DOTFILES_BLE_COMPAT
+unset _DOTFILES_BLE_COMPAT _DOTFILES_BLE_LIMITED
