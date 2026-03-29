@@ -386,6 +386,10 @@ Your terminal must support **OSC 52** (Windows Terminal, Alacritty, iTerm2, WezT
 ### Network Icons Missing
 Install **JetBrainsMono Nerd Font** on your local machine and set it as the terminal font.
 
+### Bash 5.2 "read: not a valid identifier"
+If you see this error while typing in Bash 5.2+ (common on Ubuntu 22.04), it is due to an incompatibility between the new strict `read` validation and older versions of `bash-completion` (2.11) or `fzf` (< 0.61).
+**Fix**: This repo includes a `read()` wrapper in `~/.blerc` that automatically silences these errors while keeping `ble.sh` functionality. Ensure you have run `scripts/install.sh` and sourced `~/.bashrc`.
+
 ### git-delta Not Found
 If git commands fail with "cannot run delta": install with `brew install git-delta` or use `git -c core.pager=cat` as workaround.
 

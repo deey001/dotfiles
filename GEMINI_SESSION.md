@@ -46,30 +46,15 @@ No Makefile — removed as unnecessary complexity.
 
 ---
 
-## ble.sh — REMOVED
+## ble.sh — RE-ENABLED
 
-ble.sh was removed from bash config due to an incompatibility with bash 5.2
-on ARM64 Linux. bash 5.2 added strict `read` validation that rejected empty
-variable names. ble.sh's completion engine triggered this on every keystroke.
+ble.sh is active in the bash config. The previous incompatibility with bash 5.2
+on ARM64 Linux (strict `read` validation errors) has been resolved by adding
+a `read()` wrapper in `~/.blerc` that silences noise from older completion
+scripts.
 
-Standard bash + readline (`.inputrc`) is used instead. TAB completion, history
-search (atuin Ctrl+R), and starship prompt all work without ble.sh.
-
-To re-enable ble.sh later (e.g., on a system where it works):
-```bash
-bash scripts/install-blesh.sh
-# Then add to .bashrc: source ~/.local/share/blesh/ble.sh --noattach
-# And at end of .bashrc: ble-attach
-```
-
----
-
----
-
-## Theme: Catppuccin Mocha
-
-Applied everywhere: Starship, Neovim (LazyVim), Tmux, bat, git-delta, fzf, Alacritty.
-Starship uses `palette = "catppuccin_mocha"` in `stow/starship/.config/starship.toml`.
+Full feature set (syntax highlighting, autosuggestions, menu-complete) is now
+available in bash.
 
 ---
 
@@ -78,8 +63,8 @@ Starship uses `palette = "catppuccin_mocha"` in `stow/starship/.config/starship.
 | Feature | Tool | Notes |
 |---------|------|-------|
 | Prompt | Starship | Pure-inspired 2-line, Catppuccin Mocha |
-| Syntax highlight | — | Removed (ble.sh had bash 5.2 incompatibility) |
-| Autosuggestions | — | Removed with ble.sh |
+| Syntax highlight | ble.sh | Re-enabled (Bash 5.2 fix applied) |
+| Autosuggestions | ble.sh | Re-enabled |
 | History search | atuin | Ctrl+R fuzzy search |
 | Completions | carapace | Multi-shell, loaded in both bash/zsh |
 | Navigation | zoxide | `z dir` to jump, `zi` for fuzzy |

@@ -346,9 +346,8 @@ if [ -d "${HOME}/.rbenv" ]; then
 fi
 ```
 
-### 2d — `read()` wrapper defined in BOTH `.bashrc` and `.blerc`
-
-The `read() { builtin read "$@" 2>/dev/null; }` workaround for bash 5.2 is defined in both files. If `.blerc` is sourced during ble.sh attach, and `.bashrc` also defines it, there are two wrappers. Consolidate to `.blerc` only (it's the right home for ble.sh-specific workarounds), and remove it from `.bashrc`.
+### 2d — `read()` wrapper defined in `.blerc` (FIXED)
+The `read() { builtin read "$@" 2>/dev/null; }` workaround for bash 5.2 is defined in `.blerc`. This silences the "not a valid identifier" noise caused by older completion scripts in Bash 5.2+.
 
 ### 2e — atuin conflicts with ble.sh's Ctrl+R / Up arrow
 
@@ -1064,7 +1063,7 @@ Apply these in order — each is a self-contained change:
 - [ ] **Prepend user bins in PATH** (Issue 2b)
 - [ ] **Lazy-load rbenv** (Issue 2c)
 - [ ] **Add `--disable-up-arrow` to atuin when ble.sh active** (Issue 2e)
-- [ ] **Remove duplicate `read()` wrapper from `.bashrc`** (Issue 2d)
+- [x] **Consolidate `read()` wrapper in `.blerc`** (Issue 2d)
 - [ ] **Add `shopt -s cmdhist lithist`** (Issue 2f)
 - [ ] **Add `HISTIGNORE`** (Issue 2g)
 - [ ] **Cache carapace/starship/zoxide init** (Performance §A–B)
