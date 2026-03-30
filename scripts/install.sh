@@ -190,7 +190,9 @@ backup_file() {
 # whether the script succeeds, fails, or is interrupted (Ctrl-C).
 _cleanup_dirs=()
 cleanup() {
-    for dir in "${_cleanup_dirs[@]:-}"; do
+    # ${array[@]+"${array[@]}"} is the most robust way to iterate an empty array
+    # in Bash 3.2+ when 'set -u' is enabled.
+    for dir in ${_cleanup_dirs[@]+"${_cleanup_dirs[@]}"}; do
         [[ -n "$dir" && -d "$dir" ]] && rm -rf "$dir"
     done
 }
