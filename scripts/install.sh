@@ -190,8 +190,8 @@ backup_file() {
 # whether the script succeeds, fails, or is interrupted (Ctrl-C).
 _cleanup_dirs=()
 cleanup() {
-    for dir in "${_cleanup_dirs[@]}"; do
-        [[ -d "$dir" ]] && rm -rf "$dir"
+    for dir in "${_cleanup_dirs[@]:-}"; do
+        [[ -n "$dir" && -d "$dir" ]] && rm -rf "$dir"
     done
 }
 trap cleanup EXIT

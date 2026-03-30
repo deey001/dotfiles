@@ -1,5 +1,5 @@
 # ==============================================================================
-# .stowrc — GNU Stow Configuration
+# .stowrc -- GNU Stow Configuration
 # ==============================================================================
 # This file configures GNU Stow's default behavior when run from the dotfiles
 # repo root. Stow reads .stowrc automatically from the current directory.
@@ -11,7 +11,7 @@
 #
 # HOW STOW WORKS:
 #   Stow creates symlinks in --target for every file found in --dir/<package>.
-#   Example: stow/bash/.bashrc → ~/.bashrc
+#   Example: stow/bash/.bashrc -> ~/.bashrc
 #
 # SEE ALSO:
 #   man stow, https://www.gnu.org/software/stow/
@@ -30,7 +30,7 @@
 #   CRITICAL: Prevents stow from "folding" a directory into a single symlink.
 #   Without this, stow would make ~/.config/nvim a symlink pointing to the
 #   stow package directory. That breaks LazyVim because lazy.nvim writes
-#   lazy-lock.json and plugin caches into ~/.config/nvim/ — if the whole
+#   lazy-lock.json and plugin caches into ~/.config/nvim/ -- if the whole
 #   directory is a symlink, those writes go into the git repo, polluting it
 #   with generated files. With --no-folding, stow creates individual symlinks
 #   for each file inside the directory, leaving the directory itself as a real
