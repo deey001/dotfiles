@@ -97,8 +97,8 @@ ble-face -s command_file 'fg=#a6e3a1'                  # Green
 ble-face -s command_keyword 'fg=#cba6f7'               # Mauve
 ble-face -s command_alias 'fg=#94e2d5'                 # Teal
 
-# Fix "red-on-red": use Red background with Dark Base foreground for errors
-ble-face -s syntax_error 'fg=#1e1e2e,bg=#f38ba8'       # Base on Red
+# Unknown commands / syntax errors: Red text, no background
+ble-face -s syntax_error 'fg=#f38ba8'                  # Red
 
 # Subdued ghost text (Autosuggestions)
 ble-face -s auto_complete 'fg=#6c7086'                 # Overlay0
