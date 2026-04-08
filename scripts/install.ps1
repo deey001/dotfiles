@@ -1,4 +1,4 @@
-# VERSION: 1.0.6 (RELIABLE-LINKING)
+# VERSION: 1.0.7 (FIX-ELEVATION-PATH)
 # ========================================================================================
 # install.ps1 — Dotfiles Windows Setup Tool
 # ========================================================================================
@@ -24,8 +24,14 @@
 #   • Internet access for font download and winget packages
 #
 # AUTO-ELEVATION
-#   If not running as Administrator the script downloads itself to %TEMP% and
-#   relaunches via Start-Process -Verb RunAs, which triggers a UAC prompt.
+#   If not running as Administrator the script re-launches itself elevated via
+#   UAC (Start-Process -Verb RunAs).
+#   • When run from a local clone ($PSCommandPath is set) the SAME script file
+#     is relaunched — no download required.
+#   • When run via irm|iex (in-memory) the script is downloaded to %TEMP% for
+#     the elevated launch.
+#   In both cases the resolved dotfiles repo path is passed as -DotfilesDir so
+#   the elevated process can find windows\settings.json and the PS profile.
 #   Admin is required for: creating SymbolicLinks, installing fonts system-wide,
 #   and writing to protected registry keys.
 #
@@ -41,6 +47,27 @@
 #   9.  Display remote server setup instructions
 #
 # ========================================================================================
+
+# ── Script Parameters ───────────────────────────────────────────────────────────
+# param() MUST be the first executable statement in the script (after comments).
+#
+# -DotfilesDir:
+#   Absolute path to the dotfiles repository root.  Passed automatically when the
+#   script re-launches itself elevated via UAC or switches from PS5 to PS7.
+#
+#   Why this is needed:
+#     When the script triggers UAC elevation it must re-launch as a new process.
+#     If running from a local clone the relaunched process receives the original
+#     file path (via $PSCommandPath).  If running via irm|iex (in-memory) there
+#     is no file path — the script is downloaded to %TEMP% for the relaunch.
+#     In either case $PSScriptRoot in the elevated process points somewhere other
+#     than the dotfiles repo root, so Get-DotfilesDir cannot auto-detect the path.
+#     Passing -DotfilesDir explicitly preserves the correct path across all
+#     relaunch scenarios without any user interaction.
+[CmdletBinding()]
+param(
+    [string]$DotfilesDir = ""
+)
 
 # Force TLS 1.2 for all web requests made in this session.
 # PowerShell 5 defaults to TLS 1.0 which many modern servers (GitHub, etc.) reject.
@@ -66,26 +93,55 @@ function Test-AdminPrivileges {
 }
 
 # ── Auto-Elevation Block ────────────────────────────────────────────────────────
-# If the script is not already running as Administrator, download a fresh copy
-# to %TEMP% and relaunch it elevated via UAC (Start-Process -Verb RunAs).
+# If not running as Administrator, re-launch elevated via UAC.
 #
-# Why download instead of relaunching the current file path?
-#   When invoked via `iex (irm ...)` the script lives only in memory — there is
-#   no file path to pass to the new elevated process.  Downloading to a known
-#   temp path guarantees the elevated process has a file it can read.
-#   A cache-busting query string (?v=<random>) prevents stale CDN copies.
-# Auto-Elevate: If not running as Admin, download the script to a temp file and relaunch
+# Strategy (two cases):
+#   Local clone  ($PSCommandPath is a real file):
+#     Relaunch the EXACT same script file elevated.  This avoids downloading a
+#     fresh copy and, crucially, lets us pass -DotfilesDir so the elevated process
+#     finds the repo without any detection logic.
+#
+#   In-memory (irm | iex — $PSCommandPath is empty):
+#     Download the script to %TEMP% and relaunch that.  We cannot pass
+#     -DotfilesDir because there is no local clone yet; Symlink-Dotfiles will
+#     git-clone the repo into $env:USERPROFILE\dotfiles on demand.
+#
+# The -DotfilesDir argument propagates the resolved repo root so the elevated
+# process sets $script:dotfilesDir correctly and finds windows\settings.json and
+# windows\Microsoft.PowerShell_profile.ps1 without falling back to stubs.
 if (-not (Test-AdminPrivileges)) {
     Write-Host "█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█" -ForegroundColor Red
     Write-Host "█  ADMINISTRATOR PRIVILEGES REQUIRED - AUTO-ELEVATING    █" -ForegroundColor Yellow
     Write-Host "█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█" -ForegroundColor Red
     Write-Host "`nPlease accept the UAC prompt to continue..." -ForegroundColor Gray
-    
-    $TempScript = "$env:TEMP\DotfilesSetup.ps1"
+
     try {
-        $v = Get-Random
-        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1?v=$v" -OutFile $TempScript -UseBasicParsing
-        Start-Process powershell -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$TempScript`""
+        # Detect the repo root NOW, before we lose context in the elevated process.
+        $preElevateDir = $null
+        if ($DotfilesDir -and (Test-Path (Join-Path $DotfilesDir "stow"))) {
+            $preElevateDir = $DotfilesDir          # already passed from a prior relaunch
+        } elseif ($PSCommandPath -and (Test-Path $PSCommandPath)) {
+            $candidate = Split-Path (Split-Path $PSCommandPath -Parent) -Parent
+            if (Test-Path (Join-Path $candidate "stow")) { $preElevateDir = $candidate }
+        }
+
+        # Decide which script file to run elevated.
+        # Prefer relaunching the current local file to avoid stale CDN copies.
+        $scriptToRun = if ($PSCommandPath -and (Test-Path $PSCommandPath)) {
+            $PSCommandPath
+        } else {
+            $TempScript = "$env:TEMP\DotfilesSetup.ps1"
+            $v = Get-Random
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1?v=$v" `
+                -OutFile $TempScript -UseBasicParsing
+            $TempScript
+        }
+
+        # Build argument list; append -DotfilesDir only when we resolved a path.
+        $relaunchArgs = @("-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$scriptToRun`"")
+        if ($preElevateDir) { $relaunchArgs += "-DotfilesDir", "`"$preElevateDir`"" }
+
+        Start-Process powershell -Verb RunAs -ArgumentList $relaunchArgs
     } catch {
         Write-Host "`n[ERROR] Failed to prepare auto-elevation: $_" -ForegroundColor Red
     }
@@ -100,17 +156,35 @@ if (-not (Test-AdminPrivileges)) {
 # If PS 7 is not present, winget installs it silently, then this script re-
 # launches itself inside pwsh.exe (the PS7 executable) so all subsequent code
 # runs under the correct version.
-# PowerShell Version Check
+# -DotfilesDir is forwarded so the relaunched PS7 process also finds the repo.
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     Write-Host "Detected PowerShell $($PSVersionTable.PSVersion.Major). Installing PowerShell 7..." -ForegroundColor Yellow
     winget install --id Microsoft.PowerShell --silent --accept-package-agreements --accept-source-agreements | Out-Null
-    
+
     $pwsh7Path = "C:\Program Files\PowerShell\7\pwsh.exe"
     if (Test-Path $pwsh7Path) {
-        $TempScript = "$env:TEMP\DotfilesSetup.ps1"
-        $v = Get-Random
-        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1?v=$v" -OutFile $TempScript -UseBasicParsing
-        Start-Process -FilePath $pwsh7Path -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$TempScript`""
+        # Resolve dotfiles dir before relaunching so we can pass it forward.
+        $preUpgradeDir = if ($DotfilesDir -and (Test-Path (Join-Path $DotfilesDir "stow"))) {
+            $DotfilesDir
+        } elseif ($PSCommandPath -and (Test-Path $PSCommandPath)) {
+            $candidate = Split-Path (Split-Path $PSCommandPath -Parent) -Parent
+            if (Test-Path (Join-Path $candidate "stow")) { $candidate } else { $null }
+        } else { $null }
+
+        $scriptToRun = if ($PSCommandPath -and (Test-Path $PSCommandPath)) {
+            $PSCommandPath
+        } else {
+            $TempScript = "$env:TEMP\DotfilesSetup.ps1"
+            $v = Get-Random
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1?v=$v" `
+                -OutFile $TempScript -UseBasicParsing
+            $TempScript
+        }
+
+        $relaunchArgs = @("-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$scriptToRun`"")
+        if ($preUpgradeDir) { $relaunchArgs += "-DotfilesDir", "`"$preUpgradeDir`"" }
+
+        Start-Process -FilePath $pwsh7Path -Verb RunAs -ArgumentList $relaunchArgs
         exit 0
     }
 }
@@ -145,25 +219,33 @@ $script:ActionsPerformed = @()
 # Resolves the absolute path to the dotfiles repository root and returns it, or
 # $null if the repo cannot be found.
 #
-# Detection strategy (two candidates tried in order):
-#   1. $PSScriptRoot — the directory containing THIS script file.  When the script
-#      is run from a local clone (e.g. .\scripts\install.ps1) PSScriptRoot points
-#      to scripts\; the repo root is one level up.  We validate by checking for
-#      the stow\ subdirectory, which is the canonical marker of the repo root.
-#      PSScriptRoot is empty when the script is run via iex/irm (in-memory), hence
-#      the fallback to Get-Location.
-#   2. $env:USERPROFILE\dotfiles — the default clone location used by the remote
-#      one-liner.  If the user already cloned the repo here it will be found.
+# Detection order (first match wins):
+#   1. $DotfilesDir script parameter — set when the script re-launches itself
+#      elevated (via UAC) or upgrades to PS7.  This is the only reliable path
+#      in those scenarios because $PSScriptRoot in the re-launched process points
+#      to %TEMP% or C:\Program Files\PowerShell\7, not the repo.
+#   2. $PSScriptRoot parent — works when running directly from a local clone
+#      (e.g. .\scripts\install.ps1).  PSScriptRoot = ..\scripts; parent = repo root.
+#      Validated by checking for the stow\ sub-directory (canonical repo marker).
+#   3. $env:USERPROFILE\dotfiles — default clone location assumed by Symlink-
+#      Dotfiles' auto-clone step.  Checked as last resort.
 #
 # What it modifies: nothing — pure resolver, no side effects.
-# What can go wrong: returns $null if neither candidate exists; callers must guard.
-# Resolve dotfiles directory once at script scope so all functions can use it
+# What can go wrong: returns $null if none of the three candidates exist; every
+#   caller that uses the result must guard with `if ($script:dotfilesDir)`.
 function Get-DotfilesDir {
+    # 1. Explicit parameter (passed by the re-launch / elevation logic)
+    if ($DotfilesDir -and (Test-Path (Join-Path $DotfilesDir "stow"))) { return $DotfilesDir }
+
+    # 2. $PSScriptRoot — works for local clone direct invocation
     $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
     $candidate = Split-Path $scriptDir -Parent
     if (Test-Path (Join-Path $candidate "stow")) { return $candidate }
+
+    # 3. Default clone location
     $candidate = Join-Path $env:USERPROFILE "dotfiles"
     if (Test-Path $candidate) { return $candidate }
+
     return $null
 }
 $script:dotfilesDir = Get-DotfilesDir
