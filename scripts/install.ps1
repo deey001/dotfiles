@@ -824,7 +824,7 @@ function Show-Menu {
     Write-ColorText " [1] Install JetBrainsMono Nerd Font (System-wide)" "Yellow"
     Write-ColorText " [2] Set Nerd Font in Windows Terminal (Default Profile)" "Yellow"
     Write-ColorText " [3] Set Nerd Font in PuTTY (Default Settings for KeePass)" "Yellow"
-    Write-ColorText " [4] Install Core Developer Tools via Winget (Nvim, Git, etc)" "Yellow"
+    Write-ColorText " [4] Install Core Developer Tools via Winget" "Yellow"
     Write-Host "     (Installs Neovim, Git, Ripgrep, Fd, Starship, Eza, Fastfetch)" -ForegroundColor Gray
     Write-ColorText " [5] Configure PowerShell Profile (Starship + Cleanup)" "Yellow"
     Write-Host "     (Fixes startup errors and sets up the modern prompt)" -ForegroundColor Gray

@@ -30,6 +30,9 @@ else
     DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fi
 
+ARCH=$(uname -m)
+OS_RAW="$(uname)"
+
 set -euo pipefail
 
 # ── 1. Configuration & Versions ──────────────────────────────────────────────
