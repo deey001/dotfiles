@@ -643,15 +643,17 @@ function Symlink-Dotfiles {
             }
         }
 
-        # 3. Link .config Subdirectories
+        # 3. Link .config Directory
         $configSourceBase = Join-Path $dotfilesDir "stow\config\.config"
         $configTargetBase = Join-Path $userHome ".config"
         
         if (Test-Path $configSourceBase) {
+            Write-Host "Symlinking .config directory contents..." -ForegroundColor Cyan
             if (-not (Test-Path $configTargetBase)) {
                 New-Item -Path $configTargetBase -ItemType Directory -Force | Out-Null
             }
             
+            # We link the subdirectories individually to avoid overwriting existing non-dotfile configs
             Get-ChildItem $configSourceBase | ForEach-Object {
                 $itemSource = $_.FullName
                 $itemTarget = Join-Path $configTargetBase $_.Name
@@ -659,18 +661,29 @@ function Symlink-Dotfiles {
                 # Special handling for starship.toml: link to both ~/.config/ and ~/
                 if ($_.Name -eq "starship.toml") {
                     $rootTarget = Join-Path $userHome "starship.toml"
-                    if (Test-Path $rootTarget) { Remove-Item $rootTarget -Force }
-                    New-Item -Path $rootTarget -ItemType SymbolLink -Value $itemSource -Force | Out-Null
+                    if (Test-Path $rootTarget) { 
+                        # Use a more robust check before removal
+                        try { Remove-Item $rootTarget -Force -ErrorAction SilentlyContinue } catch {}
+                    }
+                    if (-not (Test-Path $rootTarget)) {
+                        New-Item -Path $rootTarget -ItemType SymbolLink -Value $itemSource -Force | Out-Null
+                    }
                 }
 
                 if (Test-Path $itemTarget) {
                     $bak = "$itemTarget.bak"
                     if (Test-Path $bak) { 
-                        if ($_.PSIsContainer) { Remove-Item $bak -Recurse -Force } else { Remove-Item $bak -Force }
+                        try {
+                            if ((Get-Item $bak).PSIsContainer) { Remove-Item $bak -Recurse -Force } else { Remove-Item $bak -Force }
+                        } catch {}
                     }
-                    Move-Item $itemTarget $bak -Force
+                    try { Move-Item $itemTarget $bak -Force -ErrorAction SilentlyContinue } catch {}
                 }
-                New-Item -Path $itemTarget -ItemType SymbolLink -Value $itemSource -Force | Out-Null
+                
+                # Re-check if itemTarget was successfully moved/removed before creating link
+                if (-not (Test-Path $itemTarget)) {
+                    New-Item -Path $itemTarget -ItemType SymbolLink -Value $itemSource -Force | Out-Null
+                }
             }
         }
 

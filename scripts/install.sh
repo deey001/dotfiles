@@ -36,6 +36,11 @@ OS_RAW="$(uname)"
 set -euo pipefail
 
 # ── 1. Configuration & Versions ──────────────────────────────────────────────
+NEOVIM_VERSION="0.11.6"
+STARSHIP_VERSION="1.23.0"
+LAZYGIT_VERSION="0.48.0"
+BASH_COMPLETION_VERSION="2.12.0"
+
 # Normalize OS string
 case "$OS_RAW" in
     Darwin)         OS="Darwin" ;;
@@ -49,6 +54,9 @@ case "$ARCH" in
     aarch64|arm64)  NVIM_ARCH="arm64" ;;
     *)              NVIM_ARCH="x86_64" ;;
 esac
+
+_cleanup_dirs=()
+trap 'for dir in "${_cleanup_dirs[@]}"; do rm -rf "$dir"; done' EXIT
 
 # ── 3. Helper Functions ───────────────────────────────────────────────────────
 install_package_list() {
