@@ -1,311 +1,154 @@
 # ==============================================================================
 # .bashrc — Bash Configuration
 # ==============================================================================
-# Executed by bash(1) for interactive shells.
-# Load order: .bash_profile → .bashrc → .bash_exports → .bash_aliases
-#             → .bash_functions → .bash_wrappers → .bash_local → ble-attach
-# ==============================================================================
+# Load order: .bash_profile → .bashrc → .common_shell → .bash_aliases → tools
 
-# ── 1. Interactive-only guard ──────────────────────────────────────────────────
+# ── 1. Interactive-only guard ─────────────────────────────────────────────────
 case $- in *i*) ;; *) return ;; esac
 
-# ── 2. ble.sh early load (--attach=none defers activation until section 20) ───
-# ble.sh provides fish-style autosuggestions, syntax highlighting, and enhanced
-# completion for bash. Requires bash-completion >= 2.12 (install.sh handles this).
-if [[ -f "${HOME}/.local/share/blesh/ble.sh" ]]; then
+# ── 2. ble.sh early load (activated last in section 19) ──────────────────────
+[[ -f "${HOME}/.local/share/blesh/ble.sh" ]] && \
     source "${HOME}/.local/share/blesh/ble.sh" --attach=none
-fi
 
-# ── 3. History ─────────────────────────────────────────────────────────────────
+# ── 3. History ────────────────────────────────────────────────────────────────
 HISTCONTROL=ignoredups:ignorespace
 HISTSIZE=50000
 HISTFILESIZE=100000
 HISTIGNORE="ls:ll:la:l:cd:pwd:exit:clear:history:bg:fg:jobs:c:q:vi:vim"
 HISTTIMEFORMAT="%F %T "
-shopt -s histappend    # append to history; never overwrite
-shopt -s cmdhist       # save multiline commands as one history entry
-shopt -s lithist       # preserve newlines (not semicolons) in multiline history
-# Append pattern: preserves PROMPT_COMMAND already set by system or other tools
+shopt -s histappend cmdhist lithist
 PROMPT_COMMAND="history -a${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
 
-# ── 4. Environment detection ──────────────────────────────────────────────────
-[[ -n "${SSH_CLIENT:-}${SSH_TTY:-}" ]] && export IS_SSH=1 || export IS_SSH=0
-grep -qEi "(Microsoft|WSL)" /proc/version 2>/dev/null && export IS_WSL=1 || export IS_WSL=0
-_detect_container() {
-    [[ -f /.dockerenv ]] && return 0
-    [[ -f /run/.containerenv ]] && return 0
-    grep -qE 'docker|lxc|kubepods' /proc/1/cgroup 2>/dev/null && return 0
-    command -v systemd-detect-virt >/dev/null 2>&1 \
-        && systemd-detect-virt -q --container 2>/dev/null && return 0
-    return 1
-}
-_detect_container && export IS_DOCKER=1 || export IS_DOCKER=0
-unset -f _detect_container
-[[ -n "${TMUX:-}" ]] && export IS_TMUX=1 || export IS_TMUX=0
+# ── 4. Shell options ──────────────────────────────────────────────────────────
+shopt -s checkwinsize globstar extglob nullglob cdspell dirspell autocd \
+         no_empty_cmd_completion checkhash
+stty -ixon 2>/dev/null    # free up Ctrl-S/Q for fzf
 
-# ── 5. Connectivity check (file-cached, one ping per 5 minutes) ───────────────
-_online_cache="${HOME}/.cache/is_online"
-mkdir -p "${HOME}/.cache"
-if [[ ! -f "$_online_cache" ]] || \
-   [[ -z "$(find "$_online_cache" -mmin -5 2>/dev/null)" ]]; then
-    ping -c 1 -W 1 8.8.8.8 &>/dev/null \
-        && echo 1 > "$_online_cache" \
-        || echo 0 > "$_online_cache"
-fi
-export IS_ONLINE=$(< "$_online_cache")
-unset _online_cache
-
-# ── 6. Shell options ──────────────────────────────────────────────────────────
-shopt -s checkwinsize          # keep LINES/COLUMNS accurate on resize
-shopt -s globstar              # **/*.sh recursive glob (like zsh)
-shopt -s extglob               # !(*.txt) @(a|b) +(pat) extended patterns
-shopt -s nullglob              # unmatched glob → empty (not literal string)
-shopt -s cdspell               # auto-correct minor typos in cd target
-shopt -s dirspell              # typo correction in tab-completed directory names
-shopt -s autocd                # bare directory path → cd into it (like zsh autocd)
-shopt -s no_empty_cmd_completion  # don't complete on an empty line (slow)
-shopt -s checkhash             # verify hashed command paths before using them
-stty -ixon 2>/dev/null         # enable Ctrl-S/Ctrl-Q for fzf history search
-
-# ── 7. Readline bindings (skipped when ble.sh is active — it has its own) ─────
+# ── 5. Readline (skipped when ble.sh is active — it has its own) ─────────────
 if [[ ! ${BLE_VERSION-} ]]; then
     bind "set completion-ignore-case on"       2>/dev/null
     bind "set menu-complete-display-prefix on" 2>/dev/null
     bind "set colored-stats on"                2>/dev/null
     bind "set colored-completion-prefix on"    2>/dev/null
-    bind "set show-all-if-ambiguous off"       2>/dev/null
     bind "set show-all-if-unmodified on"       2>/dev/null
     bind "TAB:menu-complete"                   2>/dev/null
     bind '"\e[Z":menu-complete-backward'       2>/dev/null
 fi
 
-# ── 8. Terminal utilities ─────────────────────────────────────────────────────
+# ── 6. Terminal colors ────────────────────────────────────────────────────────
 [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
-if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+[[ -z "${debian_chroot:-}" && -r /etc/debian_chroot ]] && \
     debian_chroot=$(cat /etc/debian_chroot)
-fi
-if [ -x /usr/bin/dircolors ]; then
-    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-fi
+[ -x /usr/bin/dircolors ] && \
+    { test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"; }
 
-# ── 9. Core aliases ───────────────────────────────────────────────────────────
-if command -v eza >/dev/null 2>&1; then
-    alias ls='eza --color=auto --icons'
-    alias ll='eza -alF --icons --git'
-    alias la='eza -A --icons'
-    alias l='eza -CF --icons'
-    alias tree='eza --tree --icons'
-else
-    alias ls='ls --color=auto'
-    alias ll='ls -alF'
-    alias la='ls -A'
-    alias l='ls -CF'
-fi
-alias grep='grep --color=auto'
-alias fgrep='fgrep --color=auto'
-alias egrep='egrep --color=auto'
-if command -v bat >/dev/null 2>&1; then
-    alias cat='bat --paging=never'
-    alias oldcat='/bin/cat'
-    export MANPAGER="sh -c 'col -bx | bat -l man -p'"
-    export MANROFFOPT="-c"
-elif command -v batcat >/dev/null 2>&1; then
-    alias cat='batcat --paging=never'
-    alias oldcat='/bin/cat'
-    export MANPAGER="sh -c 'col -bx | batcat -l man -p'"
-    export MANROFFOPT="-c"
-fi
-alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
-
-# ── 10. Exports & Environment Variables ───────────────────────────────────────
-# XDG user bin (~/.local/bin) and ~/bin take priority over system bins
+# ── 7. PATH + environment ─────────────────────────────────────────────────────
 export PATH="${HOME}/.local/bin:${HOME}/bin:${PATH}"
+# Deduplicate PATH (prevents bloat on repeated sourcing)
+export PATH=$(awk -v RS=':' -v ORS=':' '!seen[$0]++' <<< "$PATH" | sed 's/:$//')
 
-# Deduplicate PATH entries
-if [[ -n "$PATH" ]]; then
-    export PATH=$(awk -v RS=':' -v ORS=':' '!seen[$0]++' <<< "$PATH" | sed 's/:$//')
-fi
-
-# CDPATH — quick cd from anywhere
-export CDPATH=":${HOME}:${HOME}/projects:${HOME}/work:${HOME}/src"
-
-# Editor
-for _editor in nvim vim vi nano; do
-    if command -v "$_editor" >/dev/null 2>&1; then
-        export EDITOR="$_editor"
-        export VISUAL="$_editor"
-        break
-    fi
+# Editor — prefer nvim, fall back gracefully
+for _e in nvim vim vi nano; do
+    command -v "$_e" >/dev/null 2>&1 && { export EDITOR="$_e" VISUAL="$_e"; break; }
 done
-unset _editor
+unset _e
 
-# Pager
 export LESS='-R'
-export LESSOPEN='|~/.lessfilter %s'
+: "${BAT_THEME:=Catppuccin Mocha}"   # theme.sh overrides this if stowed
+export BAT_THEME BAT_PAGING="never"
 
-# Go
-export GOPATH="${HOME}/gocode"
-export PATH="${GOPATH}/bin:/usr/local/go/bin:${PATH}"
-
-# rbenv (lazy-loaded)
-if [[ -d "${HOME}/.rbenv" ]]; then
-    export PATH="${HOME}/.rbenv/bin:${HOME}/.rbenv/plugins/ruby-build/bin:${PATH}"
-    rbenv() {
-        unset -f rbenv
-        eval "$(command rbenv init - bash)"
-        rbenv "$@"
-    }
+# Go — only when installed
+if command -v go >/dev/null 2>&1 || [[ -d /usr/local/go ]]; then
+    export GOPATH="${HOME}/go"
+    export PATH="${GOPATH}/bin:/usr/local/go/bin:${PATH}"
 fi
 
-# bat
-# BAT_THEME is set by the active theme (sourced via .common_shell → theme.sh).
-# Fallback to Catppuccin Mocha if no theme is stowed yet.
-: "${BAT_THEME:=Catppuccin Mocha}"
-export BAT_THEME
-export BAT_PAGING="never"
+# npm global bin
+[[ -d "$HOME/.npm-global/bin" ]] && export PATH="$HOME/.npm-global/bin:$PATH"
 
-# ── 11. Custom Functions & Wrappers ───────────────────────────────────────────
+# ── 8. Functions ──────────────────────────────────────────────────────────────
+
+# extract — unpack any common archive format
 extract() {
-    for archive in "$@"; do
-        if [ -f "$archive" ]; then
-            case $archive in
-                *.tar.bz2) tar xvjf "$archive" ;;
-                *.tar.gz) tar xvzf "$archive" ;;
-                *.bz2) bunzip2 "$archive" ;;
-                *.rar) rar x "$archive" ;;
-                *.gz) gunzip "$archive" ;;
-                *.tar) tar xvf "$archive" ;;
-                *.tbz2) tar xvjf "$archive" ;;
-                *.tgz) tar xvzf "$archive" ;;
-                *.zip) unzip "$archive" ;;
-                *.Z) uncompress "$archive" ;;
-                *.7z) 7z x "$archive" ;;
-                *) echo "don't know how to extract '$archive'..." ;;
-            esac
-        else
-            echo "'$archive' is not a valid file!"
-        fi
-    done
-}
-
-ftext() { grep -iIHrn --color=always "$1" . | less -r; }
-mkdirg() { mkdir -p "$1" && cd "$1"; }
-cpg() { if [ -d "$2" ]; then cp "$1" "$2" && cd "$2"; else cp "$1" "$2"; fi }
-mvg() { if [ -d "$2" ]; then mv "$1" "$2" && cd "$2"; else mv "$1" "$2"; fi }
-up() { local d=""; limit=${1:-1}; for ((i = 1; i <= limit; i++)); do d=$d/..; done; d=$(echo $d | sed 's/^\///'); cd ${d:-..}; }
-pwdtail() { pwd | awk -F/ '{nlast = NF -1;print $nlast"/"$NF}'; }
-
-ver() {
-    local dtype
-    dtype=$(distribution)
-    case $dtype in
-        "redhat") [ -s /etc/redhat-release ] && cat /etc/redhat-release || cat /etc/issue; uname -a ;;
-        "debian") lsb_release -a ;;
-        "arch") cat /etc/os-release ;;
-        *) [ -s /etc/issue ] && cat /etc/issue || echo "Error: Unknown distribution" ;;
-    esac
-}
-
-distribution() {
-    local dtype="unknown"
-    if [ -r /etc/os-release ]; then
-        source /etc/os-release
-        case $ID in
-            fedora|rhel|centos) dtype="redhat" ;;
-            ubuntu|debian) dtype="debian" ;;
-            arch|manjaro) dtype="arch" ;;
-            *)
-                if [ -n "$ID_LIKE" ]; then
-                    case $ID_LIKE in
-                        *fedora*|*rhel*|*centos*) dtype="redhat" ;;
-                        *ubuntu*|*debian*) dtype="debian" ;;
-                        *arch*) dtype="arch" ;;
-                    esac
-                fi
-                ;;
+    for f in "$@"; do
+        [ -f "$f" ] || { echo "'$f' not found"; continue; }
+        case $f in
+            *.tar.bz2|*.tbz2) tar xvjf "$f" ;;
+            *.tar.gz|*.tgz)   tar xvzf "$f" ;;
+            *.tar)             tar xvf  "$f" ;;
+            *.bz2)             bunzip2  "$f" ;;
+            *.gz)              gunzip   "$f" ;;
+            *.rar)             rar x    "$f" ;;
+            *.zip)             unzip    "$f" ;;
+            *.Z)               uncompress "$f" ;;
+            *.7z)              7z x     "$f" ;;
+            *)                 echo "Cannot extract '$f'" ;;
         esac
-    fi
-    echo $dtype
-}
-
-fcd() { local dir; dir=$(find . -type d -not -path '*/.*' 2>/dev/null | fzf +m) && cd "$dir"; }
-fv() { local file; file=$(find . -type f -not -path '*/.*' 2>/dev/null | fzf +m) && nvim "$file"; }
-fp() {
-    local file; file=$(find . -type f -not -path '*/.*' 2>/dev/null | fzf +m)
-    if [ -n "$file" ]; then
-        echo -n "$file" | if command -v pbcopy >/dev/null 2>&1; then pbcopy; elif command -v xclip >/dev/null 2>&1; then xclip -selection clipboard; fi
-        echo "Copied: $file"
-    fi
-}
-
-if command -v xh >/dev/null 2>&1; then alias http='xh'; fi
-
-man() {
-    env LESS_TERMCAP_mb=$'\E[01;31m' \
-    LESS_TERMCAP_md=$'\E[01;38;5;74m' \
-    LESS_TERMCAP_me=$'\E[0m' \
-    LESS_TERMCAP_se=$'\E[0m' \
-    LESS_TERMCAP_so=$'\E[01;33;03;40m' \
-    LESS_TERMCAP_ue=$'\E[0m' \
-    LESS_TERMCAP_us=$'\E[04;38;5;146m' \
-    man "$@"
-}
-
-whatsgoingon() {
-    for i in $(find . -maxdepth 1 -type d | sed -e 's/\.\///' -e '/\./d'); do
-        if [ -d "$i/.git" ]; then
-            pushd "$i" >/dev/null 2>&1 || continue
-            echo "$(tput bold)$i$(tput sgr0)"
-            if [ -z "$(git status --porcelain)" ]; then
-                echo "is clean"
-            else
-                git status -s
-            fi
-            popd >/dev/null
-        fi
     done
 }
 
-# ── 12. Modular config files ──────────────────────────────────────────────────
-[[ -f ~/.common_shell   ]] && source ~/.common_shell
-[[ -f ~/.bash_aliases   ]] && source ~/.bash_aliases
+# up N — go up N directory levels (e.g., up 3)
+up() { local d="" i; for ((i=0; i<${1:-1}; i++)); do d="../$d"; done; cd "${d:-.}"; }
 
-# ── 13. Bash-completion (prefer local >= 2.12 over system 2.11) ─────────────
+# ftext — recursive case-insensitive grep with paging
+ftext() { grep -iIHrn --color=always "$1" . | less -r; }
+
+# fzf helpers
+fcd() { local d; d=$(find . -type d -not -path '*/.*' 2>/dev/null | fzf +m) && cd "$d"; }
+fv()  { local f; f=$(find . -type f -not -path '*/.*' 2>/dev/null | fzf +m) && nvim "$f"; }
+fp()  {
+    local f; f=$(find . -type f -not -path '*/.*' 2>/dev/null | fzf +m) || return
+    echo -n "$f" | { command -v pbcopy &>/dev/null && pbcopy || xclip -selection clipboard; }
+    echo "Copied: $f"
+}
+
+# whatsgoingon — print git status for every git repo in current directory
+whatsgoingon() {
+    for d in */; do
+        [[ -d "$d/.git" ]] || continue
+        pushd "$d" >/dev/null
+        echo "$(tput bold)${d%/}$(tput sgr0)"
+        git status --porcelain | grep -q . && git status -s || echo "clean"
+        popd >/dev/null
+    done
+}
+
+# ── 9. Shared config (.common_shell sets env; .bash_aliases sets aliases) ─────
+[[ -f ~/.common_shell ]] && source ~/.common_shell
+[[ -f ~/.bash_aliases ]] && source ~/.bash_aliases
+
+# ── 10. Bash completion ───────────────────────────────────────────────────────
 if ! shopt -oq posix; then
-    if [[ -f "${HOME}/.local/share/bash-completion/bash_completion" ]]; then
-        source "${HOME}/.local/share/bash-completion/bash_completion"
-    elif [[ -f /usr/share/bash-completion/bash_completion ]]; then
-        source /usr/share/bash-completion/bash_completion
-    elif [[ -f /etc/bash_completion ]]; then
-        source /etc/bash_completion
-    fi
+    for _f in \
+        "${HOME}/.local/share/bash-completion/bash_completion" \
+        /usr/share/bash-completion/bash_completion \
+        /etc/bash_completion; do
+        [[ -f "$_f" ]] && { source "$_f"; break; }
+    done
+    unset _f
 fi
 
-# ── 14. Carapace ──────────────────────────────────────────────────────────────
+# ── 11. Carapace (cached init for fast startup) ───────────────────────────────
 if command -v carapace >/dev/null 2>&1; then
     unset CARAPACE_BRIDGES
     complete -r tmux git docker kubectl helm 2>/dev/null
     _cc="${HOME}/.cache/carapace_init.bash"
-    if [[ ! -f "$_cc" ]] || [[ "$(command -v carapace)" -nt "$_cc" ]]; then
+    [[ ! -f "$_cc" || "$(command -v carapace)" -nt "$_cc" ]] && \
         carapace _carapace bash > "$_cc" 2>/dev/null
-    fi
     source "$_cc"; unset _cc
 fi
 
-# ── 15. fzf ───────────────────────────────────────────────────────────────────
+# ── 12. fzf ───────────────────────────────────────────────────────────────────
 if command -v fzf >/dev/null 2>&1; then
     eval "$(fzf --bash 2>/dev/null)" || {
-        [[ -f /usr/share/doc/fzf/examples/key-bindings.bash ]] \
-            && source /usr/share/doc/fzf/examples/key-bindings.bash
-        [[ -f /usr/share/doc/fzf/examples/completion.bash ]] \
-            && source /usr/share/doc/fzf/examples/completion.bash
+        [[ -f /usr/share/doc/fzf/examples/key-bindings.bash ]] && \
+            source /usr/share/doc/fzf/examples/key-bindings.bash
+        [[ -f /usr/share/doc/fzf/examples/completion.bash ]] && \
+            source /usr/share/doc/fzf/examples/completion.bash
     }
-    # FZF_DEFAULT_OPTS: DOTFILES_FZF_COLORS is set by the active theme (sourced
-    # in .common_shell). Fallback to Catppuccin Mocha hex values if no theme is
-    # stowed yet, so fzf is always themed even on a fresh clone.
-    _fzf_colors="${DOTFILES_FZF_COLORS:-bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8,fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc,marker:#a6e3a1,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8}"
-    export FZF_DEFAULT_OPTS="--color=${_fzf_colors} --layout=reverse --border --height=~40% --bind='ctrl-/:toggle-preview'"
-    unset _fzf_colors
+    _c="${DOTFILES_FZF_COLORS:-bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8,fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc,marker:#a6e3a1,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8}"
+    export FZF_DEFAULT_OPTS="--color=${_c} --layout=reverse --border --height=~40% --bind='ctrl-/:toggle-preview'"
+    unset _c
     if command -v fd >/dev/null 2>&1; then
         export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
         export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
@@ -313,46 +156,32 @@ if command -v fzf >/dev/null 2>&1; then
     fi
 fi
 
-# ── 16. zoxide ────────────────────────────────────────────────────────────────
-if command -v zoxide >/dev/null 2>&1; then
-    eval "$(zoxide init bash)" 2>/dev/null
-    alias cdi='zi'
-fi
+# ── 13. zoxide ────────────────────────────────────────────────────────────────
+command -v zoxide >/dev/null 2>&1 && { eval "$(zoxide init bash)" 2>/dev/null; alias cdi='zi'; }
 
-# ── 17. Atuin (shell history with search) ─────────────────────────────────────
-if command -v atuin >/dev/null 2>&1; then
-    eval "$(atuin init bash)"
-fi
+# ── 14. atuin ─────────────────────────────────────────────────────────────────
+command -v atuin >/dev/null 2>&1 && eval "$(atuin init bash)"
 
-# ── 18. direnv ────────────────────────────────────────────────────────────────
-if command -v direnv >/dev/null 2>&1; then
-    eval "$(direnv hook bash)"
-fi
+# ── 15. direnv ────────────────────────────────────────────────────────────────
+command -v direnv >/dev/null 2>&1 && eval "$(direnv hook bash)"
 
-# ── 19. Starship prompt ──────────────────────────────────────────────────────
-if command -v starship >/dev/null 2>&1; then
-    eval "$(starship init bash)"
-fi
+# ── 16. Starship ─────────────────────────────────────────────────────────────
+command -v starship >/dev/null 2>&1 && eval "$(starship init bash)"
 
-# ── 20. Local/private config ─────────────────────────────────────────────────
+# ── 17. Local config (secrets, machine-specific PATH, etc.) ──────────────────
 [[ -f ~/.bash_local ]] && source ~/.bash_local
 
-# ── 21. Login summary (once per SSH session, never inside tmux) ───────────────
+# ── 18. Fastfetch (login shells only, skip inside tmux) ──────────────────────
 if command -v fastfetch >/dev/null 2>&1 \
     && shopt -q login_shell \
-    && [[ -z "${TMUX:-}" ]] \
-    && [[ -z "${_FASTFETCH_RAN:-}" ]]; then
+    && [[ -z "${TMUX:-}" && -z "${_FASTFETCH_RAN:-}" ]]; then
     export _FASTFETCH_RAN=1
     fastfetch
 fi
 
-# ── 22. ble.sh activation (MUST be last — takes over line editing) ────────────
-# ble.sh was loaded in section 2 with --attach=none. Now that all completions,
-# prompts, and tools are configured, activate it.
+# ── 19. ble.sh activation (MUST be last) ─────────────────────────────────────
 [[ ${BLE_VERSION-} ]] && ble-attach
 
-# ── 23. npm global bin (added by npm config) ─────────────────────────────────
-[[ -d "$HOME/.npm-global/bin" ]] && export PATH="$HOME/.npm-global/bin:$PATH"
-
-# ── 24. Local overrides (machine-specific, not tracked in git) ───────────────
-[[ -f "$HOME/.openclaw/completions/openclaw.bash" ]] && source "$HOME/.openclaw/completions/openclaw.bash"
+# ── Machine-specific completions ─────────────────────────────────────────────
+[[ -f "$HOME/.openclaw/completions/openclaw.bash" ]] && \
+    source "$HOME/.openclaw/completions/openclaw.bash"
