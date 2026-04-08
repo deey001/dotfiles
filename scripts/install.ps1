@@ -606,8 +606,22 @@ function Install-CoreTools {
 function Symlink-Dotfiles {
     try {
         Write-Host "Symlinking dotfiles to User Home..." -ForegroundColor Cyan
-        $dotfilesDir = $PSScriptRoot | Split-Path -Parent
-        $homeDir = $env:USERPROFILE
+        
+        # Robustly find dotfiles directory
+        # If run via file: $PSScriptRoot works.
+        # If run via iex: we assume ~/dotfiles or check relative to current location.
+        $scriptPath = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
+        $dotfilesDir = $scriptPath | Split-Path -Parent
+        
+        # Fallback for iex users who haven't manually cd'd into the repo
+        if (-not (Test-Path (Join-Path $dotfilesDir "stow"))) {
+            $dotfilesDir = Join-Path $env:USERPROFILE "dotfiles"
+        }
+
+        if (-not (Test-Path $dotfilesDir)) {
+            Write-Status "Dotfiles directory not found at $dotfilesDir. Please clone the repo first." "Error"
+            return
+        }
 
         # Map files to their new 'stow' locations
         $fileMap = @{
@@ -737,7 +751,7 @@ NEXT STEPS:
 function Install-RemoteDotfiles {
     Write-ColorText "`nREMOTE SERVER SETUP" "Cyan"
     Write-Host "Connect to your server, then run:"
-    Write-ColorText "bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh)\"" "Yellow"
+    Write-ColorText "bash -c `"\$(curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh)`"" "Yellow"
     Write-Host "`nThis will install your dotfiles on the server."
 
     $launch = Read-Host "`nLaunch Windows Terminal now? (y/n)"
