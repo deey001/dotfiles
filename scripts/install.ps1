@@ -608,37 +608,35 @@ function Symlink-Dotfiles {
         Write-Host "Symlinking dotfiles to User Home..." -ForegroundColor Cyan
         
         # Robustly find dotfiles directory
-        $scriptPath = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
-        $dotfilesDir = $scriptPath | Split-Path -Parent
-        
-        # Auto-Clone Logic: if repo not found, offer to clone it
-        if (-not (Test-Path (Join-Path $dotfilesDir "stow"))) {
+        # 1. Check if we are in the repo already
+        $dotfilesDir = ""
+        if (Test-Path (Join-Path (Get-Location) "stow")) {
+            $dotfilesDir = (Get-Location).Path
+        } 
+        # 2. Check ~/dotfiles
+        elseif (Test-Path (Join-Path $env:USERPROFILE "dotfiles\stow")) {
             $dotfilesDir = Join-Path $env:USERPROFILE "dotfiles"
+        }
+        # 3. Fallback: Auto-Clone
+        else {
+            $dotfilesDir = Join-Path $env:USERPROFILE "dotfiles"
+            Write-Status "Dotfiles directory not found. Attempting to clone..." "Warning"
             
-            if (-not (Test-Path $dotfilesDir)) {
-                Write-Status "Dotfiles directory not found. Attempting to clone repository..." "Warning"
-                
-                # Check if git is installed
-                if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-                    Write-Status "Git is required to clone the repository. Installing Git via Winget..." "Progress"
-                    winget install --id Git.Git --silent --accept-package-agreements --accept-source-agreements | Out-Null
-                }
+            if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+                Write-Status "Installing Git..." "Progress"
+                winget install --id Git.Git --silent --accept-package-agreements --accept-source-agreements | Out-Null
+            }
 
-                # Clone the repository
-                try {
-                    git clone "https://github.com/deey001/dotfiles.git" $dotfilesDir
-                    Write-Status "Repository cloned successfully to $dotfilesDir" "Success"
-                } catch {
-                    Write-Status "Failed to clone repository. Please clone manually to ~/dotfiles." "Error"
-                    return
-                }
+            try {
+                git clone "https://github.com/deey001/dotfiles.git" $dotfilesDir
+                Write-Status "Cloned successfully to $dotfilesDir" "Success"
+            } catch {
+                Write-Status "Failed to clone repository." "Error"
+                return
             }
         }
 
-        if (-not (Test-Path $dotfilesDir)) {
-            Write-Status "Dotfiles directory not found at $dotfilesDir." "Error"
-            return
-        }
+        Write-Log "Using dotfiles directory: $dotfilesDir"
 
         # Map files to their new 'stow' locations
         $fileMap = @{
@@ -653,12 +651,14 @@ function Symlink-Dotfiles {
 
         foreach ($file in $fileMap.Keys) {
             $source = Join-Path $dotfilesDir $fileMap[$file]
-            $target = Join-Path $homeDir $file
+            $target = Join-Path $env:USERPROFILE $file
 
             if (Test-Path $source) {
                 if (Test-Path $target) {
                     Write-Host "Backing up existing $file..." -ForegroundColor Gray
-                    Move-Item $target "$target.bak" -Force -ErrorAction SilentlyContinue
+                    $bakPath = "$target.bak"
+                    if (Test-Path $bakPath) { Remove-Item $bakPath -Force }
+                    Move-Item $target $bakPath -Force
                 }
                 
                 Write-Host "Creating symlink for $file..." -ForegroundColor Cyan
@@ -668,7 +668,7 @@ function Symlink-Dotfiles {
 
         # Symlink .config directory content from the 'config' meta-package
         $configSource = Join-Path $dotfilesDir "stow\config\.config"
-        $configTarget = Join-Path $homeDir ".config"
+        $configTarget = Join-Path $env:USERPROFILE ".config"
         
         if (Test-Path $configSource) {
             if (-not (Test-Path $configTarget)) {
@@ -681,13 +681,11 @@ function Symlink-Dotfiles {
                 
                 if (Test-Path $itemTarget) {
                     Write-Host "Backing up existing config/$($_.Name)..." -ForegroundColor Gray
-                    if (Test-Path $itemTarget -PathType Container) {
-                        # For directories, we might need to remove them if they are symlinks
-                        # or rename them if they are real directories.
-                        Move-Item $itemTarget "$itemTarget.bak" -Force -ErrorAction SilentlyContinue
-                    } else {
-                        Move-Item $itemTarget "$itemTarget.bak" -Force -ErrorAction SilentlyContinue
+                    $bakPath = "$itemTarget.bak"
+                    if (Test-Path $bakPath) { 
+                        if ($_.PSIsContainer) { Remove-Item $bakPath -Recurse -Force } else { Remove-Item $bakPath -Force }
                     }
+                    Move-Item $itemTarget $bakPath -Force
                 }
                 
                 New-Item -Path $itemTarget -ItemType SymbolLink -Value $itemSource -Force | Out-Null
@@ -701,21 +699,17 @@ function Symlink-Dotfiles {
             Write-Host "Symlinking Neovim config to AppData..." -ForegroundColor Cyan
             if (Test-Path $nvimTarget) {
                 Write-Host "Backing up existing AppData nvim..." -ForegroundColor Gray
-                if (Test-Path $nvimTarget -PathType Container) {
-                    $bakPath = Join-Path $env:LOCALAPPDATA "nvim.bak"
-                    if (Test-Path $bakPath) { Remove-Item $bakPath -Recurse -Force }
-                    Move-Item $nvimTarget $bakPath -Force
-                } else {
-                    Remove-Item $nvimTarget -Force
-                }
+                $bakPath = Join-Path $env:LOCALAPPDATA "nvim.bak"
+                if (Test-Path $bakPath) { Remove-Item $bakPath -Recurse -Force }
+                Move-Item $nvimTarget $bakPath -Force
             }
             New-Item -Path $nvimTarget -ItemType SymbolLink -Value $nvimSource -Force | Out-Null
         }
 
-        Add-Action "Symlinked dotfiles to $homeDir"
+        Add-Action "Symlinked dotfiles to $($env:USERPROFILE)"
         Write-Status "Dotfiles symlinked successfully" "Success"
     } catch {
-        Write-Status "Symlinking failed" "Error"
+        Write-Status "Symlinking failed: $_" "Error"
         Write-Log "Symlink error: $_" "ERROR"
     }
 }
@@ -767,9 +761,8 @@ NEXT STEPS:
 # This bridges the Windows setup to the Linux setup workflow.
 function Install-RemoteDotfiles {
     Write-ColorText "`nREMOTE SERVER SETUP" "Cyan"
-    Write-Host "Connect to your server, then run:"
-    Write-ColorText "bash -c `"\$(curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh)`"" "Yellow"
-    Write-Host "`nThis will install your dotfiles on the server."
+    Write-Host "Connect to your server, then run this one-liner:"
+    Write-ColorText "curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash" "Yellow"
 
     $launch = Read-Host "`nLaunch Windows Terminal now? (y/n)"
     if ($launch -match "^[Yy]") {
