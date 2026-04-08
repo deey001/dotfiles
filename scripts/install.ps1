@@ -774,33 +774,38 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
 function Symlink-Dotfiles {
     try {
         Write-Host "Symlinking dotfiles..." -ForegroundColor Cyan
-        $userHome = $env:USERPROFILE
-        $dotfilesDir = $script:dotfilesDir
-        if (-not $dotfilesDir) {
-            $dotfilesDir = Join-Path $userHome "dotfiles"
-            if (-not (Test-Path $dotfilesDir)) {
-                Write-Status "Cloning repository..." "Info"
-                git clone "https://github.com/deey001/dotfiles.git" $dotfilesDir
-            } else {
-                # Hard-reset to origin/master so newly-added files (themes, settings.json)
-                # are always present.  pull --ff-only can silently fail when tracking is
-                # misconfigured or the local HEAD has diverged.
-                Write-Status "Updating repository (fetch + reset)..." "Info"
-                git -C $dotfilesDir fetch origin master 2>&1 | Out-Null
-                git -C $dotfilesDir reset --hard origin/master 2>&1 | Out-Null
-            }
-            # Update the script-scoped variable so subsequent functions
-            # (Configure-WindowsTerminal, Configure-PowerShell) can find
-            # the repo even when this script was invoked via irm|iex and
-            # $PSScriptRoot pointed to %TEMP%.
-            $script:dotfilesDir = $dotfilesDir
-            Add-Action "Resolved dotfiles dir: $dotfilesDir"
+        $userHome    = $env:USERPROFILE
+        $dotfilesDir = if ($script:dotfilesDir) { $script:dotfilesDir } else { Join-Path $userHome "dotfiles" }
+        $repoUrl     = "https://github.com/deey001/dotfiles.git"
+
+        # ── Ensure the repo is present and up-to-date ─────────────────────────
+        # A sentinel file that must exist after a successful update.  If it is
+        # absent the update failed and we fall back to a clean clone.
+        $sentinel = Join-Path $dotfilesDir "windows\settings.json"
+
+        if (-not (Test-Path $dotfilesDir)) {
+            Write-Status "Cloning repository..." "Info"
+            git clone $repoUrl $dotfilesDir
         } else {
-            # Repo was already known — still hard-reset to get any new files.
+            # Attempt hard reset to origin/master to pick up new files.
+            # Capture output — if it fails we will see the error message.
             Write-Status "Updating repository (fetch + reset)..." "Info"
-            git -C $dotfilesDir fetch origin master 2>&1 | Out-Null
-            git -C $dotfilesDir reset --hard origin/master 2>&1 | Out-Null
+            $fetchOut = git -C $dotfilesDir fetch origin master 2>&1
+            $resetOut = git -C $dotfilesDir reset --hard origin/master 2>&1
+
+            # Verify update succeeded by checking for the sentinel file.
+            # If missing the fetch/reset failed (bad remote, detached HEAD, etc.)
+            # — delete and re-clone for a guaranteed clean state.
+            if (-not (Test-Path $sentinel)) {
+                Write-Status "Update incomplete (fetch: $fetchOut). Re-cloning..." "Warning"
+                Remove-Item $dotfilesDir -Recurse -Force -ErrorAction SilentlyContinue
+                git clone $repoUrl $dotfilesDir
+            }
         }
+
+        # Update script-scoped variable so Configure-* functions find the repo.
+        $script:dotfilesDir = $dotfilesDir
+        Add-Action "Dotfiles dir: $dotfilesDir"
         # Symlink files that are useful on Windows (including WSL sessions).
         # Excluded intentionally:
         #   .blerc  — ble.sh is a Linux/WSL bash enhancement, not used in PS/CMD
