@@ -64,9 +64,17 @@
 #     than the dotfiles repo root, so Get-DotfilesDir cannot auto-detect the path.
 #     Passing -DotfilesDir explicitly preserves the correct path across all
 #     relaunch scenarios without any user interaction.
+#
+# -Theme:
+#   Name of the colour theme to deploy (without the .ps1 extension).
+#   Must match a file under themes/windows/<Theme>.ps1 in the repo.
+#   Defaults to "catppuccin-mocha".  Pass a different value to switch themes:
+#     .\install.ps1 -Theme catppuccin-latte
+#   When running via irm|iex the default (catppuccin-mocha) is always used.
 [CmdletBinding()]
 param(
-    [string]$DotfilesDir = ""
+    [string]$DotfilesDir = "",
+    [string]$Theme       = "catppuccin-mocha"
 )
 
 # Force TLS 1.2 for all web requests made in this session.
@@ -140,9 +148,10 @@ if (-not (Test-AdminPrivileges)) {
             $TempScript
         }
 
-        # Build argument list; append -DotfilesDir only when we resolved a path.
+        # Build argument list; append -DotfilesDir and -Theme only when set.
         $relaunchArgs = @("-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$scriptToRun`"")
         if ($preElevateDir) { $relaunchArgs += "-DotfilesDir", "`"$preElevateDir`"" }
+        if ($Theme -and $Theme -ne "catppuccin-mocha") { $relaunchArgs += "-Theme", "`"$Theme`"" }
 
         # Prefer pwsh.exe (PS7) for the elevated process; fall back to powershell.exe (PS5) if not installed.
         # PS7 handles UTF-8 correctly and supports all features used in this script.
@@ -191,6 +200,7 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
 
         $relaunchArgs = @("-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$scriptToRun`"")
         if ($preUpgradeDir) { $relaunchArgs += "-DotfilesDir", "`"$preUpgradeDir`"" }
+        if ($Theme -and $Theme -ne "catppuccin-mocha") { $relaunchArgs += "-Theme", "`"$Theme`"" }
 
         Start-Process -FilePath $pwsh7Path -Verb RunAs -ArgumentList $relaunchArgs
         exit 0
@@ -557,13 +567,21 @@ function Configure-PuTTY {
 # install can run unattended.
 #
 # Tool list and purpose:
-#   Neovim.Neovim          – Modern Vim-compatible modal text editor
-#   Git.Git                – Distributed version control system
-#   BurntSushi.Ripgrep     – Extremely fast regex file search (rg)
-#   sharkdp.fd             – User-friendly alternative to `find`
-#   starship.starship      – Cross-shell prompt (used by bash, zsh, PS, CMD)
-#   eza-community.eza      – Modern replacement for `ls` with colour + icons
-#   fastfetch-cli.fastfetch – Fast system information display (neofetch successor)
+#   Neovim.Neovim            – Modern Vim-compatible modal text editor
+#   Git.Git                  – Distributed version control system
+#   BurntSushi.Ripgrep       – Extremely fast regex file search (rg)
+#   sharkdp.fd               – User-friendly alternative to `find`
+#   starship.starship         – Cross-shell prompt (used by PS, CMD, WSL bash/zsh)
+#   eza-community.eza        – Modern replacement for `ls` with colour + icons
+#   fastfetch-cli.fastfetch  – Fast system information display (neofetch successor)
+#   sharkdp.bat              – Better `cat` with syntax highlighting (bat)
+#   zig.zig                  – Zig compiler; provides a C compiler for Neovim
+#                              Treesitter parser compilation (the lightest option)
+#   chrisant996.Clink        – Readline extension for cmd.exe; required for the
+#                              Starship CMD prompt (Configure-CMD)
+#
+# NOTE: tmux, ble.sh, and atuin are Linux/macOS tools and are NOT installed here.
+#   Use WSL and run the Linux installer for those tools inside your WSL distro.
 #
 # What it modifies:
 #   Winget installs each tool to its default location (%ProgramFiles% or
@@ -578,11 +596,27 @@ function Configure-PuTTY {
 # Prerequisites: winget must be available; internet access required.
 function Install-CoreTools {
     try {
-        $tools = @("Neovim.Neovim", "Git.Git", "BurntSushi.Ripgrep", "sharkdp.fd", "starship.starship", "eza-community.eza", "fastfetch-cli.fastfetch")
+        $tools = @(
+            "Neovim.Neovim",            # Modal text editor
+            "Git.Git",                  # Version control
+            "BurntSushi.Ripgrep",       # Fast grep (rg)
+            "sharkdp.fd",               # Fast find
+            "starship.starship",        # Cross-shell prompt
+            "eza-community.eza",        # Modern ls
+            "fastfetch-cli.fastfetch",  # System info
+            "sharkdp.bat",              # Better cat (syntax highlighting)
+            "zig.zig",                  # C compiler for Neovim Treesitter parsers
+            "chrisant996.Clink"         # CMD readline (needed for Starship in cmd.exe)
+        )
         foreach ($t in $tools) {
             Write-Status "Installing $t..." "Progress"
             winget install --id $t --silent --accept-package-agreements --accept-source-agreements | Out-Null
         }
+        # Refresh the current session's PATH so newly installed tools are immediately
+        # visible without opening a new terminal window.  winget updates the system
+        # registry but the running process does not inherit the change automatically.
+        $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" +
+                    [System.Environment]::GetEnvironmentVariable("PATH","User")
         Write-Status "Core Tools installed" "Success"
     } catch { Write-Status "Winget failed: $_" "Error" }
 }
@@ -621,11 +655,11 @@ function Configure-PowerShell {
         $dstTheme    = "$dstThemeDir\theme.ps1"
         if (-not (Test-Path $dstThemeDir)) { New-Item $dstThemeDir -ItemType Directory -Force | Out-Null }
 
-        $srcTheme = if ($script:dotfilesDir) { Join-Path $script:dotfilesDir "themes\windows\catppuccin-mocha.ps1" } else { $null }
+        $srcTheme = if ($script:dotfilesDir) { Join-Path $script:dotfilesDir "themes\windows\$Theme.ps1" } else { $null }
         if ($srcTheme -and (Test-Path $srcTheme)) {
             Copy-Item -Path $srcTheme -Destination $dstTheme -Force
-            Add-Action "Deployed theme from repo: $dstTheme"
-            Write-Status "Theme deployed (Catppuccin Mocha)" "Success"
+            Add-Action "Deployed theme from repo ($Theme): $dstTheme"
+            Write-Status "Theme deployed ($Theme)" "Success"
         } else {
             # Inline Catppuccin Mocha theme — written when repo is not yet available.
             # Matches themes/windows/catppuccin-mocha.ps1 exactly.
@@ -776,7 +810,18 @@ function Symlink-Dotfiles {
             Write-Status "Updating repository (git pull)..." "Info"
             git -C $dotfilesDir pull --ff-only 2>&1 | Out-Null
         }
-        $fileMap = @{ ".bashrc"="stow\bash\.bashrc"; ".bash_aliases"="stow\bash\.bash_aliases"; ".blerc"="stow\bash\.blerc"; ".tmux.conf"="stow\tmux\.tmux.conf"; ".gitconfig"="stow\git\.gitconfig"; ".inputrc"="stow\shell\.inputrc"; ".common_shell"="stow\shell\.common_shell" }
+        # Symlink files that are useful on Windows (including WSL sessions).
+        # Excluded intentionally:
+        #   .blerc  — ble.sh is a Linux/WSL bash enhancement, not used in PS/CMD
+        #   (tmux.conf is kept because WSL users benefit from it)
+        $fileMap = @{
+            ".bashrc"       = "stow\bash\.bashrc"          # WSL bash config
+            ".bash_aliases" = "stow\bash\.bash_aliases"    # Shared aliases (WSL + tools)
+            ".tmux.conf"    = "stow\tmux\.tmux.conf"       # tmux (WSL/SSH sessions)
+            ".gitconfig"    = "stow\git\.gitconfig"        # Git — used natively on Windows
+            ".inputrc"      = "stow\shell\.inputrc"        # Readline keybindings
+            ".common_shell" = "stow\shell\.common_shell"   # Cross-shell env vars
+        }
         foreach ($f in $fileMap.Keys) {
             $src = Join-Path $dotfilesDir $fileMap[$f]; $tgt = Join-Path $userHome $f
             if (Test-Path $src) { if (Test-Path $tgt) { Remove-Item $tgt -Force }; New-Item -ItemType SymbolicLink -Path $tgt -Value $src -Force | Out-Null }
@@ -835,8 +880,14 @@ function Configure-CMD {
         # but a basic Starship init can be injected directly.
         $autoRunKey = "HKCU:\Software\Microsoft\Command Processor"
         $starshipCmd = 'starship init cmd'
-        # Check if Clink is installed (preferred method for full CMD theming)
-        if (Get-Command clink -ErrorAction SilentlyContinue) {
+        # Check if Clink is installed — try both PATH and the default winget install location.
+        # winget may not have updated the current session's PATH even after the PATH refresh above.
+        $clinkExe = if (Get-Command clink -ErrorAction SilentlyContinue) { "clink" }
+                    elseif (Test-Path "$env:ProgramFiles\clink\clink.exe") { "$env:ProgramFiles\clink\clink.exe" }
+                    elseif (Test-Path "${env:ProgramFiles(x86)}\clink\clink.exe") { "${env:ProgramFiles(x86)}\clink\clink.exe" }
+                    else { $null }
+
+        if ($clinkExe) {
             $clinkProfile = "$env:LOCALAPPDATA\clink\starship.lua"
             $clinkDir = Split-Path $clinkProfile
             if (-not (Test-Path $clinkDir)) { New-Item $clinkDir -ItemType Directory -Force | Out-Null }
