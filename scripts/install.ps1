@@ -562,59 +562,44 @@ function Configure-PuTTY {
 }
 
 # ── Install-CoreTools ───────────────────────────────────────────────────────────
-# Installs a curated set of CLI tools via winget, the Windows Package Manager.
-# Each tool is installed silently with auto-accepted license agreements so the
-# install can run unattended.
+# Installs cross-platform CLI tools via winget that work natively on Windows.
+# Linux-only tools (tmux, ble.sh, atuin, zsh) are NOT installed here — use WSL
+# and run the Linux installer inside your distro for those.
 #
-# Tool list and purpose:
-#   Neovim.Neovim            – Modern Vim-compatible modal text editor
-#   Git.Git                  – Distributed version control system
-#   BurntSushi.Ripgrep       – Extremely fast regex file search (rg)
-#   sharkdp.fd               – User-friendly alternative to `find`
-#   starship.starship         – Cross-shell prompt (used by PS, CMD, WSL bash/zsh)
-#   eza-community.eza        – Modern replacement for `ls` with colour + icons
-#   fastfetch-cli.fastfetch  – Fast system information display (neofetch successor)
-#   sharkdp.bat              – Better `cat` with syntax highlighting (bat)
-#   zig.zig                  – Zig compiler; provides a C compiler for Neovim
-#                              Treesitter parser compilation (the lightest option)
-#   chrisant996.Clink        – Readline extension for cmd.exe; required for the
-#                              Starship CMD prompt (Configure-CMD)
-#
-# NOTE: tmux, ble.sh, and atuin are Linux/macOS tools and are NOT installed here.
-#   Use WSL and run the Linux installer for those tools inside your WSL distro.
+# Tools installed:
+#   Git.Git             – Version control (also needed to clone the dotfiles repo)
+#   starship.starship   – Cross-shell prompt (PowerShell, CMD, WSL bash/zsh)
+#   Neovim.Neovim       – Modal text editor (native Windows build)
+#   sharkdp.bat         – Better cat: syntax highlighting, line numbers, git diff
+#   BurntSushi.Ripgrep  – Fast grep replacement (rg) — cross-platform
+#   sharkdp.fd          – Fast find replacement — cross-platform
 #
 # What it modifies:
-#   Winget installs each tool to its default location (%ProgramFiles% or
-#   %LOCALAPPDATA%) and updates PATH automatically via the Windows installer.
+#   Winget installs each tool to %ProgramFiles% or %LOCALAPPDATA% and updates
+#   PATH via the Windows installer.  A manual PATH refresh is done afterwards
+#   so the tools are visible in the current session without reopening a window.
 #
 # What can go wrong:
 #   • winget not available — install "App Installer" from the Microsoft Store.
-#   • Package already installed — winget returns non-zero but | Out-Null suppresses
-#     it; the tool is already present so this is acceptable.
-#   • No internet access — winget download fails; caught and reported.
+#   • Package already installed — winget skips silently (acceptable).
+#   • No internet — download fails; caught and reported.
 #
-# Prerequisites: winget must be available; internet access required.
+# Prerequisites: winget; internet access.
 function Install-CoreTools {
     try {
         $tools = @(
-            "Neovim.Neovim",            # Modal text editor
-            "Git.Git",                  # Version control
-            "BurntSushi.Ripgrep",       # Fast grep (rg)
-            "sharkdp.fd",               # Fast find
-            "starship.starship",        # Cross-shell prompt
-            "eza-community.eza",        # Modern ls
-            "fastfetch-cli.fastfetch",  # System info
-            "sharkdp.bat",              # Better cat (syntax highlighting)
-            "zig.zig",                  # C compiler for Neovim Treesitter parsers
-            "chrisant996.Clink"         # CMD readline (needed for Starship in cmd.exe)
+            "Git.Git",                 # Version control
+            "starship.starship",       # Cross-shell prompt
+            "Neovim.Neovim",           # Modal text editor
+            "sharkdp.bat",             # Better cat (syntax highlighting)
+            "BurntSushi.Ripgrep",      # Fast grep (rg)
+            "sharkdp.fd"               # Fast find
         )
         foreach ($t in $tools) {
             Write-Status "Installing $t..." "Progress"
             winget install --id $t --silent --accept-package-agreements --accept-source-agreements | Out-Null
         }
-        # Refresh the current session's PATH so newly installed tools are immediately
-        # visible without opening a new terminal window.  winget updates the system
-        # registry but the running process does not inherit the change automatically.
+        # Refresh current session PATH so newly installed tools are immediately available.
         $env:PATH = [System.Environment]::GetEnvironmentVariable("PATH","Machine") + ";" +
                     [System.Environment]::GetEnvironmentVariable("PATH","User")
         Write-Status "Core Tools installed" "Success"
@@ -926,17 +911,6 @@ function Configure-CMD {
     } catch { Write-Status "CMD config failed: $_" "Error" }
 }
 
-        if ($clinkInstalled) {
-            Write-Status "CMD configured via Clink + Starship" "Success"
-        } else {
-            # Clink may have just been installed by Install-CoreTools but winget's
-            # unpack may not have finished.  The Lua file is written; it will activate
-            # on the next cmd.exe session once Clink's installer completes.
-            Write-Status "Clink lua written; open a new CMD window after Clink install completes" "Info"
-        }
-    } catch { Write-Status "CMD config failed: $_" "Error" }
-}
-
 # ── Install-RemoteDotfiles ──────────────────────────────────────────────────────
 # Displays the one-liner curl command for bootstrapping dotfiles on a remote
 # Linux / macOS server.  This function contains no install logic — it is purely
@@ -985,8 +959,8 @@ function Show-Menu {
     Write-ColorText " [3] Configure PuTTY Font" "Yellow"
     Write-ColorText " [4] Install Core Tools (Winget)" "Yellow"
     Write-ColorText " [5] Configure PowerShell Profile" "Yellow"
-    Write-ColorText " [6] Configure CMD Prompt (requires Clink)" "Yellow"
-    Write-ColorText " [7] Full Local Setup (1-6)" "Green"
+    Write-ColorText " [6] Configure CMD Prompt (optional - requires Clink)" "Yellow"
+    Write-ColorText " [7] Full Local Setup (1-5)" "Green"
     Write-ColorText " [8] Symlink Dotfiles" "Green"
     Write-ColorText " [9] Remote Setup Guide" "Yellow"
     Write-ColorText " [A] Complete Workflow (1-8)" "Yellow"
@@ -1029,12 +1003,11 @@ function Main {
                 "4" { Install-CoreTools }
                 "5" { Configure-PowerShell }
                 "6" { Configure-CMD }
-                # Option 7: Full local setup - Symlink-Dotfiles runs FIRST so the repo
-                # is cloned/updated before Configure-* functions try to read repo files.
-                "7" { Install-NerdFont; Install-CoreTools; Symlink-Dotfiles; Configure-WindowsTerminal; Configure-PuTTY; Configure-PowerShell; Configure-CMD }
+                # Option 7: Full local setup (no CMD — use option 6 separately if you need CMD/Clink).
+                "7" { Install-NerdFont; Install-CoreTools; Symlink-Dotfiles; Configure-WindowsTerminal; Configure-PuTTY; Configure-PowerShell }
                 "8" { Symlink-Dotfiles }
                 "9" { Install-RemoteDotfiles }
-                # Option A/a: Complete workflow - same ordering rationale as option 7.
+                # Option A/a: Complete workflow (includes CMD/Clink setup).
                 { $_ -in "A","a" } { Install-NerdFont; Install-CoreTools; Symlink-Dotfiles; Configure-WindowsTerminal; Configure-PuTTY; Configure-PowerShell; Configure-CMD; Install-RemoteDotfiles }
                 "0" { break }
         }
