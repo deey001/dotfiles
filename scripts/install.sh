@@ -53,6 +53,13 @@ elif [ "$OS" = "Linux" ]; then
     elif [ -f /etc/arch-release ]; then
         echo "--- Detected Arch Linux ---"
         install_package_list "$DOTFILES_DIR/meta/packages/arch.txt" "sudo pacman -Syu --noconfirm"
+    elif [ -f /etc/redhat-release ]; then
+        echo "--- Detected RHEL/Fedora/CentOS ---"
+        if command -v dnf &>/dev/null; then
+            install_package_list "$DOTFILES_DIR/meta/packages/rhel.txt" "sudo dnf install -y"
+        else
+            install_package_list "$DOTFILES_DIR/meta/packages/rhel.txt" "sudo yum install -y"
+        fi
     fi
 fi
 
@@ -61,6 +68,7 @@ command -v stow &>/dev/null || {
     echo "Installing GNU Stow..."
     [ -f /etc/debian_version ] && sudo apt install -y stow
     [ -f /etc/arch-release ] && sudo pacman -S --noconfirm stow
+    [ -f /etc/redhat-release ] && { command -v dnf &>/dev/null && sudo dnf install -y stow || sudo yum install -y stow; }
 }
 
 echo "--- Symlinking Configurations via GNU Stow ---"

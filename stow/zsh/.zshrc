@@ -16,12 +16,11 @@
 #   1. carapace (rich CLI completions)
 #   2. fzf-tab (fuzzy dropdown completion)
 #   3. ~/.bash_aliases (shared with Bash — modern tool replacements)
-#   4. ~/.bash_functions (shared with Bash — utility functions)
-#   5. zoxide, fzf (tool initialization)
-#   6. zsh-syntax-highlighting, zsh-autosuggestions, zsh-history-substring-search
-#   7. atuin (magical shell history)
-#   8. starship (prompt — must be last)
-#   9. ~/.zsh_local / ~/.bash_local (machine-specific overrides)
+#   4. zoxide, fzf (tool initialization)
+#   5. zsh-syntax-highlighting, zsh-autosuggestions, zsh-history-substring-search
+#   6. atuin (magical shell history)
+#   7. starship (prompt — must be last)
+#   8. ~/.zsh_local / ~/.bash_local (machine-specific overrides)
 #
 # DEPENDENCIES:
 #   Required: Zsh 5.8+
@@ -146,10 +145,9 @@ if command -v eza >/dev/null 2>&1; then
     alias l='eza -CF --icons'
 fi
 
-# Load shared alias and function files (same ones Bash uses)
+# Load shared alias file (same one Bash uses)
 # This avoids duplicating alias definitions across shells
 [ -f ~/.bash_aliases ] && source ~/.bash_aliases
-[ -f ~/.bash_functions ] && source ~/.bash_functions
 
 # ------------------------------------------------------------------------------
 # Modern Tool Initialization

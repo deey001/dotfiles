@@ -50,8 +50,13 @@ config.keys = {
       local time = wezterm.strftime("%Y-%m-%d_%H-%M-%S")
       local log_dir = wezterm.home_dir .. "/logs"
       
-      -- Ensure the directory exists (best effort via local bash)
-      os.execute("mkdir -p " .. log_dir)
+      -- Ensure the directory exists (cross-platform)
+      local sep = package.config:sub(1,1)  -- '\\' on Windows, '/' on Unix
+      if sep == '\\' then
+        os.execute('if not exist "' .. log_dir .. '" mkdir "' .. log_dir .. '"')
+      else
+        os.execute("mkdir -p '" .. log_dir .. "'")
+      end
       
       local filename = log_dir .. "/session_" .. time .. ".txt"
       local file = io.open(filename, "w")

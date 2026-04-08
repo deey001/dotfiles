@@ -267,7 +267,7 @@ whatsgoingon() {
 [[ -f ~/.common_shell   ]] && source ~/.common_shell
 [[ -f ~/.bash_aliases   ]] && source ~/.bash_aliases
 
-# ── 13. Bash-completion (prefer local >= 2.12 over system 2.11) ───────────────
+# ── 13. Bash-completion (prefer local >= 2.12 over system 2.11) ─────────────
 if ! shopt -oq posix; then
     if [[ -f "${HOME}/.local/share/bash-completion/bash_completion" ]]; then
         source "${HOME}/.local/share/bash-completion/bash_completion"
@@ -278,7 +278,7 @@ if ! shopt -oq posix; then
     fi
 fi
 
-# ── 12. Carapace ──────────────────────────────────────────────────────────────
+# ── 14. Carapace ──────────────────────────────────────────────────────────────
 if command -v carapace >/dev/null 2>&1; then
     unset CARAPACE_BRIDGES
     complete -r tmux git docker kubectl helm 2>/dev/null
@@ -289,7 +289,7 @@ if command -v carapace >/dev/null 2>&1; then
     source "$_cc"; unset _cc
 fi
 
-# ── 13. fzf ───────────────────────────────────────────────────────────────────
+# ── 15. fzf ───────────────────────────────────────────────────────────────────
 if command -v fzf >/dev/null 2>&1; then
     eval "$(fzf --bash 2>/dev/null)" || {
         [[ -f /usr/share/doc/fzf/examples/key-bindings.bash ]] \
@@ -310,31 +310,31 @@ if command -v fzf >/dev/null 2>&1; then
     fi
 fi
 
-# ── 14. zoxide ────────────────────────────────────────────────────────────────
+# ── 16. zoxide ────────────────────────────────────────────────────────────────
 if command -v zoxide >/dev/null 2>&1; then
     eval "$(zoxide init bash)" 2>/dev/null
     alias cdi='zi'
 fi
 
-# ── 15. Atuin (shell history with search) ─────────────────────────────────────
+# ── 17. Atuin (shell history with search) ─────────────────────────────────────
 if command -v atuin >/dev/null 2>&1; then
     eval "$(atuin init bash)"
 fi
 
-# ── 16. direnv ────────────────────────────────────────────────────────────────
+# ── 18. direnv ────────────────────────────────────────────────────────────────
 if command -v direnv >/dev/null 2>&1; then
     eval "$(direnv hook bash)"
 fi
 
-# ── 17. Starship prompt ──────────────────────────────────────────────────────
+# ── 19. Starship prompt ──────────────────────────────────────────────────────
 if command -v starship >/dev/null 2>&1; then
     eval "$(starship init bash)"
 fi
 
-# ── 18. Local/private config ─────────────────────────────────────────────────
+# ── 20. Local/private config ─────────────────────────────────────────────────
 [[ -f ~/.bash_local ]] && source ~/.bash_local
 
-# ── 19. Login summary (once per SSH session, never inside tmux) ───────────────
+# ── 21. Login summary (once per SSH session, never inside tmux) ───────────────
 if command -v fastfetch >/dev/null 2>&1 \
     && shopt -q login_shell \
     && [[ -z "${TMUX:-}" ]] \
@@ -343,11 +343,13 @@ if command -v fastfetch >/dev/null 2>&1 \
     fastfetch
 fi
 
-# ── 20. ble.sh activation (MUST be last — takes over line editing) ────────────
+# ── 22. ble.sh activation (MUST be last — takes over line editing) ────────────
 # ble.sh was loaded in section 2 with --attach=none. Now that all completions,
 # prompts, and tools are configured, activate it.
 [[ ${BLE_VERSION-} ]] && ble-attach
-export PATH="$HOME/.npm-global/bin:$PATH"
 
-# OpenClaw Completion
-source "/home/danny/.openclaw/completions/openclaw.bash"
+# ── 23. npm global bin (added by npm config) ─────────────────────────────────
+[[ -d "$HOME/.npm-global/bin" ]] && export PATH="$HOME/.npm-global/bin:$PATH"
+
+# ── 24. Local overrides (machine-specific, not tracked in git) ───────────────
+[[ -f "$HOME/.openclaw/completions/openclaw.bash" ]] && source "$HOME/.openclaw/completions/openclaw.bash"
