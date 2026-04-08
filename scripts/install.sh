@@ -246,11 +246,22 @@ echo "--- Symlinking Configurations via GNU Stow ---"
 STOW_PKGS=(bash zsh git shell config)
 
 cd "$DOTFILES_DIR"
+
+# Remove any symlinks in $HOME that point into this dotfiles repo.
+# Uses find -exec sh (POSIX, no bash process substitution) so it works
+# correctly even when bash itself is reading from a pipe (curl|bash).
+# Handles filenames with spaces via the {} + batching form.
+echo "  Cleaning up existing dotfile symlinks..."
+find "$HOME" -maxdepth 6 -type l -exec sh -c '
+    for f do
+        t=$(readlink "$f" 2>/dev/null) || continue
+        case "$t" in *dotfiles/*) rm -f "$f" ;; esac
+    done
+' sh {} +
+
 for pkg in "${STOW_PKGS[@]}"; do
     echo "  Stowing: $pkg"
-    # --override='.*' replaces any existing symlink stow didn't create.
-    # Handles the stow/ → home/ migration and fresh installs equally.
-    stow -R --override='.*' "$pkg"
+    stow -R "$pkg"
 done
 
 # ── Deploy default theme ───────────────────────────────────────────────────
