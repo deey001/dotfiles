@@ -248,19 +248,16 @@ STOW_PKGS=(bash zsh git shell config)
 cd "$DOTFILES_DIR"
 
 # Remove any symlinks pointing into this dotfiles repo before stowing.
-# Handles: old stow/ path (pre-rename), broken links, absolute or relative targets.
-# stow -R refuses to restow links it didn't create — this clears the way.
+# Handles old stow/ path (pre-rename), broken links, and all depths.
+# Match against the raw target string — avoids needing to resolve '..' in paths.
 echo "  Cleaning up existing dotfile symlinks..."
 while read -r link; do
     target=$(readlink "$link" 2>/dev/null) || continue
-    # Resolve relative targets to absolute so matching works in all cases
-    [[ "$target" != /* ]] && target="$(dirname "$link")/$target"
-    # Remove if pointing anywhere inside the dotfiles repo directory
-    if [[ "$target" == "$DOTFILES_DIR"* ]]; then
+    if [[ "$target" == *"dotfiles/"* ]]; then
         echo "  Removing: $link"
         rm -f "$link"
     fi
-done < <(find "$HOME" -maxdepth 4 -type l 2>/dev/null)
+done < <(find "$HOME" -maxdepth 6 -type l 2>/dev/null)
 
 for pkg in "${STOW_PKGS[@]}"; do
     echo "  Stowing: $pkg"
