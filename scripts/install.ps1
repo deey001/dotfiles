@@ -687,6 +687,12 @@ function Symlink-Dotfiles {
                 Write-Status "Cloning repository..." "Warning"
                 git clone "https://github.com/deey001/dotfiles.git" $dotfilesDir
             }
+            # Update the script-scoped variable so subsequent functions
+            # (Configure-WindowsTerminal, Configure-PowerShell) can find
+            # the repo even when this script was invoked via irm|iex and
+            # $PSScriptRoot pointed to %TEMP%.
+            $script:dotfilesDir = $dotfilesDir
+            Add-Action "Resolved dotfiles dir: $dotfilesDir"
         }
         $fileMap = @{ ".bashrc"="stow\bash\.bashrc"; ".bash_aliases"="stow\bash\.bash_aliases"; ".blerc"="stow\bash\.blerc"; ".tmux.conf"="stow\tmux\.tmux.conf"; ".gitconfig"="stow\git\.gitconfig"; ".inputrc"="stow\shell\.inputrc"; ".common_shell"="stow\shell\.common_shell" }
         foreach ($f in $fileMap.Keys) {
@@ -854,11 +860,15 @@ function Main {
                 "4" { Install-CoreTools }
                 "5" { Configure-PowerShell }
                 "6" { Configure-CMD }
-                "7" { Install-NerdFont; Configure-WindowsTerminal; Configure-PuTTY; Install-CoreTools; Configure-PowerShell; Configure-CMD }
+                # Option 7: Full local setup — Symlink-Dotfiles runs FIRST so the repo
+                # is cloned (updating $script:dotfilesDir) before Configure-* functions
+                # try to read windows/settings.json and themes/windows/*.ps1.
+                "7" { Install-NerdFont; Install-CoreTools; Symlink-Dotfiles; Configure-WindowsTerminal; Configure-PuTTY; Configure-PowerShell; Configure-CMD }
                 "8" { Symlink-Dotfiles }
                 "9" { Install-RemoteDotfiles }
-                "A" { Install-NerdFont; Configure-WindowsTerminal; Configure-PuTTY; Install-CoreTools; Configure-PowerShell; Configure-CMD; Symlink-Dotfiles; Install-RemoteDotfiles }
-                "a" { Install-NerdFont; Configure-WindowsTerminal; Configure-PuTTY; Install-CoreTools; Configure-PowerShell; Configure-CMD; Symlink-Dotfiles; Install-RemoteDotfiles }
+                # Option A: Complete workflow — same ordering rationale as option 7.
+                "A" { Install-NerdFont; Install-CoreTools; Symlink-Dotfiles; Configure-WindowsTerminal; Configure-PuTTY; Configure-PowerShell; Configure-CMD; Install-RemoteDotfiles }
+                "a" { Install-NerdFont; Install-CoreTools; Symlink-Dotfiles; Configure-WindowsTerminal; Configure-PuTTY; Configure-PowerShell; Configure-CMD; Install-RemoteDotfiles }
                 "0" { break }
             }
             if ($c -ne "0") { Read-Host "`nPress Enter to continue" }

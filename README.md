@@ -40,18 +40,20 @@ A high-performance, cross-platform configuration for **macOS**, **Linux** (Debia
 
 ## ⚡ Quick Install
 
-### macOS / Linux (one-liner)
+The same one-liner works for every supported OS and distro — the script auto-detects your platform.
+
+| Platform | One-liner |
+|---|---|
+| **macOS** | `curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh \| bash` |
+| **Ubuntu / Debian** | same as above — `apt` packages are auto-selected |
+| **Arch Linux** | same as above — `pacman` packages are auto-selected |
+| **RHEL / Fedora** | same as above — `dnf` packages are auto-selected |
+| **Windows (PS7+)** | `irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" \| iex` |
+
+### macOS / Linux
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash
-```
-
-### macOS / Linux (from clone)
-
-```bash
-git clone https://github.com/deey001/dotfiles.git ~/dotfiles
-cd ~/dotfiles
-make install
 ```
 
 ### Windows (PowerShell 7+, elevated window)
@@ -60,7 +62,17 @@ make install
 irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" | iex
 ```
 
-> **WSL users:** Run the **Linux** one-liner *inside* your WSL distribution. Then separately run the Windows installer in PowerShell to set up Windows Terminal and the font.
+> The Windows installer runs an interactive menu — choose **A** for the full workflow (fonts → repo clone → theme → tools → shell profiles).
+
+### macOS / Linux (from local clone)
+
+```bash
+git clone https://github.com/deey001/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+make install
+```
+
+> **WSL users:** Run the **Linux** one-liner *inside* your WSL distribution. Then run the Windows installer in an elevated PowerShell to set up Windows Terminal, the Nerd Font, and the theme.
 
 ---
 

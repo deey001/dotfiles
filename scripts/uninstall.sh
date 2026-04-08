@@ -29,10 +29,18 @@ echo -e "${YELLOW}Target Dotfiles Directory:${NC} $DOTFILES_DIR"
 # links it created, leaving your actual files and other manual links alone.
 if command -v stow &>/dev/null; then
     echo "--- Unstowing all packages via GNU Stow ---"
+    # Core dotfile packages
     STOW_PKGS=(bash zsh git shell tmux config)
     for pkg in "${STOW_PKGS[@]}"; do
         echo "  Unstowing: $pkg"
         stow -D --dir="$DOTFILES_DIR/stow" --target="$HOME" "$pkg" 2>/dev/null || true
+    done
+    # Theme packages — only one is typically stowed at a time; try both to be safe
+    for theme_pkg in theme-catppuccin-mocha theme-catppuccin-latte; do
+        if stow --no --dir="$DOTFILES_DIR/stow" --target="$HOME" "$theme_pkg" 2>/dev/null; then
+            echo "  Unstowing: $theme_pkg"
+            stow -D --dir="$DOTFILES_DIR/stow" --target="$HOME" "$theme_pkg" 2>/dev/null || true
+        fi
     done
 else
     echo -e "${RED}Warning:${NC} GNU Stow not found. Falling back to manual cleanup."
@@ -53,6 +61,7 @@ _symlinks=(
     "$HOME/.gitconfig" 
     "$HOME/.common_shell"
     "$HOME/.config/starship.toml"
+    "$HOME/.config/dotfiles/theme.sh"   # active theme selector (stowed by theme-* package)
 )
 
 for link in "${_symlinks[@]}"; do

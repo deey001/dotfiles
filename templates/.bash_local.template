@@ -17,9 +17,9 @@
 #   vim ~/.bash_local          # customize for this machine
 #
 # LOAD ORDER:
-#   .bash_profile → .bashrc → .bash_exports → .bash_aliases →
-#   .bash_functions → .bash_wrappers → .bash_local (this file, last)
+#   .bash_profile → .bashrc → .common_shell → .bash_aliases → .bash_local (this file, last)
 #   Being last means you can override ANY setting from the earlier files.
+#   (.common_shell loads the active theme; .bash_aliases sets all aliases)
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
