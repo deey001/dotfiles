@@ -132,8 +132,11 @@ if (-not (Test-AdminPrivileges)) {
         } else {
             $TempScript = "$env:TEMP\DotfilesSetup.ps1"
             $v = Get-Random
-            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1?v=$v" `
-                -OutFile $TempScript -UseBasicParsing
+            # Write with UTF-8 BOM so PS5 reads the file correctly.
+            # Invoke-WebRequest -OutFile writes raw bytes (no BOM) which PS5 misinterprets as Windows-1252.
+            $response = Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1?v=$v" `
+                -UseBasicParsing
+            [System.IO.File]::WriteAllText($TempScript, $response.Content, [System.Text.UTF8Encoding]::new($true))
             $TempScript
         }
 
@@ -141,7 +144,10 @@ if (-not (Test-AdminPrivileges)) {
         $relaunchArgs = @("-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$scriptToRun`"")
         if ($preElevateDir) { $relaunchArgs += "-DotfilesDir", "`"$preElevateDir`"" }
 
-        Start-Process powershell -Verb RunAs -ArgumentList $relaunchArgs
+        # Prefer pwsh.exe (PS7) for the elevated process; fall back to powershell.exe (PS5) if not installed.
+        # PS7 handles UTF-8 correctly and supports all features used in this script.
+        $shell = if (Test-Path "C:\Program Files\PowerShell\7\pwsh.exe") { "C:\Program Files\PowerShell\7\pwsh.exe" } else { "powershell" }
+        Start-Process $shell -Verb RunAs -ArgumentList $relaunchArgs
     } catch {
         Write-Host "`n[ERROR] Failed to prepare auto-elevation: $_" -ForegroundColor Red
     }
@@ -176,8 +182,10 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
         } else {
             $TempScript = "$env:TEMP\DotfilesSetup.ps1"
             $v = Get-Random
-            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1?v=$v" `
-                -OutFile $TempScript -UseBasicParsing
+            # Write with UTF-8 BOM so PS5 reads the file correctly (see elevation block above for rationale).
+            $response = Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1?v=$v" `
+                -UseBasicParsing
+            [System.IO.File]::WriteAllText($TempScript, $response.Content, [System.Text.UTF8Encoding]::new($true))
             $TempScript
         }
 
@@ -439,7 +447,7 @@ function Configure-WindowsTerminal {
         $wtPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
 
         if (-not (Test-Path $wtPath)) {
-            Write-Status "Windows Terminal settings.json not found — is Windows Terminal installed?" "Warning"
+            Write-Status "Windows Terminal settings.json not found - is Windows Terminal installed?" "Warning"
             return
         }
 
@@ -469,7 +477,7 @@ function Configure-WindowsTerminal {
                 if (-not $exists) { $existing.schemes += $scheme }
             }
         } else {
-            Write-Status "Repo windows/settings.json not found — applying font only" "Warning"
+            Write-Status "Repo windows/settings.json not found - applying font only" "Warning"
             if (-not $existing.profiles.defaults) {
                 $existing.profiles | Add-Member NoteProperty defaults ([PSCustomObject]@{}) -Force
             }
@@ -591,7 +599,7 @@ function Configure-PowerShell {
                 Add-Action "Deployed theme: catppuccin-mocha → $dstTheme"
                 Write-Status "Theme deployed (Catppuccin Mocha)" "Success"
             } else {
-                Write-Status "themes/windows/catppuccin-mocha.ps1 not found — PSReadLine will use inline fallback" "Warning"
+                Write-Status "themes/windows/catppuccin-mocha.ps1 not found - PSReadLine will use inline fallback" "Warning"
             }
         }
 
@@ -625,13 +633,13 @@ function Configure-PowerShell {
                     }
                 }
                 # Prepend preserved custom content (if any), then dot-source the repo profile
-                $final = @("# Dotfiles — sourced from repo (do not edit directly)")
+                $final = @("# Dotfiles - sourced from repo (do not edit directly)")
                 if ($existing) { $final += $existing }
                 $final += ". `"$repoProfile`""
                 $final | Out-File $path -Encoding UTF8 -Force
             } else {
                 # Repo profile not found — fall back to minimal inline config
-                Write-Status "Repo PS profile not found — writing minimal profile" "Warning"
+                Write-Status "Repo PS profile not found - writing minimal profile" "Warning"
                 $final = @(
                     "# Added by Dotfiles Setup",
                     "[Environment]::SetEnvironmentVariable('STARSHIP_CONFIG', `"$env:USERPROFILE\.config\starship.toml`", 'User')",
