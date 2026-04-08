@@ -31,7 +31,8 @@ _cleanup_dirs=()
 trap 'for dir in "${_cleanup_dirs[@]}"; do rm -rf "$dir"; done' EXIT
 
 # Determine if we are running from a local clone or piped from curl
-if [[ "${BASH_SOURCE[0]}" == "$0" ]] || [[ "${BASH_SOURCE[0]}" == "" ]]; then
+# Using ${VAR:-} avoids "unbound variable" errors under set -u
+if [[ "${BASH_SOURCE[0]:-}" == "${0:-}" ]] || [[ "${BASH_SOURCE[0]:-}" == "" ]]; then
     # Script is being piped to bash (e.g., curl | bash) or run directly
     DOTFILES_DIR="$HOME/dotfiles"
     if [ ! -d "$DOTFILES_DIR" ]; then
