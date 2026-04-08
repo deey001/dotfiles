@@ -1,35 +1,39 @@
-# Danny's Dotfiles
+# 🐾 Danny's Dotfiles
 
-Cross-platform dev environment for **macOS**, **Linux** (Debian/Ubuntu, Arch, RHEL), and **Windows**.  
-Unified [Catppuccin Mocha](https://catppuccin.com) theme, Starship prompt, Neovim/LazyVim, and zero manual steps after install.
+> Cross-platform dev environment for **macOS**, **Linux**, and **Windows** — unified [Catppuccin Mocha](https://catppuccin.com) theme, Starship prompt, Neovim/LazyVim, zero manual steps.
 
 ---
 
-## Quick Install
+## 🚀 Quick Install
 
-| Platform | One-liner |
-|---|---|
-| **macOS / Linux** | `curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh \| bash` |
-| **Windows** (PowerShell, elevated) | `irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" \| iex` |
+**macOS / Linux**
+```bash
+curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash
+```
+
+**Windows** *(PowerShell, elevated)*
+```powershell
+irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" | iex
+```
 
 > **Windows:** Interactive menu appears — press **A** for the full workflow.  
 > **WSL:** Run the Linux one-liner inside WSL, then run the Windows installer in an elevated PowerShell for Terminal + font.
 
 ---
 
-## What Gets Installed
+## 📦 What Gets Installed
 
 | Category | Tools |
 |---|---|
 | **Shell** | Bash (+ ble.sh), Zsh, Starship prompt |
 | **Editor** | Neovim + LazyVim |
-| **Terminal** | WezTerm, Windows Terminal (Catppuccin Mocha theme) |
+| **Terminal** | WezTerm, Windows Terminal (Catppuccin Mocha) |
 | **CLI** | bat, ripgrep, fd, fzf, eza, atuin, zoxide, tmux, delta |
 | **Font** | JetBrainsMono Nerd Font |
 
 ---
 
-## Repo Structure
+## 🗂️ Repo Structure
 
 ```
 dotfiles/
@@ -40,12 +44,12 @@ dotfiles/
 │   ├── shell/          #   .common_shell, .inputrc, .editorconfig
 │   └── config/         #   ~/.config/: nvim, wezterm, starship, tmux, atuin, bat…
 ├── themes/             # Theme definitions sourced by ~/.config/dotfiles/theme.sh
-│   └── windows/        #   PS1 variants for Windows
+│   └── windows/        #   PS1 variants for Windows Terminal
 ├── platform/           # OS-specific files
 │   ├── windows/        #   PowerShell profile, Windows Terminal settings.json
-│   └── packages/       #   Package lists: ubuntu.txt, arch.txt, rhel.txt
+│   └── packages/       #   ubuntu.txt, arch.txt, rhel.txt
 ├── scripts/            # install.sh, install.ps1, uninstall.sh, install-blesh.sh
-│   └── .bash_local.template  # Machine-local overrides (copy to ~/.bash_local)
+│   └── .bash_local.template  # Copy to ~/.bash_local for machine-local overrides
 ├── Brewfile            # macOS Homebrew packages
 ├── Makefile            # make install / uninstall / theme-mocha / theme-latte
 └── README.md
@@ -53,45 +57,46 @@ dotfiles/
 
 ---
 
-## Local Workflow
+## 🔧 Local Workflow
 
 ```bash
 git clone https://github.com/deey001/dotfiles.git ~/dotfiles
 cd ~/dotfiles
-make install          # stow all packages
-make theme-mocha      # apply Catppuccin Mocha (default)
-make theme-latte      # switch to Catppuccin Latte (light)
+make install          # stow all packages + link default theme
+make theme-mocha      # Catppuccin Mocha (dark, default)
+make theme-latte      # Catppuccin Latte (light)
 make uninstall        # remove all symlinks
+make test             # validate installation
 ```
 
 ---
 
-## Switching Themes
+## 🎨 Switching Themes
 
 ```bash
 make theme-mocha   # dark
 make theme-latte   # light
 ```
 
-Theme files live in `themes/` and `themes/windows/`. All consumers (shell, bat, fzf, WezTerm, PSReadLine) source the active theme via `~/.config/dotfiles/theme.sh` (Linux/macOS) or `~/.config/dotfiles/theme.ps1` (Windows).
+Theme files live in `themes/`. All consumers (shell, bat, fzf, WezTerm, PSReadLine) source the active theme via `~/.config/dotfiles/theme.sh` (Linux/macOS) or `~/.config/dotfiles/theme.ps1` (Windows).
 
 ---
 
-## Machine-Local Overrides
+## ⚙️ Machine-Local Overrides
 
-Copy the template and edit to taste — it is never committed:
+Copy the template and edit — it is never committed to git:
 
 ```bash
 cp ~/dotfiles/scripts/.bash_local.template ~/.bash_local
 ```
 
-Use `~/.bash_local` for secrets, host-specific `$PATH` entries, or anything you don't want in the repo.
+Use `~/.bash_local` for secrets, tokens, host-specific `$PATH`, GOPATH, rbenv, etc.
 
 ---
 
-## ble.sh (Bash Line Editor)
+## 🐚 ble.sh (Bash Line Editor)
 
-ble.sh is not installed by default (it requires a build step). Install or update it manually:
+ble.sh provides fish-style autosuggestions and syntax highlighting for Bash. Install manually after the main setup:
 
 ```bash
 bash ~/dotfiles/scripts/install-blesh.sh
@@ -99,9 +104,9 @@ bash ~/dotfiles/scripts/install-blesh.sh
 
 ---
 
-## Documentation
+## 📖 Documentation
 
-Full documentation lives in the [GitHub Wiki](https://github.com/deey001/dotfiles/wiki):
+Full docs in the [GitHub Wiki](https://github.com/deey001/dotfiles/wiki):
 
 - [Architecture & How GNU Stow Works](https://github.com/deey001/dotfiles/wiki/Architecture)
 - [Tool Reference](https://github.com/deey001/dotfiles/wiki/Tool-Reference)

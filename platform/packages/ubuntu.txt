@@ -38,3 +38,4 @@ bash-completion        # Programmable Bash completion (tab-complete git, docker,
 zsh                    # Z shell — alternative to bash, used on macOS by default
 zsh-syntax-highlighting  # Colorize zsh commands as you type (green=valid, red=invalid)
 zsh-autosuggestions    # Fish-style ghost-text suggestions from zsh history
+neovim                 # Text editor — config lives in ~/.config/nvim (LazyVim)

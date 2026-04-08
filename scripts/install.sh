@@ -178,13 +178,8 @@ elif [ "$OS" = "Linux" ]; then
         # since the last index refresh.
         sudo apt update
 
-        # Install the full declarative package list from the repo.
+        # Install all packages from the declarative list (includes neovim).
         install_package_list "$DOTFILES_DIR/platform/packages/ubuntu.txt" "sudo apt install -y"
-
-        # Neovim is listed separately because the apt universe version is often
-        # several major releases behind upstream.  Naming it explicitly here makes
-        # it easy to later swap for a PPA or snap without editing the package list.
-        sudo apt install -y neovim
 
     elif [ -f /etc/arch-release ]; then
         # ── Arch Linux ─────────────────────────────────────────────────────────
@@ -235,24 +230,7 @@ command -v stow &>/dev/null || {
 # ── 7. Stow Dotfile Packages ────────────────────────────────────────────────────
 #
 # Each entry in STOW_PKGS corresponds to a subdirectory under home/ in the repo.
-# The directory tree inside each package mirrors $HOME exactly, so Stow can
-# create the correct symlinks without additional path configuration.
-#
-# Package breakdown:
-#   bash                   – .bashrc, .bash_profile, .bash_aliases, .blerc
-#   zsh                    – .zshrc, .zprofile (if present)
-#   git                    – .gitconfig, .gitignore_global
-#   shell                  – .inputrc, .common_shell (shared env + mkcd function)
-#   tmux                   – .tmux.conf
-#   config                 – .config/ subtree (starship.toml, nvim/, wezterm/, etc.)
-#   theme-catppuccin-mocha – .config/dotfiles/theme.sh → themes/catppuccin-mocha.sh
-#                            (the active theme selector — switch with: make theme-latte)
-
-# ── 7. Stow Dotfile Packages ────────────────────────────────────────────────────
-#
-# Each entry in STOW_PKGS corresponds to a subdirectory under home/ in the repo.
-# The directory tree inside each package mirrors $HOME exactly, so Stow can
-# create the correct symlinks without additional path configuration.
+# The directory tree mirrors $HOME, so Stow creates the correct symlinks.
 #
 # Package breakdown:
 #   bash    – .bashrc, .bash_profile, .bash_aliases, .blerc
@@ -260,19 +238,17 @@ command -v stow &>/dev/null || {
 #   git     – .gitconfig, .gitignore_global
 #   shell   – .inputrc, .common_shell (shared env + functions)
 #   config  – .config/ subtree (starship.toml, nvim/, wezterm/, tmux.conf, etc.)
+#
+# .stowrc declares --dir=home and --target=~ so flags are not needed here.
+# -R (restow) is idempotent: safe to run on every update.
 
 echo "--- Symlinking Configurations via GNU Stow ---"
 STOW_PKGS=(bash zsh git shell config)
 
-# Change to the repo root so Stow resolves the --dir relative path correctly.
 cd "$DOTFILES_DIR"
-
 for pkg in "${STOW_PKGS[@]}"; do
     echo "  Stowing: $pkg"
-    # -R (restow) removes and recreates all symlinks for the package.
-    # --dir=home   tells Stow where to find packages (the home/ subdirectory).
-    # --target=$HOME tells Stow where symlinks should be created.
-    stow -R --dir=home --target="$HOME" "$pkg"
+    stow -R "$pkg"
 done
 
 # ── Deploy default theme ───────────────────────────────────────────────────
