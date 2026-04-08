@@ -36,53 +36,37 @@
     TODO: Add winget package list export/import for reproducible Windows dev environments
 #>
 
-# ========================================================================================
-# Section 0: Critical Pre-flight Checks (TLS & Admin)
-# ========================================================================================
-# These checks MUST run before anything else because:
-# 1. TLS 1.2 is required for GitHub API/raw downloads (older Windows defaults to TLS 1.0)
-# 2. Font installation and registry changes require Administrator privileges
+# VERSION: 1.0.5 (ASCII-SAFE + NO-CACHE)
 # ========================================================================================
 
-# Force TLS 1.2 — without this, Invoke-WebRequest fails on older Windows 10 builds
-# with "Could not create SSL/TLS secure channel" because they default to TLS 1.0
+# Force TLS 1.2
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-# 2. Define the exact command used to run this script (for auto-elevation reliability)
-# $RepoParams removed as it was unused in the new file-based approach
-
 # Helper: Check if the current user has Administrator privileges.
-# Font installation writes to C:\Windows\Fonts and HKLM registry, both of which
-# require elevation. We check early to avoid mid-install failures.
 function Test-AdminPrivileges {
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     return $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
 # Auto-Elevate: If not running as Admin, download the script to a temp file and
-# relaunch in an elevated PowerShell window. The temp file approach avoids the
-# quoting/escaping nightmare of passing a URL through Start-Process -ArgumentList.
+# relaunch in an elevated PowerShell window.
 if (-not (Test-AdminPrivileges)) {
     Write-Host "█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█" -ForegroundColor Red
     Write-Host "█  ADMINISTRATOR PRIVILEGES REQUIRED - AUTO-ELEVATING    █" -ForegroundColor Yellow
     Write-Host "█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█" -ForegroundColor Red
     Write-Host "`nPlease accept the UAC prompt to continue..." -ForegroundColor Gray
     
-    # Download script to temp file to avoid quoting/parsing hell in Start-Process
     $TempScript = "$env:TEMP\DotfilesSetup.ps1"
     try {
-        Write-Host "Preparing setup file..." -ForegroundColor Cyan
-        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" -OutFile $TempScript -UseBasicParsing
+        Write-Host "Downloading latest version..." -ForegroundColor Cyan
+        # Use a random number to bust the GitHub cache
+        $v = Get-Random
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1?v=$v" -OutFile $TempScript -UseBasicParsing
         
-        # Launch the temp file as Admin
         Start-Process powershell -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$TempScript`""
     } catch {
         Write-Host "`n[ERROR] Failed to prepare auto-elevation: $_" -ForegroundColor Red
-        Write-Host "Please try running PowerShell as Administrator manually." -ForegroundColor Yellow
     }
-    
-    # Pause so user sees what happened
-    Read-Host "`n[INFO] Auto-elevation attempted. Check the new window.`nPress Enter to close this window..."
     exit
 }
 
@@ -140,9 +124,8 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
 
         # Use same temp file strategy for reliability
         $TempScript = "$env:TEMP\DotfilesSetup.ps1"
-        if (-not (Test-Path $TempScript)) {
-            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" -OutFile $TempScript -UseBasicParsing
-        }
+        $v = Get-Random
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1?v=$v" -OutFile $TempScript -UseBasicParsing
 
         Start-Process -FilePath $pwsh7Path -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$TempScript`""
 
