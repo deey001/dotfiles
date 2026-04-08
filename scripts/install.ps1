@@ -656,6 +656,13 @@ function Symlink-Dotfiles {
                 $itemSource = $_.FullName
                 $itemTarget = Join-Path $configTargetBase $_.Name
                 
+                # Special handling for starship.toml: link to both ~/.config/ and ~/
+                if ($_.Name -eq "starship.toml") {
+                    $rootTarget = Join-Path $userHome "starship.toml"
+                    if (Test-Path $rootTarget) { Remove-Item $rootTarget -Force }
+                    New-Item -Path $rootTarget -ItemType SymbolLink -Value $itemSource -Force | Out-Null
+                }
+
                 if (Test-Path $itemTarget) {
                     $bak = "$itemTarget.bak"
                     if (Test-Path $bak) { 

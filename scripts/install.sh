@@ -10,28 +10,14 @@
 #
 # WHEN: Run this on any new machine, or after pulling changes to the repo.
 #       It is safe to run multiple times (idempotent).
-#
 # HOW: 1. Detects OS and Architecture.
 #      2. Installs system dependencies from meta/packages/*.txt.
 #      3. Downloads latest binaries for tools not in system repos (Neovim).
 #      4. Uses GNU Stow to link configuration files into your home directory.
 # ==============================================================================
-set -euo pipefail
-
-# ── 1. Configuration & Versions ──────────────────────────────────────────────
-NEOVIM_VERSION="0.11.6"
-STARSHIP_VERSION="1.23.0"
-LAZYGIT_VERSION="0.48.0"
-BASH_COMPLETION_VERSION="2.12.0"
-
-# ── 2. Environment Detection ─────────────────────────────────────────────────
-ARCH=$(uname -m)
-OS_RAW="$(uname)"
-_cleanup_dirs=()
-trap 'for dir in "${_cleanup_dirs[@]}"; do rm -rf "$dir"; done' EXIT
 
 # Determine if we are running from a local clone or piped from curl
-# Using ${VAR:-} avoids "unbound variable" errors under set -u
+# We do this before 'set -u' to avoid "unbound variable" errors
 if [[ "${BASH_SOURCE[0]:-}" == "${0:-}" ]] || [[ "${BASH_SOURCE[0]:-}" == "" ]]; then
     # Script is being piped to bash (e.g., curl | bash) or run directly
     DOTFILES_DIR="$HOME/dotfiles"
@@ -44,6 +30,9 @@ else
     DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 fi
 
+set -euo pipefail
+
+# ── 1. Configuration & Versions ──────────────────────────────────────────────
 # Normalize OS string
 case "$OS_RAW" in
     Darwin)         OS="Darwin" ;;

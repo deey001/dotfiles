@@ -193,31 +193,31 @@ format = '[$duration]($style)'
 [python]
 symbol = " "
 style = "fg:#a6e3a1"
-format = '[$symbol($virtualenv )]($style)'
+format = '[$symbol]($style)'
 
 # Node.js — activates when package.json or .node-version is found.
 [nodejs]
 symbol = " "
 style = "fg:#a6e3a1"
-format = '[$symbol$version]($style) '
+format = '[$symbol]($style)'
 
 # Go — activates when go.mod or .go files are found.
 [golang]
 symbol = " "
 style = "fg:#a6e3a1"
-format = '[$symbol$version]($style) '
+format = '[$symbol]($style)'
 
 # Rust — activates when Cargo.toml is found.
 [rust]
 symbol = " "
 style = "fg:#a6e3a1"
-format = '[$symbol$version]($style) '
+format = '[$symbol]($style)'
 
 # Java — activates when pom.xml, build.gradle, or .java files are found.
 [java]
 symbol = " "
 style = "fg:#a6e3a1"
-format = '[$symbol$version]($style) '
+format = '[$symbol]($style)'
 
 # --- Docker Context Module ----------------------------------------------------
 # Shows the active Docker context (e.g., "default", "remote-server").
