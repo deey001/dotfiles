@@ -33,20 +33,22 @@ Unified [Catppuccin Mocha](https://catppuccin.com) theme, Starship prompt, Neovi
 
 ```
 dotfiles/
-├── stow/               # GNU Stow packages — each folder symlinks into $HOME
+├── home/               # GNU Stow packages — each folder symlinks into $HOME
 │   ├── bash/           #   .bashrc, .bash_aliases, .bash_profile, .blerc
 │   ├── zsh/            #   .zshrc
-│   ├── git/            #   .gitconfig
+│   ├── git/            #   .gitconfig, .gitattributes, .gitignore
 │   ├── shell/          #   .common_shell, .inputrc, .editorconfig
-│   ├── tmux/           #   .tmux.conf
-│   ├── config/         #   ~/.config/: nvim, wezterm, starship, atuin, bat…
-│   └── theme-*/        #   Swappable Catppuccin theme packages
-├── themes/             # Theme definitions (shell + Windows PS1 variants)
-├── windows/            # PowerShell profile, Windows Terminal settings
+│   └── config/         #   ~/.config/: nvim, wezterm, starship, tmux, atuin, bat…
+├── themes/             # Theme definitions sourced by ~/.config/dotfiles/theme.sh
+│   └── windows/        #   PS1 variants for Windows
+├── platform/           # OS-specific files
+│   ├── windows/        #   PowerShell profile, Windows Terminal settings.json
+│   └── packages/       #   Package lists: ubuntu.txt, arch.txt, rhel.txt
 ├── scripts/            # install.sh, install.ps1, uninstall.sh, install-blesh.sh
-├── meta/packages/      # Package lists per distro (ubuntu.txt, arch.txt, rhel.txt)
-├── templates/          # .bash_local.template — machine-local overrides
-└── Makefile            # make install / uninstall / theme-mocha / theme-latte
+│   └── .bash_local.template  # Machine-local overrides (copy to ~/.bash_local)
+├── Brewfile            # macOS Homebrew packages
+├── Makefile            # make install / uninstall / theme-mocha / theme-latte
+└── README.md
 ```
 
 ---
@@ -80,7 +82,7 @@ Theme files live in `themes/` and `themes/windows/`. All consumers (shell, bat, 
 Copy the template and edit to taste — it is never committed:
 
 ```bash
-cp ~/dotfiles/templates/.bash_local.template ~/.bash_local
+cp ~/dotfiles/scripts/.bash_local.template ~/.bash_local
 ```
 
 Use `~/.bash_local` for secrets, host-specific `$PATH` entries, or anything you don't want in the repo.

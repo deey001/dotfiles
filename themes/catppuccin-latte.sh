@@ -7,7 +7,7 @@
 #   Same variable API as catppuccin-mocha.sh; all consumers work unchanged.
 #
 # ACTIVATE:
-#   make theme-latte    (stows stow/theme-catppuccin-latte/ → ~/.config/dotfiles/theme.sh)
+#   make theme-latte    (stows themes/catppuccin-latte.sh → ~/.config/dotfiles/theme.sh)
 #
 # PALETTE REFERENCE:
 #   https://catppuccin.com/palette  (Latte column)

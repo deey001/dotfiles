@@ -28,7 +28,7 @@
 #
 # CONFIGURATION:
 #   ble.sh reads ~/.blerc for customization (keybindings, theme, features).
-#   See stow/bash/.blerc in this repo.
+#   See home/bash/.blerc in this repo.
 # ==============================================================================
 set -euo pipefail
 

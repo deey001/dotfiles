@@ -514,7 +514,7 @@ function Configure-WindowsTerminal {
         if (-not $schemeExists) { $existing.schemes += $catppuccinMocha }
 
         # If the repo is available, also merge any additional schemes it defines.
-        $repoSettings = if ($script:dotfilesDir) { Join-Path $script:dotfilesDir "windows\settings.json" } else { $null }
+        $repoSettings = if ($script:dotfilesDir) { Join-Path $script:dotfilesDir "platform\windows\settings.json" } else { $null }
         if ($repoSettings -and (Test-Path $repoSettings)) {
             $repo = Get-Content $repoSettings -Raw | ConvertFrom-Json
             foreach ($scheme in $repo.schemes) {
@@ -689,7 +689,7 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
         }
 
         # Locate the tracked PowerShell profile from the dotfiles repo
-        $repoProfile = if ($script:dotfilesDir) { Join-Path $script:dotfilesDir "windows\Microsoft.PowerShell_profile.ps1" } else { $null }
+        $repoProfile = if ($script:dotfilesDir) { Join-Path $script:dotfilesDir "platform\windows\Microsoft.PowerShell_profile.ps1" } else { $null }
 
         # All profile paths to configure (PS5 + PS7 for current and all users)
         $profilePaths = @(
@@ -781,7 +781,7 @@ function Symlink-Dotfiles {
         # ── Ensure the repo is present and up-to-date ─────────────────────────
         # A sentinel file that must exist after a successful update.  If it is
         # absent the update failed and we fall back to a clean clone.
-        $sentinel = Join-Path $dotfilesDir "windows\settings.json"
+        $sentinel = Join-Path $dotfilesDir "platform\windows\settings.json"
 
         if (-not (Test-Path $dotfilesDir)) {
             Write-Status "Cloning repository..." "Info"

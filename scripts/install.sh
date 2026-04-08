@@ -39,10 +39,10 @@
 #
 # SUPPORTED PLATFORMS
 #   macOS                  – packages installed via Homebrew (Brewfile)
-#   Debian / Ubuntu        – packages installed via apt  (meta/packages/ubuntu.txt)
-#   Arch Linux             – packages installed via pacman (meta/packages/arch.txt)
+#   Debian / Ubuntu        – packages installed via apt  (platform/packages/ubuntu.txt)
+#   Arch Linux             – packages installed via pacman (platform/packages/arch.txt)
 #   RHEL / Fedora / CentOS – packages installed via dnf (preferred) or yum
-#                            (meta/packages/rhel.txt)
+#                            (platform/packages/rhel.txt)
 #
 # ==============================================================================
 
@@ -179,7 +179,7 @@ elif [ "$OS" = "Linux" ]; then
         sudo apt update
 
         # Install the full declarative package list from the repo.
-        install_package_list "$DOTFILES_DIR/meta/packages/ubuntu.txt" "sudo apt install -y"
+        install_package_list "$DOTFILES_DIR/platform/packages/ubuntu.txt" "sudo apt install -y"
 
         # Neovim is listed separately because the apt universe version is often
         # several major releases behind upstream.  Naming it explicitly here makes
@@ -193,7 +193,7 @@ elif [ "$OS" = "Linux" ]; then
         # -Syu syncs the package database AND upgrades all installed packages before
         # installing the new ones.  On Arch (rolling release) installing without
         # upgrading first risks a "partial upgrade" state that can break packages.
-        install_package_list "$DOTFILES_DIR/meta/packages/arch.txt" "sudo pacman -Syu --noconfirm"
+        install_package_list "$DOTFILES_DIR/platform/packages/arch.txt" "sudo pacman -Syu --noconfirm"
 
     elif [ -f /etc/redhat-release ]; then
         # ── RHEL / Fedora / CentOS ─────────────────────────────────────────────
@@ -202,9 +202,9 @@ elif [ "$OS" = "Linux" ]; then
         # dnf is the modern successor to yum (Fedora 22+, RHEL 8+, CentOS Stream).
         # Fall back to yum for older systems (CentOS 7 / RHEL 7) where dnf is absent.
         if command -v dnf &>/dev/null; then
-            install_package_list "$DOTFILES_DIR/meta/packages/rhel.txt" "sudo dnf install -y"
+            install_package_list "$DOTFILES_DIR/platform/packages/rhel.txt" "sudo dnf install -y"
         else
-            install_package_list "$DOTFILES_DIR/meta/packages/rhel.txt" "sudo yum install -y"
+            install_package_list "$DOTFILES_DIR/platform/packages/rhel.txt" "sudo yum install -y"
         fi
     fi
 fi
@@ -234,7 +234,7 @@ command -v stow &>/dev/null || {
 
 # ── 7. Stow Dotfile Packages ────────────────────────────────────────────────────
 #
-# Each entry in STOW_PKGS corresponds to a subdirectory under stow/ in the repo.
+# Each entry in STOW_PKGS corresponds to a subdirectory under home/ in the repo.
 # The directory tree inside each package mirrors $HOME exactly, so Stow can
 # create the correct symlinks without additional path configuration.
 #
@@ -248,8 +248,21 @@ command -v stow &>/dev/null || {
 #   theme-catppuccin-mocha – .config/dotfiles/theme.sh → themes/catppuccin-mocha.sh
 #                            (the active theme selector — switch with: make theme-latte)
 
+# ── 7. Stow Dotfile Packages ────────────────────────────────────────────────────
+#
+# Each entry in STOW_PKGS corresponds to a subdirectory under home/ in the repo.
+# The directory tree inside each package mirrors $HOME exactly, so Stow can
+# create the correct symlinks without additional path configuration.
+#
+# Package breakdown:
+#   bash    – .bashrc, .bash_profile, .bash_aliases, .blerc
+#   zsh     – .zshrc
+#   git     – .gitconfig, .gitignore_global
+#   shell   – .inputrc, .common_shell (shared env + functions)
+#   config  – .config/ subtree (starship.toml, nvim/, wezterm/, tmux.conf, etc.)
+
 echo "--- Symlinking Configurations via GNU Stow ---"
-STOW_PKGS=(bash zsh git shell tmux config)
+STOW_PKGS=(bash zsh git shell config)
 
 # Change to the repo root so Stow resolves the --dir relative path correctly.
 cd "$DOTFILES_DIR"
@@ -257,19 +270,18 @@ cd "$DOTFILES_DIR"
 for pkg in "${STOW_PKGS[@]}"; do
     echo "  Stowing: $pkg"
     # -R (restow) removes and recreates all symlinks for the package.
-    # This cleanly handles files that were moved within a package — a plain `stow`
-    # would leave dangling symlinks that the new run would refuse to overwrite.
-    # --dir=stow   tells Stow where to find packages (the stow/ subdirectory).
+    # --dir=home   tells Stow where to find packages (the home/ subdirectory).
     # --target=$HOME tells Stow where symlinks should be created.
-    stow -R --dir=stow --target="$HOME" "$pkg"
+    stow -R --dir=home --target="$HOME" "$pkg"
 done
 
-# ── Stow default theme package ─────────────────────────────────────────────
-# Deploys ~/.config/dotfiles/theme.sh → themes/catppuccin-mocha.sh.
-# .common_shell sources this file so every shell session gets the palette vars.
-# To switch to Catppuccin Latte: make theme-latte
-echo "  Stowing: theme-catppuccin-mocha (default theme)"
-stow -R --dir=stow --target="$HOME" theme-catppuccin-mocha
+# ── Deploy default theme ───────────────────────────────────────────────────
+# Directly symlink the theme file — no stow package needed.
+# .common_shell sources ~/.config/dotfiles/theme.sh on every shell start.
+# To switch: make theme-latte  |  make theme-mocha
+echo "  Linking: theme-catppuccin-mocha (default)"
+mkdir -p "$HOME/.config/dotfiles"
+ln -sf "$DOTFILES_DIR/themes/catppuccin-mocha.sh" "$HOME/.config/dotfiles/theme.sh"
 
 echo "======================================================================"
 echo "INSTALLATION PROCESS FINISHED!"

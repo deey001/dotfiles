@@ -5,7 +5,7 @@
 # PURPOSE:
 #   Single source of truth for the Catppuccin Mocha color palette and all
 #   tool-specific theme names derived from it.  Sourced by
-#   ~/.config/dotfiles/theme.sh (stowed from stow/theme-catppuccin-mocha/).
+#   ~/.config/dotfiles/theme.sh (symlinked directly by make theme-mocha).
 #
 # CONSUMERS:
 #   .common_shell        → sources this via ~/.config/dotfiles/theme.sh
@@ -23,7 +23,7 @@
 #
 # ADDING A NEW THEME:
 #   1. Copy this file to themes/<name>.sh
-#   2. Create stow/theme-<name>/.config/dotfiles/theme.sh that sources it
+#   2. Symlink themes/<name>.sh → ~/.config/dotfiles/theme.sh via make theme-<name>
 #   3. Create themes/windows/<name>.ps1 with PSReadLine colors
 #   4. Add a Makefile target: theme-<name>
 #

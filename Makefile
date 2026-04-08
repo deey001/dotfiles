@@ -47,10 +47,10 @@ all: install
 # ── Install ───────────────────────────────────────────────────────────────────
 # Runs scripts/install.sh which:
 #   1. Detects OS (macOS / Debian / Arch / RHEL)
-#   2. Installs system packages from meta/packages/<distro>.txt
+#   2. Installs system packages from platform/packages/<distro>.txt
 #   3. Installs GNU Stow if missing
-#   4. Stows all packages (bash, zsh, git, shell, tmux, config) into $HOME
-#   5. Stows the default theme package (theme-catppuccin-mocha)
+#   4. Stows all packages (bash, zsh, git, shell, config) into $HOME
+#   5. Symlinks the default theme (themes/catppuccin-mocha.sh)
 install:
 	@echo "--- Starting Dotfiles Installation ---"
 	@bash scripts/install.sh
@@ -82,43 +82,35 @@ test-verbose:
 	@bash scripts/test.sh --verbose
 
 # ── Theme: Show Active ────────────────────────────────────────────────────────
-# Prints which theme is currently stowed and active.
-# The active theme is the stow/theme-*/ package whose files are symlinked into
-# ~/.config/dotfiles/theme.sh.
+# Prints which theme is currently active by reading the symlink target.
 theme:
 	@if [ -L "$$HOME/.config/dotfiles/theme.sh" ]; then \
 	    target=$$(readlink "$$HOME/.config/dotfiles/theme.sh"); \
 	    echo "Active theme: $$target"; \
-	    if [ -f "$$HOME/.config/dotfiles/theme.sh" ]; then \
-	        slug=$$(bash -c 'source "$$HOME/.config/dotfiles/theme.sh" 2>/dev/null && echo $$DOTFILES_THEME' HOME="$$HOME"); \
-	        echo "  Theme slug:  $${slug:-unknown}"; \
-	    fi; \
 	elif [ -f "$$HOME/.config/dotfiles/theme.sh" ]; then \
-	    echo "Active theme: (non-symlink file) $$HOME/.config/dotfiles/theme.sh"; \
+	    echo "Active theme: (non-symlink) $$HOME/.config/dotfiles/theme.sh"; \
 	else \
-	    echo "No theme stowed. Run: make theme-mocha"; \
+	    echo "No theme active. Run: make theme-mocha"; \
 	fi
 
 # ── Theme: Catppuccin Mocha (dark, default) ───────────────────────────────────
-# Unstows any active theme-* package, then stows theme-catppuccin-mocha.
-# After switching, reload the theme in your current shell with:
-#   source ~/.config/dotfiles/theme.sh
-# Or simply open a new terminal — .common_shell sources it on every start.
+# Directly symlinks themes/catppuccin-mocha.sh → ~/.config/dotfiles/theme.sh.
+# No stow package needed — avoids double-indirection.
+# Reload in current shell: source ~/.config/dotfiles/theme.sh
 theme-mocha:
 	@echo "--- Switching theme → Catppuccin Mocha ---"
-	@stow -d . -t "$$HOME" --ignore='.DS_Store' -D theme-catppuccin-latte 2>/dev/null || true
-	@stow -d . -t "$$HOME" --ignore='.DS_Store' -R theme-catppuccin-mocha
+	@mkdir -p "$$HOME/.config/dotfiles"
+	@ln -sf "$$PWD/themes/catppuccin-mocha.sh" "$$HOME/.config/dotfiles/theme.sh"
 	@echo "[OK] Theme set to Catppuccin Mocha"
 	@echo "     Run: source ~/.config/dotfiles/theme.sh (or open a new terminal)"
 
 # ── Theme: Catppuccin Latte (light) ──────────────────────────────────────────
-# Unstows any active theme-* package, then stows theme-catppuccin-latte.
-# Note: After switching to Latte you may also want to update your terminal
-# background color to match (WezTerm reads DOTFILES_WEZTERM_THEME automatically).
+# Directly symlinks themes/catppuccin-latte.sh → ~/.config/dotfiles/theme.sh.
+# WezTerm reads DOTFILES_WEZTERM_THEME from env — takes effect in new windows.
 theme-latte:
 	@echo "--- Switching theme → Catppuccin Latte ---"
-	@stow -d . -t "$$HOME" --ignore='.DS_Store' -D theme-catppuccin-mocha 2>/dev/null || true
-	@stow -d . -t "$$HOME" --ignore='.DS_Store' -R theme-catppuccin-latte
+	@mkdir -p "$$HOME/.config/dotfiles"
+	@ln -sf "$$PWD/themes/catppuccin-latte.sh" "$$HOME/.config/dotfiles/theme.sh"
 	@echo "[OK] Theme set to Catppuccin Latte"
 	@echo "     Run: source ~/.config/dotfiles/theme.sh (or open a new terminal)"
 
