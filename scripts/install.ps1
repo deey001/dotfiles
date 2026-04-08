@@ -751,6 +751,48 @@ function Install-RemoteDotfiles {
 # 7-8 bridge to remote server setup, 9-10 handle reset/restore.
 # ========================================================================================
 
+# Configure PowerShell Profile to use Starship and clean up old errors.
+function Configure-PowerShell {
+    try {
+        Write-Host "Configuring PowerShell Profile..." -ForegroundColor Cyan
+        
+        # Ensure the profile directory exists
+        $profileDir = Split-Path -Parent $PROFILE
+        if (-not (Test-Path $profileDir)) {
+            New-Item -Path $profileDir -ItemType Directory -Force | Out-Null
+        }
+
+        # Content to add to profile
+        $starshipLine = 'starship init powershell | Invoke-Expression'
+        
+        if (Test-Path $PROFILE) {
+            $currentContent = Get-Content $PROFILE
+            # Remove the specific broken line mentioned by the user and any other starship/omp lines
+            # We filter out lines containing 'starship' or '.omp.json' to start fresh
+            $newContent = $currentContent | Where-Object { 
+                $_ -notmatch "starship" -and 
+                $_ -notmatch ".omp.json" -and
+                -not [string]::IsNullOrWhiteSpace($_)
+            }
+            
+            # Append Starship
+            $newContent += "`n# Added by Dotfiles Setup"
+            $newContent += $starshipLine
+            
+            $newContent | Set-Content $PROFILE -Force
+            Write-Log "Cleaned and updated PowerShell Profile"
+        } else {
+            Set-Content $PROFILE -Value "# Added by Dotfiles Setup`n$starshipLine" -Force
+            Write-Log "Created new PowerShell Profile"
+        }
+
+        Add-Action "Configured PowerShell Profile with Starship"
+        Write-Status "PowerShell Profile configured successfully" "Success"
+    } catch {
+        Write-Status "PowerShell configuration failed: $($_.Exception.Message)" "Error"
+    }
+}
+
 # Display the interactive menu — called in a loop by Main
 function Show-Menu {
     Clear-Host
@@ -764,22 +806,22 @@ function Show-Menu {
     Write-ColorText " [3] Set Nerd Font in PuTTY (Default Settings for KeePass)" "Yellow"
     Write-ColorText " [4] Install Core Developer Tools via Winget (Nvim, Git, etc)" "Yellow"
     Write-Host "     (Installs Neovim, Git, Ripgrep, Fd, Starship, Eza, Fastfetch)" -ForegroundColor Gray
-    Write-ColorText " [5] Full Local Setup (Run tasks 1-4 automatically)" "Green"
-    Write-ColorText " [6] Symlink Dotfiles to Windows Home (for Git Bash/WSL)" "Green"
+    Write-ColorText " [5] Configure PowerShell Profile (Starship + Cleanup)" "Yellow"
+    Write-Host "     (Fixes startup errors and sets up the modern prompt)" -ForegroundColor Gray
+    Write-ColorText " [6] Full Local Setup (Run tasks 1-5 automatically)" "Green"
+    Write-ColorText " [7] Symlink Dotfiles to Windows Home (for Git Bash/WSL)" "Green"
     Write-Host "     (Creates links for .bashrc, .tmux.conf, .config, etc)" -ForegroundColor Gray
     Write-Host ""
-    Write-ColorText " [7] Install dotfiles on remote server (guide)" "Yellow"
-    Write-ColorText " [8] Complete Workflow (Tasks 1-7 in sequence)" "Yellow"
-    Write-ColorText " [9] Reset / Remove Configuration (Restore from backup)" "Yellow"
-    Write-ColorText " [10] Restore from Backup" "Yellow"
+    Write-ColorText " [8] Install dotfiles on remote server (guide)" "Yellow"
+    Write-ColorText " [9] Complete Workflow (Tasks 1-8 in sequence)" "Yellow"
+    Write-ColorText " [10] Reset / Remove Configuration (Restore from backup)" "Yellow"
+    Write-ColorText " [11] Restore from Backup" "Yellow"
     Write-ColorText " [0] Exit" "Red"
     Write-Host ""
     Write-Host "Enter choice: " -NoNewline
 }
 
 # Main entry point — creates a backup, then loops the interactive menu until exit.
-# Option 8 ("Complete Workflow") runs all tasks in sequence: font → WT → PuTTY →
-# tools → symlinks → remote server guide.
 function Main {
     try {
         Backup-Settings
@@ -793,27 +835,30 @@ function Main {
                 "2" { Configure-WindowsTerminal }
                 "3" { Configure-PuTTY }
                 "4" { Install-CoreTools }
-                "5" {
+                "5" { Configure-PowerShell }
+                "6" {
                     Install-NerdFont
                     Configure-WindowsTerminal
                     Configure-PuTTY
                     Install-CoreTools
+                    Configure-PowerShell
                 }
-                "6" { Symlink-Dotfiles }
-                "7" { Install-RemoteDotfiles }
-                "8" {
+                "7" { Symlink-Dotfiles }
+                "8" { Install-RemoteDotfiles }
+                "9" {
                     Install-NerdFont
                     Configure-WindowsTerminal
                     Configure-PuTTY
                     Install-CoreTools
+                    Configure-PowerShell
                     Symlink-Dotfiles
                     Install-RemoteDotfiles
                 }
-                "9" {
+                "10" {
                     $confirm = Read-Host "Reset all settings? This will restore from latest backup (y/n)"
                     if ($confirm -match "^[Yy]") { Restore-Settings }
                 }
-                "10" { Restore-Settings }
+                "11" { Restore-Settings }
                 "0" { break }
                 default { Write-Status "Invalid choice" "Warning" }
             }
