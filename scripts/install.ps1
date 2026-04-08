@@ -763,13 +763,15 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
 #   This script always runs elevated, so this is not an issue.
 #
 # What each symlink does:
-#   .bashrc          → stow\bash\.bashrc         — Bash interactive shell config
-#   .bash_aliases    → stow\bash\.bash_aliases   — Shared bash aliases
-#   .blerc           → stow\bash\.blerc          — Bash Line Editor (ble.sh) config
-#   .tmux.conf       → stow\tmux\.tmux.conf      — tmux multiplexer config
-#   .gitconfig       → stow\git\.gitconfig       — Git user/alias/tool settings
+#   .bashrc          → stow\bash\.bashrc         — Bash config (WSL sessions)
+#   .bash_aliases    → stow\bash\.bash_aliases   — Shared aliases (WSL + cross-platform tools)
+#   .tmux.conf       → stow\tmux\.tmux.conf      — tmux config (WSL/SSH sessions)
+#   .gitconfig       → stow\git\.gitconfig       — Git user/alias/tool settings (native Windows)
 #   .inputrc         → stow\shell\.inputrc       — Readline keybindings (bash + python REPL)
-#   .common_shell    → stow\shell\.common_shell  — Aliases/functions shared by bash + zsh
+#   .common_shell    → stow\shell\.common_shell  — Cross-shell env vars
+#
+#   NOT symlinked on Windows (Linux/WSL-only):
+#   .blerc           — ble.sh is a Linux bash enhancement, irrelevant in PS/CMD
 #
 # .config\ directory:
 #   Each subdirectory of stow\config\.config\ is symlinked into %USERPROFILE%\.config\.
@@ -795,9 +797,12 @@ function Symlink-Dotfiles {
                 Write-Status "Cloning repository..." "Info"
                 git clone "https://github.com/deey001/dotfiles.git" $dotfilesDir
             } else {
-                # Pull latest changes so newly-added files (themes, settings.json) are present.
-                Write-Status "Updating repository (git pull)..." "Info"
-                git -C $dotfilesDir pull --ff-only 2>&1 | Out-Null
+                # Hard-reset to origin/master so newly-added files (themes, settings.json)
+                # are always present.  pull --ff-only can silently fail when tracking is
+                # misconfigured or the local HEAD has diverged.
+                Write-Status "Updating repository (fetch + reset)..." "Info"
+                git -C $dotfilesDir fetch origin master 2>&1 | Out-Null
+                git -C $dotfilesDir reset --hard origin/master 2>&1 | Out-Null
             }
             # Update the script-scoped variable so subsequent functions
             # (Configure-WindowsTerminal, Configure-PowerShell) can find
@@ -806,9 +811,10 @@ function Symlink-Dotfiles {
             $script:dotfilesDir = $dotfilesDir
             Add-Action "Resolved dotfiles dir: $dotfilesDir"
         } else {
-            # Repo was already known — still pull to get any new files.
-            Write-Status "Updating repository (git pull)..." "Info"
-            git -C $dotfilesDir pull --ff-only 2>&1 | Out-Null
+            # Repo was already known — still hard-reset to get any new files.
+            Write-Status "Updating repository (fetch + reset)..." "Info"
+            git -C $dotfilesDir fetch origin master 2>&1 | Out-Null
+            git -C $dotfilesDir reset --hard origin/master 2>&1 | Out-Null
         }
         # Symlink files that are useful on Windows (including WSL sessions).
         # Excluded intentionally:
@@ -861,44 +867,72 @@ function Symlink-Dotfiles {
 #
 # What it modifies:
 #   %LOCALAPPDATA%\clink\starship.lua — Clink auto-loads all *.lua files from its
-#   profile directory on every cmd.exe launch, so placing the file there is
-#   sufficient; no registry changes are needed.
+# ── Configure-CMD ───────────────────────────────────────────────────────────────
+# Configures the Windows Command Prompt (cmd.exe) to use Starship as its prompt
+# via the Clink readline extension.
+#
+# Why Clink is needed:
+#   cmd.exe has no native support for custom prompts beyond the static %PROMPT%
+#   environment variable.  Clink (https://chrisant996.github.io/clink/) injects
+#   a Lua scripting layer into cmd.exe at startup, enabling Readline editing,
+#   history improvements, and Lua-driven prompt rendering.
+#   Starship provides `starship init cmd` which outputs a Lua snippet for Clink.
+#
+# How detection works:
+#   Clink is installed via winget in Install-CoreTools, but its exe may not be
+#   on PATH in the running session yet.  We therefore check common install paths.
+#   Critically, we do NOT need to RUN clink here — we only need to write a
+#   one-line Lua file into its auto-load directory (%LOCALAPPDATA%\clink\).
+#   Clink loads all *.lua files from that directory on every cmd.exe launch.
+#
+# What it modifies:
+#   %LOCALAPPDATA%\clink\starship.lua — written unconditionally (safe if Clink is
+#   absent; activates automatically on the next cmd.exe session after Clink installs)
 #
 # What can go wrong:
-#   • Clink is not installed — detected via Get-Command; the function informs the
-#     user and provides the winget install command; no file is written.
-#   • Clink profile directory doesn't exist — created with New-Item -Force.
-#   • starship is not on PATH at CMD launch time — Clink will silently fail to
-#     load the prompt; installing Starship via Install-CoreTools fixes this.
+#   • starship is not on PATH at CMD launch time — Clink will silently skip the
+#     prompt; installing Starship via Install-CoreTools fixes this.
 #
-# Prerequisites: Clink must be installed; Starship must be on PATH.
+# Prerequisites: Clink should be installed (done by Install-CoreTools).
 function Configure-CMD {
     try {
         Write-Host "Configuring Command Prompt (CMD) with Starship..." -ForegroundColor Cyan
-        # Starship supports CMD via an AutoRun registry key that runs on every CMD session.
-        # This requires the Clink tool (https://mridgers.github.io/clink/) for full support,
-        # but a basic Starship init can be injected directly.
-        $autoRunKey = "HKCU:\Software\Microsoft\Command Processor"
-        $starshipCmd = 'starship init cmd'
-        # Check if Clink is installed — try both PATH and the default winget install location.
-        # winget may not have updated the current session's PATH even after the PATH refresh above.
-        $clinkExe = if (Get-Command clink -ErrorAction SilentlyContinue) { "clink" }
-                    elseif (Test-Path "$env:ProgramFiles\clink\clink.exe") { "$env:ProgramFiles\clink\clink.exe" }
-                    elseif (Test-Path "${env:ProgramFiles(x86)}\clink\clink.exe") { "${env:ProgramFiles(x86)}\clink\clink.exe" }
-                    else { $null }
 
-        if ($clinkExe) {
-            $clinkProfile = "$env:LOCALAPPDATA\clink\starship.lua"
-            $clinkDir = Split-Path $clinkProfile
-            if (-not (Test-Path $clinkDir)) { New-Item $clinkDir -ItemType Directory -Force | Out-Null }
-            @('load(io.popen("starship init cmd"):read("*a"))()')  | Out-File $clinkProfile -Encoding UTF8 -Force
-            Add-Action "Configured Starship for CMD via Clink profile"
+        # Write the Clink Lua loader regardless of whether clink is detected.
+        # Clink auto-loads every *.lua file from %LOCALAPPDATA%\clink\ at cmd.exe startup.
+        # Writing this file is safe even if Clink is not yet installed — it will
+        # simply take effect the next time cmd.exe starts after Clink is present.
+        $clinkDir    = "$env:LOCALAPPDATA\clink"
+        $starshipLua = "$clinkDir\starship.lua"
+        if (-not (Test-Path $clinkDir)) { New-Item $clinkDir -ItemType Directory -Force | Out-Null }
+        'load(io.popen("starship init cmd"):read("*a"))()' | Out-File $starshipLua -Encoding UTF8 -Force
+        Add-Action "Wrote Clink Starship loader: $starshipLua"
+
+        # Determine whether Clink is currently installed so we can give an accurate status.
+        # Check common install paths — winget may not have updated PATH in this session.
+        $clinkInstalled = (Get-Command clink -ErrorAction SilentlyContinue) -or
+                          (Test-Path "$env:LOCALAPPDATA\Programs\clink\clink.bat") -or
+                          (Test-Path "${env:ProgramFiles(x86)}\clink\clink.bat") -or
+                          (Test-Path "$env:ProgramFiles\clink\clink.bat")
+
+        if ($clinkInstalled) {
             Write-Status "CMD configured via Clink + Starship" "Success"
         } else {
-            # No Clink — inform user Clink is needed for CMD Starship support
-            Write-Status "Clink not found. Install Clink for full CMD Starship support:" "Warning"
-            Write-Host "  winget install clink" -ForegroundColor Yellow
-            Write-Host "  Then re-run this option." -ForegroundColor Gray
+            # Clink may have just been installed by Install-CoreTools but its installer
+            # may not have finished unpacking.  The Lua file is already written and will
+            # activate on the next cmd.exe session once Clink's install completes.
+            Write-Status "Clink lua written; open a new CMD window after Clink install completes" "Info"
+        }
+    } catch { Write-Status "CMD config failed: $_" "Error" }
+}
+
+        if ($clinkInstalled) {
+            Write-Status "CMD configured via Clink + Starship" "Success"
+        } else {
+            # Clink may have just been installed by Install-CoreTools but winget's
+            # unpack may not have finished.  The Lua file is written; it will activate
+            # on the next cmd.exe session once Clink's installer completes.
+            Write-Status "Clink lua written; open a new CMD window after Clink install completes" "Info"
         }
     } catch { Write-Status "CMD config failed: $_" "Error" }
 }
