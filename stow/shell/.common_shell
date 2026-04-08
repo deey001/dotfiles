@@ -11,6 +11,7 @@
 #   also sourced by .zshrc), keeping this file focused on ENV only.
 #
 # WHAT BELONGS HERE:
+#   ✓ Active theme sourcing (loads ~/.config/dotfiles/theme.sh)
 #   ✓ Environment variables (EDITOR, PAGER, LANG, etc.)
 #   ✓ Short utility functions needed in all shells (mkcd)
 #   ✗ Aliases — use ~/.bash_aliases instead
@@ -23,6 +24,23 @@
 # LOAD ORDER (Zsh):
 #   .zshrc (top) → .common_shell (here) → .bash_aliases → tools → starship
 # ==============================================================================
+
+# ── Active Theme ──────────────────────────────────────────────────────────────
+# Sources ~/.config/dotfiles/theme.sh — a symlink managed by the active stow
+# theme package (stow/theme-catppuccin-mocha/ or stow/theme-catppuccin-latte/).
+#
+# What the theme file exports (full list in themes/catppuccin-mocha.sh):
+#   DOTFILES_THEME              — slug, e.g. "catppuccin-mocha"
+#   DOTFILES_COLOR_*            — full 26-color hex palette
+#   BAT_THEME                   — bat syntax highlighting theme name
+#   DOTFILES_WEZTERM_THEME      — WezTerm color scheme name
+#   DOTFILES_FZF_COLORS         — ready-to-use --color= value for FZF
+#   DOTFILES_FZFTAB_COLORS      — same, for fzf-tab zstyle in Zsh
+#
+# Switch themes:  make theme-latte  /  make theme-mocha
+# If no theme is stowed yet, this silently no-ops; tools fall back to their
+# own hard-coded defaults in each rc file.
+[ -f "$HOME/.config/dotfiles/theme.sh" ] && source "$HOME/.config/dotfiles/theme.sh"
 
 # ── Environment Variables ─────────────────────────────────────────────────────
 

@@ -43,10 +43,14 @@ local config = wezterm.config_builder()
 -- ==============================================================================
 
 -- Catppuccin Mocha is bundled into WezTerm — no external scheme file needed.
+-- The active theme is exported as DOTFILES_WEZTERM_THEME by the stowed theme
+-- package (stow/theme-catppuccin-mocha/ or stow/theme-catppuccin-latte/).
+-- Switch themes: `make theme-latte` / `make theme-mocha`, then restart WezTerm.
+-- If the env var is unset (fresh install, no theme stowed yet), fall back to
+-- Catppuccin Mocha so the terminal is never unstyled.
 -- To see all available built-in schemes: wezterm ls-fonts --list-color-schemes
--- To try a different Catppuccin flavor: 'Catppuccin Latte', 'Catppuccin Frappe',
--- or 'Catppuccin Macchiato'
-config.color_scheme = 'Catppuccin Mocha'
+local active_theme = os.getenv("DOTFILES_WEZTERM_THEME") or "Catppuccin Mocha"
+config.color_scheme = active_theme
 
 -- Slight transparency (5%) so desktop wallpaper bleeds through on macOS/Linux.
 -- Set to 1.0 for fully opaque (useful on low-powered machines or Windows).

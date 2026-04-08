@@ -158,7 +158,10 @@ if [[ -d "${HOME}/.rbenv" ]]; then
 fi
 
 # bat
-export BAT_THEME="Catppuccin Mocha"
+# BAT_THEME is set by the active theme (sourced via .common_shell → theme.sh).
+# Fallback to Catppuccin Mocha if no theme is stowed yet.
+: "${BAT_THEME:=Catppuccin Mocha}"
+export BAT_THEME
 export BAT_PAGING="never"
 
 # ── 11. Custom Functions & Wrappers ───────────────────────────────────────────
@@ -297,12 +300,12 @@ if command -v fzf >/dev/null 2>&1; then
         [[ -f /usr/share/doc/fzf/examples/completion.bash ]] \
             && source /usr/share/doc/fzf/examples/completion.bash
     }
-    export FZF_DEFAULT_OPTS="
-        --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8
-        --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc
-        --color=marker:#a6e3a1,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8
-        --layout=reverse --border --height=~40%
-        --bind='ctrl-/:toggle-preview'"
+    # FZF_DEFAULT_OPTS: DOTFILES_FZF_COLORS is set by the active theme (sourced
+    # in .common_shell). Fallback to Catppuccin Mocha hex values if no theme is
+    # stowed yet, so fzf is always themed even on a fresh clone.
+    _fzf_colors="${DOTFILES_FZF_COLORS:-bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8,fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc,marker:#a6e3a1,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8}"
+    export FZF_DEFAULT_OPTS="--color=${_fzf_colors} --layout=reverse --border --height=~40% --bind='ctrl-/:toggle-preview'"
+    unset _fzf_colors
     if command -v fd >/dev/null 2>&1; then
         export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
         export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"

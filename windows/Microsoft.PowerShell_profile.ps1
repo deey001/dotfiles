@@ -3,59 +3,87 @@
 # ==============================================================================
 # Deployed by scripts/install.ps1 → Configure-PowerShell
 # Provides an experience comparable to the bash/zsh setup:
-#   - Catppuccin Mocha colors via PSReadLine
+#   - Catppuccin Mocha colors via PSReadLine (modular — loaded from theme file)
 #   - Common aliases mirroring .bash_aliases (eza, nvim, git shortcuts)
 #   - Starship prompt (must be last)
+#
+# THEME SYSTEM:
+#   Colors are loaded from ~/.config\dotfiles\theme.ps1 — a file deployed by
+#   install.ps1 → Configure-PowerShell from themes/windows/<name>.ps1.
+#   Inline PSReadLine colors below are the FALLBACK for fresh installs where
+#   no theme file has been deployed yet.
 #
 # COMPATIBLE: PowerShell 5.1 and PowerShell 7+
 # ==============================================================================
 
-# ── 1. PSReadLine — Catppuccin Mocha colors ───────────────────────────────────
-# PSReadLine controls syntax highlighting and the interactive editing experience.
-# These colors match the Catppuccin Mocha palette used everywhere else.
+# ── 1. Active Theme ────────────────────────────────────────────────────────────
+# Load theme variables and PSReadLine colors from the deployed theme file.
+# The theme file sets $env:DOTFILES_COLOR_*, $env:BAT_THEME, and calls
+# Set-PSReadLineOption -Colors with the palette values.
+#
+# themes/windows/ contains one file per theme:
+#   catppuccin-mocha.ps1   (dark, default)
+#   catppuccin-latte.ps1   (light)
+#
+# To switch themes: re-run install.ps1 option 5 after editing
+# $env:USERPROFILE\.config\dotfiles\theme.ps1 to point to the desired file,
+# OR copy the desired themes/windows/*.ps1 to that path manually.
+$_themeFile = "$env:USERPROFILE\.config\dotfiles\theme.ps1"
+if (Test-Path $_themeFile) {
+    . $_themeFile    # dot-source: loads $env:DOTFILES_COLOR_* + PSReadLine colors
+} else {
+    # ── Fallback: inline Catppuccin Mocha colors ──────────────────────────────
+    # Used when no theme file is deployed (fresh install, or theme step skipped).
+    # Keeps the profile functional and themed even without the theme system.
+    if (Get-Module -ListAvailable -Name PSReadLine) {
+        Import-Module PSReadLine
+        Set-PSReadLineOption -Colors @{
+            Command            = '#89b4fa'   # blue   — valid commands
+            Parameter          = '#cba6f7'   # mauve  — flags/parameters
+            Operator           = '#89dceb'   # sky    — operators (=, +, |, etc.)
+            Variable           = '#cdd6f4'   # text   — $variables
+            String             = '#a6e3a1'   # green  — string literals
+            Number             = '#fab387'   # peach  — number literals
+            Type               = '#94e2d5'   # teal   — [type] casts
+            Comment            = '#585b70'   # surface2 — # comments
+            Keyword            = '#f38ba8'   # red    — keywords (if, for, function)
+            Error              = '#f38ba8'   # red    — error state
+            Default            = '#cdd6f4'   # text   — default foreground
+            Emphasis           = '#f5c2e7'   # pink   — emphasis
+            Selection          = '#313244'   # surface0 — selected text background
+            InlinePrediction   = '#585b70'   # surface2 — ghost-text suggestions
+        }
+    }
+    $env:BAT_THEME = 'Catppuccin Mocha'
+}
+Remove-Variable _themeFile -ErrorAction SilentlyContinue
+
+# ── 2. PSReadLine Behaviour (non-color settings) ──────────────────────────────
+# Color settings are handled by the theme file above.
+# These behaviour settings are theme-independent.
 if (Get-Module -ListAvailable -Name PSReadLine) {
     Import-Module PSReadLine
-
     Set-PSReadLineOption -EditMode Emacs
-
-    # Syntax highlighting colors (Catppuccin Mocha)
-    Set-PSReadLineOption -Colors @{
-        Command            = '#89b4fa'   # blue   — valid commands
-        Parameter          = '#cba6f7'   # mauve  — flags/parameters
-        Operator           = '#89dceb'   # sky    — operators (=, +, |, etc.)
-        Variable           = '#cdd6f4'   # text   — $variables
-        String             = '#a6e3a1'   # green  — string literals
-        Number             = '#fab387'   # peach  — number literals
-        Type               = '#94e2d5'   # teal   — [type] casts
-        Comment            = '#585b70'   # surface2 — # comments
-        Keyword            = '#f38ba8'   # red    — keywords (if, for, function)
-        Error              = '#f38ba8'   # red    — error state
-        Default            = '#cdd6f4'   # text   — default foreground
-        Emphasis           = '#f5c2e7'   # pink   — emphasis
-        Selection          = '#313244'   # surface0 — selected text background
-        InlinePrediction   = '#585b70'   # surface2 — ghost-text suggestions
-    }
-
     # History-based autosuggestion (like ble.sh / zsh-autosuggestions)
     Set-PSReadLineOption -PredictionSource History
     Set-PSReadLineOption -PredictionViewStyle ListView
-
     # Key bindings
-    Set-PSReadLineKeyHandler -Key Tab            -Function MenuComplete
-    Set-PSReadLineKeyHandler -Key Shift+Tab      -Function BackwardMenuComplete
-    Set-PSReadLineKeyHandler -Key UpArrow        -Function HistorySearchBackward
-    Set-PSReadLineKeyHandler -Key DownArrow      -Function HistorySearchForward
-    Set-PSReadLineKeyHandler -Key Ctrl+d         -Function DeleteCharOrExit
-    Set-PSReadLineKeyHandler -Key Ctrl+LeftArrow -Function BackwardWord
+    Set-PSReadLineKeyHandler -Key Tab             -Function MenuComplete
+    Set-PSReadLineKeyHandler -Key Shift+Tab       -Function BackwardMenuComplete
+    Set-PSReadLineKeyHandler -Key UpArrow         -Function HistorySearchBackward
+    Set-PSReadLineKeyHandler -Key DownArrow       -Function HistorySearchForward
+    Set-PSReadLineKeyHandler -Key Ctrl+d          -Function DeleteCharOrExit
+    Set-PSReadLineKeyHandler -Key Ctrl+LeftArrow  -Function BackwardWord
     Set-PSReadLineKeyHandler -Key Ctrl+RightArrow -Function ForwardWord
 }
 
-# ── 2. Environment Variables ──────────────────────────────────────────────────
-$env:EDITOR  = 'nvim'
-$env:VISUAL  = 'nvim'
-$env:BAT_THEME = 'Catppuccin Mocha'
+# ── 3. Environment Variables ──────────────────────────────────────────────────
+$env:EDITOR = 'nvim'
+$env:VISUAL = 'nvim'
+# BAT_THEME is set by the theme file; fallback here in case theme wasn't loaded.
+if (-not $env:BAT_THEME) { $env:BAT_THEME = 'Catppuccin Mocha' }
 
-# ── 3. Aliases — mirroring .bash_aliases ──────────────────────────────────────
+# ── 4. Aliases — mirroring .bash_aliases ──────────────────────────────────────
 
 # Navigation
 function .. { Set-Location .. }

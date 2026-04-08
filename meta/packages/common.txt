@@ -1,0 +1,104 @@
+# ==============================================================================
+# meta/packages/common.txt — Cross-Platform Package Reference
+# ==============================================================================
+#
+# PURPOSE:
+#   Documents the conceptual packages that should be installed on EVERY platform
+#   (Linux distros, macOS, Windows).  This is a reference/documentation file —
+#   it is NOT directly consumed by install.sh (which reads the per-distro files).
+#   Use it as a checklist when adding a new platform target, or to verify that
+#   a tool is available on all supported systems.
+#
+# TIERS:
+#   [CORE]       — Required for the dotfiles to function at all.
+#                  Missing tools may break shell startup or core aliases.
+#   [SHELL]      — Required for the full Bash/Zsh prompt + completion experience.
+#   [MODERN-CLI] — Drop-in replacements for classic Unix tools (see .bash_aliases).
+#                  Always guarded with `command -v` — safe to omit on minimal machines.
+#   [OPTIONAL]   — Nice to have. Not referenced by any config; install manually.
+#
+# PLATFORM MAPPING:
+#   Each line shows the canonical concept → actual package name per platform.
+#   Where names differ, the platform-specific file has the correct spelling.
+#
+# ==============================================================================
+
+# ── [CORE] — Required ────────────────────────────────────────────────────────
+
+git                    # Version control — required by stow, fzf-tab, install.sh self-clone
+                       #   ubuntu: git | arch: git | rhel: git | brew: git | winget: Git.Git
+
+curl                   # HTTP client — used by install.sh, fonts, package bootstrapping
+                       #   ubuntu: curl | arch: curl | rhel: curl | brew: curl | winget: (built-in)
+
+stow                   # GNU Stow — symlink farm manager (core of the dotfiles system)
+                       #   ubuntu: stow | arch: stow | rhel: stow (EPEL) | brew: stow | Windows: N/A (manual)
+
+tmux                   # Terminal multiplexer — persistent sessions, split panes
+                       #   ubuntu: tmux | arch: tmux | rhel: tmux | brew: tmux | Windows: N/A
+
+unzip                  # .zip extraction — Nerd Fonts ZIP download
+                       #   ubuntu: unzip | arch: unzip | rhel: unzip | brew: unzip | Windows: built-in
+
+# ── [SHELL] — Full prompt + completion experience ────────────────────────────
+
+starship               # Cross-shell prompt — reads ~/.config/starship.toml
+                       #   ubuntu: snap/cargo/curl | arch: starship | rhel: cargo | brew: starship | winget: starship.starship
+
+fzf                    # Fuzzy finder — Ctrl+R history, Ctrl+T files, Alt+C cd
+                       #   ubuntu: fzf | arch: fzf | rhel: fzf (EPEL) | brew: fzf | winget: junegunn.fzf
+
+zoxide                 # Smart cd — learns frequent directories, 'z partial' jumps
+                       #   ubuntu: zoxide | arch: zoxide | rhel: cargo install zoxide | brew: zoxide | winget: ajeetdsouza.zoxide
+
+neovim                 # Modal text editor — LazyVim config in stow/config/.config/nvim/
+                       #   ubuntu: neovim | arch: neovim | rhel: neovim (EPEL) | brew: neovim | winget: Neovim.Neovim
+
+zsh                    # Z shell — .zshrc managed by stow/zsh package
+                       #   ubuntu: zsh | arch: zsh | rhel: zsh | brew: zsh | Windows: N/A (use PS7)
+
+zsh-autosuggestions    # Fish-style ghost-text suggestions from history
+                       #   ubuntu: zsh-autosuggestions | arch: zsh-autosuggestions | rhel: manual | brew: zsh-autosuggestions
+
+zsh-syntax-highlighting  # Colorize commands as you type (green=valid, red=invalid)
+                       #   ubuntu: zsh-syntax-highlighting | arch: zsh-syntax-highlighting | rhel: manual | brew: zsh-syntax-highlighting
+
+# ── [MODERN-CLI] — Drop-in tool replacements ─────────────────────────────────
+
+eza                    # ls replacement — colors, icons, git status
+                       #   ubuntu: eza | arch: eza | rhel: cargo | brew: eza | winget: eza-community.eza
+
+bat                    # cat replacement — syntax highlighting, Catppuccin Mocha theme
+                       #   ubuntu: bat | arch: bat | rhel: bat (COPR: atim/bat) | brew: bat | winget: sharkdp.bat
+
+ripgrep (rg)           # grep replacement — fast, .gitignore-aware, Rust-based
+                       #   ubuntu: ripgrep | arch: ripgrep | rhel: ripgrep (EPEL) | brew: ripgrep | winget: BurntSushi.Ripgrep
+
+fd                     # find replacement — simpler syntax, faster, .gitignore-aware
+                       #   ubuntu: fd-find (binary: fdfind) | arch: fd | rhel: fd-find | brew: fd | winget: sharkdp.fd
+
+lazygit                # TUI git client — visual branches, commits, diffs, staging
+                       #   ubuntu: lazygit (PPA) | arch: lazygit | rhel: lazygit (COPR: atim/lazygit) | brew: lazygit | winget: JesseDuffield.lazygit
+
+fastfetch              # System info display — replaces neofetch on login
+                       #   ubuntu: fastfetch | arch: fastfetch | rhel: fastfetch (COPR) | brew: fastfetch | winget: fastfetch-cli.fastfetch
+
+btop                   # Resource monitor — replaces top/htop (aliased as 'top')
+                       #   ubuntu: btop | arch: btop | rhel: btop (EPEL) | brew: btop | Windows: N/A
+
+# ── [OPTIONAL] — Nice to have ─────────────────────────────────────────────────
+
+tldr                   # Simplified man pages — tldr git, tldr tar, etc.
+                       #   ubuntu: tldr | arch: tldr | rhel: npm install -g tldr | brew: tldr | winget: tldr (npm)
+
+dust                   # du replacement — visual tree of disk usage
+                       #   ubuntu: dust (cargo) | arch: dust | rhel: cargo | brew: dust | Windows: N/A
+
+duf                    # df replacement — colorized filesystem usage table
+                       #   ubuntu: duf | arch: duf | rhel: cargo | brew: duf | Windows: N/A
+
+glow                   # Markdown renderer — render README.md in terminal
+                       #   ubuntu: glow | arch: glow | rhel: cargo | brew: glow | Windows: N/A
+
+atuin                  # Shell history with search and sync across machines
+                       #   all: curl -fsSL https://setup.atuin.sh | bash

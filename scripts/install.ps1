@@ -552,45 +552,21 @@ function Install-CoreTools {
 }
 
 # ── Configure-PowerShell ────────────────────────────────────────────────────────
-# Configures the PowerShell profile for both Windows PowerShell 5 and PowerShell 7
-# so both versions load the same dotfiles-sourced configuration.
+# Configures the PowerShell profile for both Windows PowerShell 5 and PowerShell 7.
 #
 # What it does, in order:
-#   1. Sets STARSHIP_CONFIG as a persistent User environment variable pointing to
-#      ~/.config/starship.toml (symlinked by Symlink-Dotfiles).
-#      Why persistent?  Without this, PS sessions launched outside of the profile
-#      use Starship's default config path, ignoring our custom theme.  The variable
-#      is set at both the process scope ($env:) and User scope
-#      ([Environment]::SetEnvironmentVariable) so it takes effect immediately AND
-#      survives reboots.
+#   1. Sets STARSHIP_CONFIG as a persistent User env var (so Starship finds the
+#      symlinked starship.toml regardless of which PS version is running).
+#   2. Deploys the active Windows theme to ~/.config\dotfiles\theme.ps1 so the
+#      PS profile can source it for PSReadLine colors and $env:DOTFILES_COLOR_*.
+#      Defaults to catppuccin-mocha.ps1; other themes live in themes/windows/.
+#   3. Writes a thin wrapper profile to the PS5 and PS7 profile paths that
+#      dot-sources the repo's tracked profile (windows\Microsoft.PowerShell_profile.ps1).
+#      This means edits to the tracked file are picked up on the next PS session
+#      without re-running setup.
+#   4. Strips stale oh-my-posh / inline Starship lines from any existing profile.
 #
-#   2. Locates the tracked PS profile from the dotfiles repo
-#      (windows\Microsoft.PowerShell_profile.ps1) — the single source of truth
-#      for PS configuration.
-#
-#   3. Writes a thin wrapper profile to each of the two profile paths:
-#        %USERPROFILE%\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1  (PS5)
-#        %USERPROFILE%\Documents\PowerShell\Microsoft.PowerShell_profile.ps1         (PS7)
-#      The wrapper dot-sources the repo profile so changes to the tracked file are
-#      picked up automatically without re-running this setup step.
-#
-#   4. Strips out any existing oh-my-posh / inline starship initialisation lines
-#      before writing the new profile.  These stale lines conflict with Starship
-#      and cause double-prompt initialisation that slows PS startup.
-#
-# Dot-sourcing pattern:
-#   Writing `. "<path>"` instead of copying file content means the profile is
-#   always read fresh from the repo on every PS session — edits to the repo
-#   profile take effect without re-running setup.
-#
-# What can go wrong:
-#   • Repo profile not found — falls back to a minimal inline profile that just
-#     sets STARSHIP_CONFIG and initialises Starship.
-#   • Profile directory doesn't exist — created with New-Item -Force.
-#   • Concurrent PS session holds the profile file open — Set-Content fails;
-#     caught and reported.
-#
-# Prerequisites: $script:dotfilesDir should be set for the repo profile path.
+# Prerequisites: $script:dotfilesDir should be set (resolved by Get-DotfilesDir).
 function Configure-PowerShell {
     try {
         Write-Host "Configuring PowerShell Profiles..." -ForegroundColor Cyan
@@ -600,6 +576,24 @@ function Configure-PowerShell {
         [Environment]::SetEnvironmentVariable("STARSHIP_CONFIG", "$env:USERPROFILE\.config\starship.toml", "User")
         $env:STARSHIP_CONFIG = "$env:USERPROFILE\.config\starship.toml"
         Add-Action "Set STARSHIP_CONFIG=$env:USERPROFILE\.config\starship.toml"
+
+        # ── Deploy active theme to ~/.config\dotfiles\theme.ps1 ──────────────
+        # The PS profile dot-sources this file for PSReadLine colors + palette vars.
+        # Defaults to catppuccin-mocha; swap by copying a different themes/windows/*.ps1.
+        if ($script:dotfilesDir) {
+            $themeDir = Join-Path $script:dotfilesDir "themes\windows"
+            $srcTheme = Join-Path $themeDir "catppuccin-mocha.ps1"   # default theme
+            $dstThemeDir = "$env:USERPROFILE\.config\dotfiles"
+            $dstTheme    = "$dstThemeDir\theme.ps1"
+            if (Test-Path $srcTheme) {
+                if (-not (Test-Path $dstThemeDir)) { New-Item $dstThemeDir -ItemType Directory -Force | Out-Null }
+                Copy-Item -Path $srcTheme -Destination $dstTheme -Force
+                Add-Action "Deployed theme: catppuccin-mocha → $dstTheme"
+                Write-Status "Theme deployed (Catppuccin Mocha)" "Success"
+            } else {
+                Write-Status "themes/windows/catppuccin-mocha.ps1 not found — PSReadLine will use inline fallback" "Warning"
+            }
+        }
 
         # Locate the tracked PowerShell profile from the dotfiles repo
         $repoProfile = if ($script:dotfilesDir) { Join-Path $script:dotfilesDir "windows\Microsoft.PowerShell_profile.ps1" } else { $null }
@@ -619,7 +613,7 @@ function Configure-PowerShell {
             $dir = Split-Path -Parent $path
             if (-not (Test-Path $dir)) { New-Item $dir -ItemType Directory -Force | Out-Null }
 
-            if (Test-Path $repoProfile) {
+            if ($repoProfile -and (Test-Path $repoProfile)) {
                 # Deploy the tracked profile — strip any old oh-my-posh/inline starship lines
                 $existing = @()
                 if (Test-Path $path) {

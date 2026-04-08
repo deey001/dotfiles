@@ -104,11 +104,15 @@ zstyle ':completion:*' group-name ''
 zstyle ':completion:*:descriptions' format '[%d]'
 zstyle ':completion:*:warnings' format '%F{red}No matches found%f'
 
-# fzf-tab appearance — Catppuccin Mocha color scheme matching fzf and tmux theme
+# fzf-tab appearance — colors come from the active theme's DOTFILES_FZFTAB_COLORS.
+# Fallback to Catppuccin Mocha hex values if no theme is stowed yet.
 zstyle ':fzf-tab:complete:*' fzf-preview ''
 # Show directory contents preview when completing `cd` arguments
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color=always $realpath 2>/dev/null || ls $realpath'
-zstyle ':fzf-tab:*' fzf-flags --height=~40% --layout=reverse --border --color=bg+:#313244,fg+:#cdd6f4,hl:#f38ba8,hl+:#f38ba8,info:#cba6f7,prompt:#cba6f7,pointer:#f5e0dc,marker:#a6e3a1,spinner:#f5e0dc,header:#89b4fa
+# fzf-tab color flags — sourced from DOTFILES_FZFTAB_COLORS (set by theme.sh via .common_shell)
+_fzftab_colors="${DOTFILES_FZFTAB_COLORS:-bg+:#313244,fg+:#cdd6f4,hl:#f38ba8,hl+:#f38ba8,info:#cba6f7,prompt:#cba6f7,pointer:#f5e0dc,marker:#a6e3a1,spinner:#f5e0dc,header:#89b4fa}"
+zstyle ':fzf-tab:*' fzf-flags --height=~40% --layout=reverse --border --color="${_fzftab_colors}"
+unset _fzftab_colors
 # Use < and > keys to switch between completion groups
 zstyle ':fzf-tab:*' switch-group '<' '>'
 
@@ -135,18 +139,9 @@ bindkey '^[[B' history-search-forward     # Down: search history forward
 # ------------------------------------------------------------------------------
 # Aliases & Functions (Shared with Bash)
 # ------------------------------------------------------------------------------
-# eza replaces ls with color, icons, and git integration
-# These aliases are defined here (in addition to .bash_aliases) because
-# Zsh loads before .bash_aliases and we want eza available immediately
-if command -v eza >/dev/null 2>&1; then
-    alias ls='eza --color=auto --icons'
-    alias ll='eza -alF --icons'
-    alias la='eza -A --icons'
-    alias l='eza -CF --icons'
-fi
-
-# Load shared alias file (same one Bash uses)
-# This avoids duplicating alias definitions across shells
+# Load shared alias file — contains eza/ls, git, navigation, and all other aliases.
+# Defined once in .bash_aliases and sourced by both Bash and Zsh.
+# No need to re-define eza/ls here; .bash_aliases handles the eza guard.
 [ -f ~/.bash_aliases ] && source ~/.bash_aliases
 
 # ------------------------------------------------------------------------------
@@ -167,11 +162,11 @@ if command -v fzf >/dev/null 2>&1; then
         [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
         [ -f /usr/share/doc/fzf/examples/key-bindings.zsh ] && source /usr/share/doc/fzf/examples/key-bindings.zsh
     }
-    export FZF_DEFAULT_OPTS=" \
-        --color=bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8 \
-        --color=fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc \
-        --color=marker:#a6e3a1,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8 \
-        --layout=reverse --border --height=~40%"
+    # FZF_DEFAULT_OPTS: DOTFILES_FZF_COLORS is set by the active theme (via .common_shell).
+    # Fallback to Catppuccin Mocha values if no theme is stowed yet.
+    _fzf_colors="${DOTFILES_FZF_COLORS:-bg+:#313244,bg:#1e1e2e,spinner:#f5e0dc,hl:#f38ba8,fg:#cdd6f4,header:#f38ba8,info:#cba6f7,pointer:#f5e0dc,marker:#a6e3a1,fg+:#cdd6f4,prompt:#cba6f7,hl+:#f38ba8}"
+    export FZF_DEFAULT_OPTS="--color=${_fzf_colors} --layout=reverse --border --height=~40%"
+    unset _fzf_colors
 fi
 
 # ------------------------------------------------------------------------------

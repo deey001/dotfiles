@@ -230,12 +230,14 @@ command -v stow &>/dev/null || {
 # create the correct symlinks without additional path configuration.
 #
 # Package breakdown:
-#   bash    – .bashrc, .bash_profile, .bash_aliases, .blerc
-#   zsh     – .zshrc, .zprofile (if present)
-#   git     – .gitconfig, .gitignore_global
-#   shell   – .inputrc, .common_shell (shared aliases/functions sourced by both shells)
-#   tmux    – .tmux.conf
-#   config  – .config/ subtree (starship.toml, nvim/, and other XDG config dirs)
+#   bash                   – .bashrc, .bash_profile, .bash_aliases, .blerc
+#   zsh                    – .zshrc, .zprofile (if present)
+#   git                    – .gitconfig, .gitignore_global
+#   shell                  – .inputrc, .common_shell (shared env + mkcd function)
+#   tmux                   – .tmux.conf
+#   config                 – .config/ subtree (starship.toml, nvim/, wezterm/, etc.)
+#   theme-catppuccin-mocha – .config/dotfiles/theme.sh → themes/catppuccin-mocha.sh
+#                            (the active theme selector — switch with: make theme-latte)
 
 echo "--- Symlinking Configurations via GNU Stow ---"
 STOW_PKGS=(bash zsh git shell tmux config)
@@ -252,6 +254,13 @@ for pkg in "${STOW_PKGS[@]}"; do
     # --target=$HOME tells Stow where symlinks should be created.
     stow -R --dir=stow --target="$HOME" "$pkg"
 done
+
+# ── Stow default theme package ─────────────────────────────────────────────
+# Deploys ~/.config/dotfiles/theme.sh → themes/catppuccin-mocha.sh.
+# .common_shell sources this file so every shell session gets the palette vars.
+# To switch to Catppuccin Latte: make theme-latte
+echo "  Stowing: theme-catppuccin-mocha (default theme)"
+stow -R --dir=stow --target="$HOME" theme-catppuccin-mocha
 
 echo "======================================================================"
 echo "INSTALLATION PROCESS FINISHED!"
