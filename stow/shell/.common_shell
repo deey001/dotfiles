@@ -1,19 +1,59 @@
 # ==============================================================================
-# .common_shell — Shared Aliases and Exports for Bash and Zsh
+# .common_shell — Shared Environment for Bash and Zsh
 # ==============================================================================
-# Sourced by both .bashrc and .zshrc. Keep this file lean — only put things
-# here that are NOT already in .bash_aliases and must work in every shell
-# (including non-bash shells like zsh). Full alias definitions live in
-# .bash_aliases (which is also sourced by .zshrc).
+# LOCATION:  ~/.common_shell  (symlinked by install.sh via stow/shell)
+# SOURCED BY: ~/.bashrc (section 12) and ~/.zshrc (top of file)
+#
+# PURPOSE:
+#   This file is the single source of truth for environment variables and
+#   small utility functions that must behave identically in every shell.
+#   It is intentionally lean — aliases live in ~/.bash_aliases (which is
+#   also sourced by .zshrc), keeping this file focused on ENV only.
+#
+# WHAT BELONGS HERE:
+#   ✓ Environment variables (EDITOR, PAGER, LANG, etc.)
+#   ✓ Short utility functions needed in all shells (mkcd)
+#   ✗ Aliases — use ~/.bash_aliases instead
+#   ✗ Shell-specific options (shopts, setopt, bindkey) — use the shell's own rc
+#   ✗ Tool initializations (starship, zoxide, fzf) — use the shell's own rc
+#
+# LOAD ORDER (Bash):
+#   .bash_profile → .bashrc → .common_shell (here) → .bash_aliases → tools
+#
+# LOAD ORDER (Zsh):
+#   .zshrc (top) → .common_shell (here) → .bash_aliases → tools → starship
 # ==============================================================================
 
-# ── Environment Variables ────────────────────────────────────────────────────
+# ── Environment Variables ─────────────────────────────────────────────────────
+
+# EDITOR / VISUAL — preferred text editor for CLI programs.
+# EDITOR: used by non-interactive programs (git commit messages, crontab -e, sudoedit).
+# VISUAL: used by interactive terminal programs (some respect VISUAL over EDITOR).
+# Both set to nvim; if nvim is absent, .bashrc overrides with a fallback loop
+# (tries nvim → vim → vi → nano in order).
 export EDITOR='nvim'
 export VISUAL='nvim'
+
+# PAGER — program used to paginate long output (man pages, git log, help text).
+# 'less' is the POSIX standard pager. LESS='-R' (set in .bashrc) enables ANSI
+# color passthrough so colored output from bat/delta/git isn't stripped.
 export PAGER='less'
+
+# LANG / LC_ALL — force UTF-8 locale globally.
+# LANG sets the default for all locale categories (LC_CTYPE, LC_MESSAGES, etc.).
+# LC_ALL overrides every individual LC_* variable — ensures consistency even
+# when connecting to systems that export a different locale via SSH.
+# Without UTF-8: grep/awk/Python can produce encoding errors, non-ASCII filenames
+# may be mangled, and some tools (like bat) silently fall back to ASCII rendering.
 export LANG='en_US.UTF-8'
 export LC_ALL='en_US.UTF-8'
 
-# ── Functions ────────────────────────────────────────────────────────────────
-# mkcd — Create and enter a directory
+# ── Functions ─────────────────────────────────────────────────────────────────
+
+# mkcd — Make a directory and immediately enter it.
+# USAGE:  mkcd my-new-project
+#         mkcd ~/projects/deep/nested/path
+# WHY:    'mkdir foo && cd foo' is the most common two-step in terminal work.
+#         The -p flag creates all intermediate directories silently (no error
+#         if path already exists). Available in both Bash and Zsh via this file.
 mkcd() { mkdir -p "$1" && cd "$1"; }

@@ -1,22 +1,38 @@
-base-devel
-git
-tmux
-fzf
-neovim
-eza
-fastfetch
-btop
-ripgrep
-fd
-dust
-duf
-zoxide
-unzip
-gawk
-zsh
-zsh-syntax-highlighting
-zsh-autosuggestions
-hstr
-lazygit
-glow
-tldr
+# ==============================================================================
+# meta/packages/arch.txt — System Packages for Arch Linux / Manjaro
+# ==============================================================================
+# Used by: scripts/install.sh (via install_package_list)
+# Command: sudo pacman -Syu --noconfirm <packages>
+#
+# Note: Many modern tools (eza, fd, dust, duf, zoxide, lazygit, fastfetch)
+# are available directly in the Arch official repos or AUR — no PPAs needed.
+# Format: one package name per line; lines starting with # are comments.
+# ==============================================================================
+
+# ── Build Essentials ──────────────────────────────────────────────────────────
+base-devel             # Meta-package: gcc, make, binutils, etc. (like build-essential)
+gawk                   # GNU AWK — used in .bashrc PATH deduplication
+unzip                  # .zip extraction
+
+# ── Core CLI Tools ───────────────────────────────────────────────────────────
+git                    # Version control — required by stow, fzf-tab auto-clone, etc.
+tmux                   # Terminal multiplexer — persistent sessions, split panes
+fzf                    # Fuzzy finder — Ctrl+R history, Ctrl+T file picker, Alt+C cd
+neovim                 # Editor — LazyVim config lives in stow/config/.config/nvim/
+eza                    # ls replacement — colors, icons, git status in directory listing
+fastfetch              # System info display on login (replaces neofetch)
+btop                   # Resource monitor — replaces top/htop (aliased as 'top')
+ripgrep                # grep replacement — faster, respects .gitignore, Rust-based
+fd                     # find replacement — simpler syntax, faster, respects .gitignore
+dust                   # du replacement — visual tree of disk usage (aliased as 'duu')
+duf                    # df replacement — colorized filesystem usage table (aliased as 'dff')
+zoxide                 # Smart cd — learns frequent directories, 'z partial' jumps there
+hstr                   # History browser — alternative Ctrl+R
+lazygit                # TUI git client — visual branch/commit/diff management
+glow                   # Markdown renderer — render .md files in terminal
+tldr                   # Simplified man pages — tldr git, tldr tar, etc.
+
+# ── Shell & Completion ────────────────────────────────────────────────────────
+zsh                    # Z shell — alternative to bash
+zsh-syntax-highlighting  # Colorize zsh commands as you type
+zsh-autosuggestions    # Fish-style ghost-text suggestions from zsh history

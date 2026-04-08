@@ -1,15 +1,79 @@
 # VERSION: 1.0.6 (RELIABLE-LINKING)
 # ========================================================================================
+# install.ps1 — Dotfiles Windows Setup Tool
+# ========================================================================================
+#
+# DESCRIPTION
+#   Interactive menu-driven installer for the dotfiles repository on Windows.
+#   Handles font installation, Windows Terminal theming, PuTTY configuration,
+#   core tool installation via winget, PowerShell profile setup, CMD prompt
+#   theming via Clink/Starship, and symlink creation for tracked dotfiles.
+#
+# USAGE
+#   Remote (one-liner, recommended):
+#     irm https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1 | iex
+#   Local clone:
+#     Set-ExecutionPolicy Bypass -Scope Process -Force
+#     .\scripts\install.ps1
+#
+# PREREQUISITES
+#   • Windows 10 / 11
+#   • PowerShell 5.1+ (script auto-upgrades to PS7 if needed)
+#   • Administrator privileges (auto-elevates via UAC if not already elevated)
+#   • winget (pre-installed on Windows 11; available via App Installer on Win10)
+#   • Internet access for font download and winget packages
+#
+# AUTO-ELEVATION
+#   If not running as Administrator the script downloads itself to %TEMP% and
+#   relaunches via Start-Process -Verb RunAs, which triggers a UAC prompt.
+#   Admin is required for: creating SymbolicLinks, installing fonts system-wide,
+#   and writing to protected registry keys.
+#
+# EXECUTION ORDER (Full Workflow — option A)
+#   1.  Auto-backup existing settings
+#   2.  Install JetBrainsMono Nerd Font
+#   3.  Configure Windows Terminal (font + Catppuccin Mocha theme)
+#   4.  Configure PuTTY font
+#   5.  Install core CLI tools via winget
+#   6.  Configure PowerShell profiles (PS5 + PS7)
+#   7.  Configure CMD prompt via Clink + Starship
+#   8.  Symlink dotfiles into %USERPROFILE%
+#   9.  Display remote server setup instructions
+#
+# ========================================================================================
 
-# Force TLS 1.2
+# Force TLS 1.2 for all web requests made in this session.
+# PowerShell 5 defaults to TLS 1.0 which many modern servers (GitHub, etc.) reject.
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-# Helper: Check if the current user has Administrator privileges.
+# ── Test-AdminPrivileges ────────────────────────────────────────────────────────
+# Returns $true if the current process is running with Administrator privileges.
+#
+# Why this is needed:
+#   Several operations in this script require elevation:
+#     • New-Item -ItemType SymbolicLink  — requires SeCreateSymbolicLinkPrivilege
+#       (granted to Administrators by default; standard users need Developer Mode).
+#     • Shell.Namespace(0x14) font install — writes to %SystemRoot%\Fonts and the
+#       HKLM font registry key, both of which are Administrator-only.
+#     • Registry keys under HKLM (if any future step writes there).
+#   We check early and auto-re-launch via UAC rather than failing mid-install.
+#
+# What it modifies: nothing — pure query, no side effects.
+# Prerequisites: none — uses only .NET BCL types available in all PS versions.
 function Test-AdminPrivileges {
     $currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     return $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 }
 
+# ── Auto-Elevation Block ────────────────────────────────────────────────────────
+# If the script is not already running as Administrator, download a fresh copy
+# to %TEMP% and relaunch it elevated via UAC (Start-Process -Verb RunAs).
+#
+# Why download instead of relaunching the current file path?
+#   When invoked via `iex (irm ...)` the script lives only in memory — there is
+#   no file path to pass to the new elevated process.  Downloading to a known
+#   temp path guarantees the elevated process has a file it can read.
+#   A cache-busting query string (?v=<random>) prevents stale CDN copies.
 # Auto-Elevate: If not running as Admin, download the script to a temp file and relaunch
 if (-not (Test-AdminPrivileges)) {
     Write-Host "█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█" -ForegroundColor Red
@@ -28,6 +92,14 @@ if (-not (Test-AdminPrivileges)) {
     exit
 }
 
+# ── PowerShell Version Check ────────────────────────────────────────────────────
+# Ensure we are running on PowerShell 7+.  PS 5 lacks several features used here
+# (e.g. improved ConvertTo-Json depth handling) and its UTF-8 output is less
+# reliable in some terminal hosts.
+#
+# If PS 7 is not present, winget installs it silently, then this script re-
+# launches itself inside pwsh.exe (the PS7 executable) so all subsequent code
+# runs under the correct version.
 # PowerShell Version Check
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     Write-Host "Detected PowerShell $($PSVersionTable.PSVersion.Major). Installing PowerShell 7..." -ForegroundColor Yellow
@@ -43,22 +115,48 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
     }
 }
 
+# ── Console Encoding & Colour Support ──────────────────────────────────────────
+# Force UTF-8 output so box-drawing characters and emoji render correctly in
+# Windows Terminal and modern conhost.  If the console doesn't support UTF-8
+# (older conhost, redirected output) we fall back gracefully and disable ANSI
+# colour sequences, using Write-Host's -ForegroundColor parameter instead.
 try {
-    [System.Console]::OutputEncoding = [System.Text.Encoding]::UTF8
     $script:UseColors = $true
 } catch {
     $script:UseColors = $false
 }
 
-$FONT_DOWNLOAD_URL = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
-$TEMP_DIR = "$env:TEMP\nerd-fonts-install"
-$BACKUP_DIR = "$env:USERPROFILE\.dotfiles-backup"
-$BACKUP_TIMESTAMP = Get-Date -Format "yyyyMMdd_HHmmss"
-$LOG_FILE = "$env:USERPROFILE\Documents\dotfiles-install-log-$BACKUP_TIMESTAMP.txt"
+# ── Global Constants & Paths ────────────────────────────────────────────────────
+# Centralised here so every function references the same values and changes only
+# need to happen in one place.
 
-$script:InstallationLog = @()
+$FONT_DOWNLOAD_URL = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+$TEMP_DIR          = "$env:TEMP\nerd-fonts-install"         # Scratch dir for font zip extraction
+$BACKUP_DIR        = "$env:USERPROFILE\.dotfiles-backup"     # Root for all timestamped backups
+$BACKUP_TIMESTAMP  = Get-Date -Format "yyyyMMdd_HHmmss"      # Unique suffix for this run's backup
+$LOG_FILE          = "$env:USERPROFILE\Documents\dotfiles-install-log-$BACKUP_TIMESTAMP.txt"
+
+# Script-scope arrays for accumulating log messages and a human-readable action
+# summary that can be written to $LOG_FILE at the end of the session.
+$script:InstallationLog  = @()
 $script:ActionsPerformed = @()
 
+# ── Get-DotfilesDir ─────────────────────────────────────────────────────────────
+# Resolves the absolute path to the dotfiles repository root and returns it, or
+# $null if the repo cannot be found.
+#
+# Detection strategy (two candidates tried in order):
+#   1. $PSScriptRoot — the directory containing THIS script file.  When the script
+#      is run from a local clone (e.g. .\scripts\install.ps1) PSScriptRoot points
+#      to scripts\; the repo root is one level up.  We validate by checking for
+#      the stow\ subdirectory, which is the canonical marker of the repo root.
+#      PSScriptRoot is empty when the script is run via iex/irm (in-memory), hence
+#      the fallback to Get-Location.
+#   2. $env:USERPROFILE\dotfiles — the default clone location used by the remote
+#      one-liner.  If the user already cloned the repo here it will be found.
+#
+# What it modifies: nothing — pure resolver, no side effects.
+# What can go wrong: returns $null if neither candidate exists; callers must guard.
 # Resolve dotfiles directory once at script scope so all functions can use it
 function Get-DotfilesDir {
     $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
@@ -70,24 +168,81 @@ function Get-DotfilesDir {
 }
 $script:dotfilesDir = Get-DotfilesDir
 
+# ── ANSI Colour Map ─────────────────────────────────────────────────────────────
+# Escape sequences for 256-colour terminals (Windows Terminal, modern conhost).
+# Used by Write-ColorText when $script:UseColors is $true; ignored otherwise.
 $colors = @{
     Reset   = "`e[0m"; Red = "`e[91m"; Green = "`e[92m"; Yellow = "`e[93m"
     Cyan    = "`e[96m"; Magenta = "`e[95m"; Gray = "`e[90m"; White = "`e[97m"
 }
 
+# ── Write-Log ───────────────────────────────────────────────────────────────────
+# Appends a timestamped entry to the in-memory $script:InstallationLog array.
+# The array is flushed to $LOG_FILE at the end of the session so the user has
+# a full audit trail without verbose console output during the run.
+#
+# Parameters:
+#   $Message – Human-readable description of the event.
+#   $Level   – Severity/category tag (INFO, ACTION, OUTPUT, ERROR).  Defaults to INFO.
+#
+# What it modifies: $script:InstallationLog (in-memory only during the run).
+# What can go wrong: nothing — array append cannot fail.
 function Write-Log {
     param([string]$Message, $Level = "INFO")
     $script:InstallationLog += "[$(Get-Date -Format 'HH:mm:ss')] [$Level] $Message"
 }
 
+# ── Add-Action ──────────────────────────────────────────────────────────────────
+# Records a completed action in the $script:ActionsPerformed summary array AND
+# logs it at the ACTION level.  The summary is printed at session end so the
+# user can see exactly what changed without scrolling through all log output.
+#
+# Parameters:
+#   $Action – Short past-tense description (e.g. "Installed JetBrainsMono Nerd Font").
+#
+# What it modifies: $script:ActionsPerformed, $script:InstallationLog.
 function Add-Action { param($Action) $script:ActionsPerformed += $Action; Write-Log $Action "ACTION" }
 
+# ── Write-ColorText ─────────────────────────────────────────────────────────────
+# Logs a message and writes it to the console with colour.
+#
+# Colour strategy:
+#   • If $script:UseColors is $true (UTF-8 console detected at startup) output
+#     is wrapped in raw ANSI escape codes from the $colors map — this produces
+#     the richest colours in Windows Terminal.
+#   • Otherwise falls back to Write-Host -ForegroundColor, which works in older
+#     conhost and in redirected/piped output scenarios where ANSI codes would
+#     appear as literal characters.
+#
+# Parameters:
+#   $Message – Text to display.
+#   $Color   – Key into the $colors hashtable (e.g. "Green", "Red", "Cyan").
+#
+# What can go wrong: if $Color is not a valid key in $colors the ANSI branch
+#   produces garbled output; always use one of the defined key names.
 function Write-ColorText {
     param($Message, $Color)
     Write-Log $Message "OUTPUT"
     if ($script:UseColors) { Write-Host "$($colors[$Color])$Message$($colors.Reset)" } else { Write-Host $Message -ForegroundColor $Color }
 }
 
+# ── Write-Status ────────────────────────────────────────────────────────────────
+# Displays a status line with a bracketed icon and colour appropriate to the
+# status type, then delegates to Write-ColorText (which also logs the message).
+#
+# Status types and their visual indicators:
+#   Success  → [OK]  green    — operation completed without error
+#   Error    → [!!]  red      — operation failed; check the log for details
+#   Progress → [>>]  cyan     — operation is in progress
+#   Warning  → [! ]  yellow   — operation completed with caveats
+#   Info     → [i ]  gray     — informational, no action required
+#
+# Parameters:
+#   $Message    – Description of the event.
+#   $StatusType – One of the five keys above.
+#
+# What can go wrong: unknown $StatusType falls through to the Info style — safe
+#   but may mislead; always use one of the five defined types.
 function Write-Status {
     param($Message, $StatusType)
     $map = @{ Success = @{I='[OK]';C='Green'}; Error = @{I='[!!]';C='Red'}; Progress = @{I='[>>]';C='Cyan'}; Warning = @{I='[! ]';C='Yellow'}; Info = @{I='[i ]';C='Gray'} }
@@ -95,6 +250,25 @@ function Write-Status {
     Write-ColorText "$($s.I) $Message" $s.C
 }
 
+# ── Backup-Settings ─────────────────────────────────────────────────────────────
+# Creates a timestamped snapshot of user settings that will be modified by this
+# script, so they can be restored manually if something goes wrong.
+#
+# What it backs up:
+#   • Windows Terminal settings.json — because Configure-WindowsTerminal merges
+#     new properties into this file and the merge is not easily reversible.
+#
+# Where backups are stored:
+#   $env:USERPROFILE\.dotfiles-backup\<YYYYMMDD_HHmmss>\
+#   A new subdirectory is created for each script run using $BACKUP_TIMESTAMP,
+#   so multiple runs produce independent snapshots that never overwrite each other.
+#
+# What can go wrong:
+#   If the backup directory cannot be created (e.g. disk full, permissions) the
+#   catch block logs the error and continues — a failed backup should not abort
+#   the install.
+#
+# Prerequisites: $BACKUP_DIR and $BACKUP_TIMESTAMP must be set (set at script scope).
 function Backup-Settings {
     try {
         $timestampDir = Join-Path $BACKUP_DIR $BACKUP_TIMESTAMP
@@ -105,6 +279,31 @@ function Backup-Settings {
     } catch { Write-Log "Backup failed: $_" "ERROR" }
 }
 
+# ── Install-NerdFont ────────────────────────────────────────────────────────────
+# Downloads and installs JetBrainsMono Nerd Font for all users via the Windows
+# Shell COM object, then cleans up the temporary download directory.
+#
+# How the COM font install works:
+#   Shell.Namespace(0x14) returns a reference to the system Fonts folder as a
+#   Shell folder object.  Calling .CopyHere() on a .ttf file triggers the same
+#   code path as dragging a font file into the Fonts folder in Explorer — Windows
+#   copies it to %SystemRoot%\Fonts and registers it in the registry automatically.
+#   The 0x10 flag suppresses the "overwrite?" progress dialog.
+#
+# Why check for existing fonts before copying:
+#   CopyHere with 0x10 would silently overwrite, but checking first avoids the
+#   overhead of re-registering fonts that are already present (faster re-runs).
+#
+# What it modifies:
+#   • %SystemRoot%\Fonts — copies *.ttf files extracted from the zip
+#   • HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts — font registry
+#
+# What can go wrong:
+#   • Download failure (no internet, GitHub rate-limit) — caught, logged, reported.
+#   • CopyHere is asynchronous internally, but Expand-Archive blocks long enough
+#     that fonts are fully extracted before the copy loop starts in practice.
+#
+# Prerequisites: Administrator privileges (font registry is HKLM).
 function Install-NerdFont {
     try {
         Write-Host "Installing Nerd Font..." -ForegroundColor Cyan
@@ -113,10 +312,11 @@ function Install-NerdFont {
         Invoke-WebRequest -Uri $FONT_DOWNLOAD_URL -OutFile $zip
         Expand-Archive $zip $TEMP_DIR -Force
         $shell = New-Object -ComObject Shell.Application
-        $fontsFolder = $shell.Namespace(0x14)
+        $fontsFolder = $shell.Namespace(0x14)   # 0x14 = CSIDL_FONTS — the system Fonts folder
         Get-ChildItem $TEMP_DIR -Filter "*.ttf" -Recurse | ForEach-Object {
+            # Skip fonts that are already installed to avoid unnecessary re-registration.
             if (-not (Test-Path "$env:SystemRoot\Fonts\$($_.Name)")) {
-                $fontsFolder.CopyHere($_.FullName, 0x10)
+                $fontsFolder.CopyHere($_.FullName, 0x10)   # 0x10 = suppress progress dialogs
             }
         }
         Remove-Item $TEMP_DIR -Recurse -Force
@@ -125,6 +325,32 @@ function Install-NerdFont {
     } catch { Write-Status "Font failed: $_" "Error" }
 }
 
+# ── Configure-WindowsTerminal ───────────────────────────────────────────────────
+# Merges dotfiles repository settings into the live Windows Terminal settings.json,
+# setting the default font to JetBrainsMono Nerd Font and the colour scheme to
+# Catppuccin Mocha.  If the repo's windows\settings.json exists, its colour
+# schemes array is also merged in (additive — existing schemes are preserved).
+#
+# How JSON merging works:
+#   PowerShell's ConvertFrom-Json deserialises the JSON into a PSCustomObject.
+#   Add-Member -Force is used to set (or overwrite) specific properties on the
+#   nested object graph without touching unrelated settings.  The final object is
+#   re-serialised with ConvertTo-Json -Depth 100 to preserve deep nesting.
+#
+# What properties are set:
+#   profiles.defaults.font.face   → "JetBrainsMono Nerd Font"
+#   profiles.defaults.colorScheme → "Catppuccin Mocha"
+#   schemes[]                     → any schemes from repo settings.json not already
+#                                   present (matched by .name property)
+#
+# What can go wrong:
+#   • settings.json not found — Windows Terminal may not be installed or has never
+#     been opened (the file is created on first launch).  Reported as a warning.
+#   • Malformed existing JSON — ConvertFrom-Json throws; caught and reported.
+#   • File locked by Windows Terminal — Set-Content fails; caught and reported.
+#
+# Prerequisites: Windows Terminal must be installed; $script:dotfilesDir should be
+#   set for repo-side colour scheme injection to work.
 function Configure-WindowsTerminal {
     try {
         Write-Host "Configuring Windows Terminal..." -ForegroundColor Cyan
@@ -141,6 +367,8 @@ function Configure-WindowsTerminal {
         if ($repoSettings -and (Test-Path $repoSettings)) {
             $repo = Get-Content $repoSettings -Raw | ConvertFrom-Json
 
+            # Ensure the nested defaults and font objects exist before setting properties;
+            # Add-Member throws if the parent object doesn't have the property yet.
             if (-not $existing.profiles.defaults) {
                 $existing.profiles | Add-Member NoteProperty defaults ([PSCustomObject]@{}) -Force
             }
@@ -150,6 +378,7 @@ function Configure-WindowsTerminal {
             $existing.profiles.defaults.font | Add-Member NoteProperty face "JetBrainsMono Nerd Font" -Force
             $existing.profiles.defaults | Add-Member NoteProperty colorScheme "Catppuccin Mocha" -Force
 
+            # Merge colour schemes from the repo — additive only; never remove existing schemes.
             if (-not $existing.schemes) {
                 $existing | Add-Member NoteProperty schemes @() -Force
             }
@@ -173,6 +402,27 @@ function Configure-WindowsTerminal {
     } catch { Write-Status "WT config failed: $_" "Error" }
 }
 
+# ── Configure-PuTTY ─────────────────────────────────────────────────────────────
+# Writes font settings into PuTTY's "Default Settings" registry key so that new
+# sessions inherit the Nerd Font without manual GUI configuration.
+#
+# Which registry keys are set:
+#   HKCU:\Software\SimonTatham\PuTTY\Sessions\Default%20Settings
+#     Font       (REG_SZ)    → "JetBrainsMono Nerd Font"
+#     FontHeight (REG_DWORD) → 12
+#
+# Why HKCU, not HKLM:
+#   PuTTY stores all settings per-user under HKCU.  Writing to HKCU does not
+#   require Administrator rights, but this function runs after elevation anyway.
+#
+# Why "Default%20Settings" (URL-encoded space):
+#   PuTTY uses URL-encoded session names as registry key names; the built-in
+#   default session is literally called "Default Settings" and stored URL-encoded.
+#
+# What can go wrong:
+#   • PuTTY is not installed — the registry key won't exist.  New-Item -Force
+#     creates it harmlessly; PuTTY will read these values when eventually installed.
+#   • Set-ItemProperty fails on an invalid path — caught and reported.
 function Configure-PuTTY {
     try {
         $reg = "HKCU:\Software\SimonTatham\PuTTY\Sessions\Default%20Settings"
@@ -183,6 +433,31 @@ function Configure-PuTTY {
     } catch { Write-Status "PuTTY failed: $_" "Error" }
 }
 
+# ── Install-CoreTools ───────────────────────────────────────────────────────────
+# Installs a curated set of CLI tools via winget, the Windows Package Manager.
+# Each tool is installed silently with auto-accepted license agreements so the
+# install can run unattended.
+#
+# Tool list and purpose:
+#   Neovim.Neovim          – Modern Vim-compatible modal text editor
+#   Git.Git                – Distributed version control system
+#   BurntSushi.Ripgrep     – Extremely fast regex file search (rg)
+#   sharkdp.fd             – User-friendly alternative to `find`
+#   starship.starship      – Cross-shell prompt (used by bash, zsh, PS, CMD)
+#   eza-community.eza      – Modern replacement for `ls` with colour + icons
+#   fastfetch-cli.fastfetch – Fast system information display (neofetch successor)
+#
+# What it modifies:
+#   Winget installs each tool to its default location (%ProgramFiles% or
+#   %LOCALAPPDATA%) and updates PATH automatically via the Windows installer.
+#
+# What can go wrong:
+#   • winget not available — install "App Installer" from the Microsoft Store.
+#   • Package already installed — winget returns non-zero but | Out-Null suppresses
+#     it; the tool is already present so this is acceptable.
+#   • No internet access — winget download fails; caught and reported.
+#
+# Prerequisites: winget must be available; internet access required.
 function Install-CoreTools {
     try {
         $tools = @("Neovim.Neovim", "Git.Git", "BurntSushi.Ripgrep", "sharkdp.fd", "starship.starship", "eza-community.eza", "fastfetch-cli.fastfetch")
@@ -194,6 +469,46 @@ function Install-CoreTools {
     } catch { Write-Status "Winget failed: $_" "Error" }
 }
 
+# ── Configure-PowerShell ────────────────────────────────────────────────────────
+# Configures the PowerShell profile for both Windows PowerShell 5 and PowerShell 7
+# so both versions load the same dotfiles-sourced configuration.
+#
+# What it does, in order:
+#   1. Sets STARSHIP_CONFIG as a persistent User environment variable pointing to
+#      ~/.config/starship.toml (symlinked by Symlink-Dotfiles).
+#      Why persistent?  Without this, PS sessions launched outside of the profile
+#      use Starship's default config path, ignoring our custom theme.  The variable
+#      is set at both the process scope ($env:) and User scope
+#      ([Environment]::SetEnvironmentVariable) so it takes effect immediately AND
+#      survives reboots.
+#
+#   2. Locates the tracked PS profile from the dotfiles repo
+#      (windows\Microsoft.PowerShell_profile.ps1) — the single source of truth
+#      for PS configuration.
+#
+#   3. Writes a thin wrapper profile to each of the two profile paths:
+#        %USERPROFILE%\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1  (PS5)
+#        %USERPROFILE%\Documents\PowerShell\Microsoft.PowerShell_profile.ps1         (PS7)
+#      The wrapper dot-sources the repo profile so changes to the tracked file are
+#      picked up automatically without re-running this setup step.
+#
+#   4. Strips out any existing oh-my-posh / inline starship initialisation lines
+#      before writing the new profile.  These stale lines conflict with Starship
+#      and cause double-prompt initialisation that slows PS startup.
+#
+# Dot-sourcing pattern:
+#   Writing `. "<path>"` instead of copying file content means the profile is
+#   always read fresh from the repo on every PS session — edits to the repo
+#   profile take effect without re-running setup.
+#
+# What can go wrong:
+#   • Repo profile not found — falls back to a minimal inline profile that just
+#     sets STARSHIP_CONFIG and initialises Starship.
+#   • Profile directory doesn't exist — created with New-Item -Force.
+#   • Concurrent PS session holds the profile file open — Set-Content fails;
+#     caught and reported.
+#
+# Prerequisites: $script:dotfilesDir should be set for the repo profile path.
 function Configure-PowerShell {
     try {
         Write-Host "Configuring PowerShell Profiles..." -ForegroundColor Cyan
@@ -253,6 +568,38 @@ function Configure-PowerShell {
     } catch { Write-Status "PowerShell failed: $_" "Error" }
 }
 
+# ── Symlink-Dotfiles ────────────────────────────────────────────────────────────
+# Creates symbolic links in %USERPROFILE% pointing to the tracked source files in
+# the dotfiles repository's stow\ directory tree.
+#
+# Why SymbolicLink requires Administrator:
+#   By default, creating symbolic links on Windows requires the
+#   SeCreateSymbolicLinkPrivilege, which is only granted to the Administrators
+#   group.  Standard users can create symlinks only if Developer Mode is enabled.
+#   This script always runs elevated, so this is not an issue.
+#
+# What each symlink does:
+#   .bashrc          → stow\bash\.bashrc         — Bash interactive shell config
+#   .bash_aliases    → stow\bash\.bash_aliases   — Shared bash aliases
+#   .blerc           → stow\bash\.blerc          — Bash Line Editor (ble.sh) config
+#   .tmux.conf       → stow\tmux\.tmux.conf      — tmux multiplexer config
+#   .gitconfig       → stow\git\.gitconfig       — Git user/alias/tool settings
+#   .inputrc         → stow\shell\.inputrc       — Readline keybindings (bash + python REPL)
+#   .common_shell    → stow\shell\.common_shell  — Aliases/functions shared by bash + zsh
+#
+# .config\ directory:
+#   Each subdirectory of stow\config\.config\ is symlinked into %USERPROFILE%\.config\.
+#   This covers Starship (starship.toml), Neovim (nvim\), and any other XDG config.
+#   starship.toml also gets a root-level symlink at %USERPROFILE%\starship.toml for
+#   compatibility with tools that look there instead of .config\.
+#
+# What can go wrong:
+#   • Source file not found — silently skipped (guarded by Test-Path).
+#   • Target already exists as a directory (not a symlink) — Remove-Item -Recurse
+#     deletes it; this is intentional but destructive if the directory has data.
+#   • Dotfiles repo not found and git clone fails — caught and reported.
+#
+# Prerequisites: Administrator privileges for SymbolicLink creation.
 function Symlink-Dotfiles {
     try {
         Write-Host "Symlinking dotfiles..." -ForegroundColor Cyan
@@ -284,6 +631,38 @@ function Symlink-Dotfiles {
     } catch { Write-Status "Symlinking failed: $_" "Error" }
 }
 
+# ── Configure-CMD ───────────────────────────────────────────────────────────────
+# Configures the Windows Command Prompt (cmd.exe) to use Starship as its prompt
+# via the Clink readline extension.
+#
+# Why Clink is needed:
+#   cmd.exe has no native support for custom prompts beyond the static %PROMPT%
+#   environment variable.  Clink (https://chrisant996.github.io/clink/) injects
+#   a Lua scripting layer into cmd.exe at startup, enabling Readline editing,
+#   history improvements, and — critically — arbitrary Lua-driven prompt rendering.
+#   Starship provides a `starship init cmd` command that outputs a Lua snippet
+#   designed to be loaded by Clink.
+#
+# How the Lua file works:
+#   The single line:
+#     load(io.popen("starship init cmd"):read("*a"))()
+#   runs `starship init cmd` as a subprocess, captures its Lua output, and
+#   executes it in the Clink context.  This is the officially documented method
+#   for Starship + Clink integration.
+#
+# What it modifies:
+#   %LOCALAPPDATA%\clink\starship.lua — Clink auto-loads all *.lua files from its
+#   profile directory on every cmd.exe launch, so placing the file there is
+#   sufficient; no registry changes are needed.
+#
+# What can go wrong:
+#   • Clink is not installed — detected via Get-Command; the function informs the
+#     user and provides the winget install command; no file is written.
+#   • Clink profile directory doesn't exist — created with New-Item -Force.
+#   • starship is not on PATH at CMD launch time — Clink will silently fail to
+#     load the prompt; installing Starship via Install-CoreTools fixes this.
+#
+# Prerequisites: Clink must be installed; Starship must be on PATH.
 function Configure-CMD {
     try {
         Write-Host "Configuring Command Prompt (CMD) with Starship..." -ForegroundColor Cyan
@@ -309,12 +688,43 @@ function Configure-CMD {
     } catch { Write-Status "CMD config failed: $_" "Error" }
 }
 
-
+# ── Install-RemoteDotfiles ──────────────────────────────────────────────────────
+# Displays the one-liner curl command for bootstrapping dotfiles on a remote
+# Linux / macOS server.  This function contains no install logic — it is purely
+# informational, giving the user the exact command to run on a fresh server to
+# replicate the shell environment set up by install.sh.
+#
+# Why this is in the Windows installer:
+#   Many users manage remote servers from Windows.  After setting up the local
+#   Windows environment they typically want to apply the same dotfiles to their
+#   servers.  Providing the command here, in context, removes the need to look
+#   it up elsewhere.
+#
+# What it modifies: nothing — read-only display function.
+# What can go wrong: nothing — no network calls, no file writes.
+function Install-RemoteDotfiles {
     Write-ColorText "`nREMOTE SERVER SETUP" "Cyan"
     Write-Host "Run this on your server:"
     Write-ColorText "curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash" "Yellow"
 }
 
+# ── Show-Menu ───────────────────────────────────────────────────────────────────
+# Clears the console and renders the interactive selection menu.
+#
+# Structure:
+#   Items 1–6  — individual configuration steps (can be run in any order)
+#   Item 7     — Full Local Setup: runs items 1–6 in the recommended sequence
+#   Item 8     — Symlink Dotfiles: links repo files into %USERPROFILE%
+#   Item 9     — Remote Setup Guide: prints the Linux/macOS one-liner
+#   Item A     — Complete Workflow: runs all of 1–8 then shows the remote guide
+#   Item 0     — Exit the menu loop
+#
+# Why a menu instead of a linear script?
+#   Different machines need different subsets of the setup.  A menu lets the user
+#   re-run individual steps (e.g. just re-link dotfiles after adding a new file)
+#   without re-running the full install.
+#
+# What it modifies: nothing — display only.  Input reading is done in Main.
 function Show-Menu {
     Clear-Host
     Write-ColorText "╔══════════════════════════════════════════════════╗" "Cyan"
@@ -335,6 +745,26 @@ function Show-Menu {
     Write-Host "`nEnter choice: " -NoNewline
 }
 
+# ── Main ────────────────────────────────────────────────────────────────────────
+# Entry point.  Backs up existing settings once, then runs the interactive menu
+# loop until the user chooses to exit (option 0).
+#
+# Structure:
+#   • Backup-Settings is called once before the loop so a snapshot exists
+#     regardless of which options the user chooses during the session.
+#   • The do…while loop re-renders the menu and reads input after each action,
+#     allowing the user to run multiple steps in one session.
+#   • After any non-exit choice, Read-Host pauses so the user can read the output
+#     of the just-completed action before the menu clears the screen.
+#
+# Switch dispatch:
+#   "7" and "A"/"a" call multiple functions in the recommended sequence.
+#   Both "A" and "a" are matched explicitly to handle Shift and CapsLock states.
+#
+# What can go wrong:
+#   Any unhandled exception from a called function bubbles up to the outer catch
+#   and is printed via Write-Error; the menu loop does not restart after a fatal
+#   error, so the -NoExit window stays open and the user can inspect the error.
 function Main {
     try {
         Backup-Settings

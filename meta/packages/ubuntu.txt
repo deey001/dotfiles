@@ -1,29 +1,40 @@
-# Core tools (prerequisites)
-make
-gcc
-g++
-gawk
-curl
-xz-utils
-tar
-unzip
-bzip2
-build-essential
+# ==============================================================================
+# meta/packages/ubuntu.txt — System Packages for Debian / Ubuntu
+# ==============================================================================
+# Used by: scripts/install.sh (via install_package_list)
+# Command: sudo apt install -y <packages>
+#
+# Format: one package name per line; lines starting with # are comments.
+# Add/remove packages here to change what install.sh provisions.
+# ==============================================================================
 
-# Core tools (shell-agnostic)
-tmux
-git
-fzf
-xclip
-hstr
-bat
-cmatrix
-btop
-tldr
-ncurses-term
+# ── Build Essentials ──────────────────────────────────────────────────────────
+# Required to compile tools from source (ble.sh, some cargo builds, etc.)
+make                   # GNU Make — build automation
+gcc                    # C compiler (required by many native npm/gem packages)
+g++                    # C++ compiler
+gawk                   # GNU AWK — used in .bashrc PATH deduplication
+curl                   # HTTP client — used by the install script itself
+xz-utils               # .xz / .tar.xz decompression
+tar                    # Archive extraction
+unzip                  # .zip extraction (Nerd Fonts, etc.)
+bzip2                  # .bz2 decompression
+build-essential        # Meta-package: gcc, g++, make, libc-dev in one shot
 
-# Shell-specific
-bash-completion
-zsh
-zsh-syntax-highlighting
-zsh-autosuggestions
+# ── Core CLI Tools ───────────────────────────────────────────────────────────
+tmux                   # Terminal multiplexer — persistent sessions, split panes
+git                    # Version control — required by stow, fzf-tab auto-clone, etc.
+fzf                    # Fuzzy finder — Ctrl+R history, Ctrl+T file picker, Alt+C cd
+xclip                  # X11 clipboard integration — used by tmux yank.sh for copy
+hstr                   # History browser — alternative Ctrl+R (atuin takes over if installed)
+bat                    # cat replacement — syntax highlighting, Catppuccin theme
+cmatrix                # Matrix rain screensaver (fun, not required)
+btop                   # Resource monitor — replaces top/htop (aliased as 'top')
+tldr                   # Simplified man pages — tldr git, tldr tar, etc.
+ncurses-term           # Extra TERM definitions — enables tmux-256color, alacritty, etc.
+
+# ── Shell & Completion ────────────────────────────────────────────────────────
+bash-completion        # Programmable Bash completion (tab-complete git, docker, etc.)
+zsh                    # Z shell — alternative to bash, used on macOS by default
+zsh-syntax-highlighting  # Colorize zsh commands as you type (green=valid, red=invalid)
+zsh-autosuggestions    # Fish-style ghost-text suggestions from zsh history
