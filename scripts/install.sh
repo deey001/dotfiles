@@ -126,10 +126,11 @@ install_package_list() {
 
     echo "--- Installing system dependencies from $(basename "$list_file") ---"
 
-    # Strip comment lines (^#) and blank lines (^$), then collapse newlines into
-    # spaces so the whole list can be passed as positional args to the install cmd.
+    # Strip comment lines (^#) and blank lines (^$), strip inline comments
+    # (everything after a # on a data line), then collapse to a single space-
+    # separated list suitable for passing as positional args to the install cmd.
     local pkgs
-    pkgs=$(grep -v '^#' "$list_file" | grep -v '^$' | tr '\n' ' ')
+    pkgs=$(grep -v '^#' "$list_file" | grep -v '^$' | sed 's/[[:space:]]*#.*//' | tr '\n' ' ')
 
     # Guard against an empty package list — most package managers error out when
     # invoked with no arguments, which would abort the script under `set -e`.
