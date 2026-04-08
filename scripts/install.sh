@@ -65,11 +65,19 @@ if [[ "${BASH_SOURCE[0]:-}" == "${0:-}" ]] || [[ "${BASH_SOURCE[0]:-}" == "" ]];
     # Running from curl-pipe or a direct `bash install.sh` invocation outside the repo.
     # Point DOTFILES_DIR at the canonical location under $HOME.
     DOTFILES_DIR="$HOME/dotfiles"
-    if [ ! -d "$DOTFILES_DIR" ]; then
+    if [ ! -d "$DOTFILES_DIR/.git" ]; then
         # Repo hasn't been cloned yet — fetch it now so the rest of the script can
         # reference package lists, the Brewfile, and stow packages that live inside it.
         echo "--- Cloning dotfiles repository... ---"
+        # Remove any incomplete/non-git directory before cloning.
+        [ -d "$DOTFILES_DIR" ] && rm -rf "$DOTFILES_DIR"
         git clone https://github.com/deey001/dotfiles.git "$DOTFILES_DIR"
+    else
+        # Repo already exists — pull the latest changes so package lists and stow
+        # packages are always up to date on every run.
+        echo "--- Updating dotfiles repository... ---"
+        git -C "$DOTFILES_DIR" fetch origin master 2>&1
+        git -C "$DOTFILES_DIR" reset --hard origin/master 2>&1
     fi
 else
     # Running via `make install` or sourced from inside the repo.
@@ -126,11 +134,11 @@ install_package_list() {
 
     echo "--- Installing system dependencies from $(basename "$list_file") ---"
 
-    # Strip comment lines (^#) and blank lines (^$), strip inline comments
-    # (everything after a # on a data line), then collapse to a single space-
-    # separated list suitable for passing as positional args to the install cmd.
+    # Parse the package list: skip comment lines (^#) and blank lines, then
+    # extract only the first field (package name) — awk $1 discards any inline
+    # comments like "make  # GNU Make" without needing sed or regex.
     local pkgs
-    pkgs=$(grep -v '^#' "$list_file" | grep -v '^$' | sed 's/[[:space:]]*#.*//' | tr '\n' ' ')
+    pkgs=$(awk '!/^[[:space:]]*#/ && /[^[:space:]]/ {print $1}' "$list_file" | tr '\n' ' ')
 
     # Guard against an empty package list — most package managers error out when
     # invoked with no arguments, which would abort the script under `set -e`.
