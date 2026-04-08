@@ -606,16 +606,22 @@ function Install-CoreTools {
 function Symlink-Dotfiles {
     try {
         Write-Host "Symlinking dotfiles to User Home..." -ForegroundColor Cyan
-        $dotfilesDir = Split-Path -Parent $PSScriptRoot
+        $dotfilesDir = $PSScriptRoot | Split-Path -Parent
         $homeDir = $env:USERPROFILE
 
-        $filesToLink = @(
-            ".bashrc", ".bash_profile", ".bash_aliases",
-            ".tmux.conf", ".gitconfig",
-            ".inputrc", ".blerc"
-        )
-        foreach ($file in $filesToLink) {
-            $source = Join-Path $dotfilesDir "dots\$file"
+        # Map files to their new 'stow' locations
+        $fileMap = @{
+            ".bashrc"       = "stow\bash\.bashrc"
+            ".bash_profile" = "stow\bash\.bash_profile"
+            ".bash_aliases" = "stow\bash\.bash_aliases"
+            ".blerc"        = "stow\bash\.blerc"
+            ".tmux.conf"    = "stow\tmux\.tmux.conf"
+            ".gitconfig"    = "stow\git\.gitconfig"
+            ".inputrc"      = "stow\shell\.inputrc"
+        }
+
+        foreach ($file in $fileMap.Keys) {
+            $source = Join-Path $dotfilesDir $fileMap[$file]
             $target = Join-Path $homeDir $file
 
             if (Test-Path $source) {
@@ -629,8 +635,8 @@ function Symlink-Dotfiles {
             }
         }
 
-        # Symlink .config directory content
-        $configSource = Join-Path $dotfilesDir ".config"
+        # Symlink .config directory content from the 'config' meta-package
+        $configSource = Join-Path $dotfilesDir "stow\config\.config"
         $configTarget = Join-Path $homeDir ".config"
         
         if (Test-Path $configSource) {
@@ -645,7 +651,9 @@ function Symlink-Dotfiles {
                 if (Test-Path $itemTarget) {
                     Write-Host "Backing up existing config/$($_.Name)..." -ForegroundColor Gray
                     if (Test-Path $itemTarget -PathType Container) {
-                        Rename-Item $itemTarget "$($_.Name).bak" -ErrorAction SilentlyContinue
+                        # For directories, we might need to remove them if they are symlinks
+                        # or rename them if they are real directories.
+                        Move-Item $itemTarget "$itemTarget.bak" -Force -ErrorAction SilentlyContinue
                     } else {
                         Move-Item $itemTarget "$itemTarget.bak" -Force -ErrorAction SilentlyContinue
                     }
@@ -656,13 +664,19 @@ function Symlink-Dotfiles {
         }
 
         # Neovim Windows Path (AppData/Local/nvim)
-        $nvimSource = Join-Path $dotfilesDir ".config\nvim"
+        $nvimSource = Join-Path $configSource "nvim"
         $nvimTarget = Join-Path $env:LOCALAPPDATA "nvim"
         if (Test-Path $nvimSource) {
             Write-Host "Symlinking Neovim config to AppData..." -ForegroundColor Cyan
             if (Test-Path $nvimTarget) {
                 Write-Host "Backing up existing AppData nvim..." -ForegroundColor Gray
-                Rename-Item $nvimTarget "nvim.bak" -ErrorAction SilentlyContinue
+                if (Test-Path $nvimTarget -PathType Container) {
+                    $bakPath = Join-Path $env:LOCALAPPDATA "nvim.bak"
+                    if (Test-Path $bakPath) { Remove-Item $bakPath -Recurse -Force }
+                    Move-Item $nvimTarget $bakPath -Force
+                } else {
+                    Remove-Item $nvimTarget -Force
+                }
             }
             New-Item -Path $nvimTarget -ItemType SymbolLink -Value $nvimSource -Force | Out-Null
         }

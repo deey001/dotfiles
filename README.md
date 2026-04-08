@@ -6,15 +6,25 @@ A high-performance, cross-platform configuration for macOS and Linux (Debian/Ubu
 
 ### 📦 Quick Install (The One-Liner)
 
-To set up a fresh machine, run this command in your terminal:
-
+**macOS / Linux (Bash):**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash
+```
+
+**Windows (PowerShell 7+):**
+*Run this in an elevated PowerShell window to install fonts and tools:*
+```powershell
+irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" | iex
 ```
 
 ---
 
 ## 🏗️ Architecture: The "Why" and "How"
+
+### Cross-Platform Support
+- **Linux/macOS:** Handled by `scripts/install.sh` using **GNU Stow**. It manages symlinks and system packages.
+- **Windows:** Handled by `scripts/install.ps1`. It focuses on **Nerd Fonts** (critical for icons), **Windows Terminal** themes, and creating Windows-native symlinks so that **Git Bash** can share your Linux configurations.
+- **WSL:** You should run the **Linux** installer inside your WSL distribution.
 
 ### Why GNU Stow?
 We use **GNU Stow** because it is the safest way to manage dotfiles.

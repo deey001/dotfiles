@@ -175,7 +175,7 @@
 
 [credential]
 	# Cache credentials for 1 hour (3600 seconds)
-	helper = cache --timeout=3600
+	helper = store
 
 [fetch]
 	# Automatically prune deleted remote branches when fetching

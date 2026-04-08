@@ -19,8 +19,6 @@
 set -euo pipefail
 
 # ── 1. Configuration & Versions ──────────────────────────────────────────────
-# Pinned versions ensure that the "One-Liner" install is reproducible and
-# won't break if an upstream project releases a buggy update.
 NEOVIM_VERSION="0.11.6"
 STARSHIP_VERSION="1.23.0"
 LAZYGIT_VERSION="0.48.0"
@@ -28,10 +26,18 @@ BASH_COMPLETION_VERSION="2.12.0"
 
 # ── 2. Environment Detection ─────────────────────────────────────────────────
 ARCH=$(uname -m)
-OS="$(uname)"
+OS_RAW="$(uname)"
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 _cleanup_dirs=()
 trap 'for dir in "${_cleanup_dirs[@]}"; do rm -rf "$dir"; done' EXIT
+
+# Normalize OS string
+case "$OS_RAW" in
+    Darwin)         OS="Darwin" ;;
+    Linux)          OS="Linux" ;;
+    MINGW*|MSYS*|CYGWIN*) OS="Windows" ;;
+    *)              OS="Unknown" ;;
+esac
 
 case "$ARCH" in
     x86_64)         NVIM_ARCH="x86_64" ;;
@@ -40,8 +46,6 @@ case "$ARCH" in
 esac
 
 # ── 3. Helper Functions ───────────────────────────────────────────────────────
-# install_package_list: Reads a distro-specific .txt file and passes it to
-# the system package manager. This keeps the logic separate from the data.
 install_package_list() {
     local list_file="$1"
     local install_cmd="$2"
@@ -83,30 +87,30 @@ elif [ "$OS" = "Linux" ]; then
         echo "--- Detected Arch Linux ---"
         install_package_list "$DOTFILES_DIR/meta/packages/arch.txt" "sudo pacman -Syu --noconfirm"
     fi
+elif [ "$OS" = "Windows" ]; then
+    echo "--- Detected Windows (Git Bash/MSYS) ---"
+    echo "Running in Windows Bash environment. Only stowing configurations."
+    echo "Use scripts/install.ps1 in PowerShell for full Windows local setup (fonts, tools)."
 fi
 
 # ── 5. GNU Stow (The Linker) ──────────────────────────────────────────────────
-# Stow creates symlinks in $HOME that point back to ~/dotfiles/stow/.
-# This allows you to edit files in the repo and have them update instantly.
-command -v stow &>/dev/null || {
-    echo "Installing GNU Stow..."
-    [ -f /etc/debian_version ] && sudo apt install -y stow
-    [ -f /etc/arch-release ] && sudo pacman -S --noconfirm stow
-}
-
-echo "--- Symlinking Configurations via GNU Stow ---"
-STOW_PKGS=(bash zsh git shell tmux config)
-# Only stow GUI configs if we are on a desktop environment
-# (Note: wezterm is now part of 'config', but we keep this check for logic clarity if needed later)
-
-
-cd "$DOTFILES_DIR"
-for pkg in "${STOW_PKGS[@]}"; do
-    echo "  Stowing: $pkg"
-    stow -R --dir=stow --target="$HOME" "$pkg"
-done
+if command -v stow &>/dev/null; then
+    echo "--- Symlinking Configurations via GNU Stow ---"
+    STOW_PKGS=(bash zsh git shell tmux config)
+    
+    cd "$DOTFILES_DIR"
+    for pkg in "${STOW_PKGS[@]}"; do
+        echo "  Stowing: $pkg"
+        stow -R --dir=stow --target="$HOME" "$pkg"
+    done
+else
+    echo "Warning: GNU Stow not found. Skipping configuration symlinking."
+    if [ "$OS" = "Windows" ]; then
+        echo "Tip: You can install stow on Windows via 'pacman -S stow' in Git Bash / MSYS2."
+    fi
+fi
 
 echo "======================================================================"
-echo "INSTALLATION COMPLETE!"
+echo "INSTALLATION PROCESS FINISHED!"
 echo "Please restart your shell or run: source ~/.bashrc"
 echo "======================================================================"
