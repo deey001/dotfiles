@@ -126,19 +126,18 @@ Redhat = "[󱄛 ](fg:red)"
 SUSE = "[ ](fg:green)"
 
 # --- Username Module ----------------------------------------------------------
-# Only shows when running as root (red + bold as a warning) or via SSH.
-# Hidden for normal local sessions to keep the prompt minimal.
+# Always show the username — provides context on both local and SSH sessions.
 [username]
-show_always = false                  # Only show in SSH sessions or as root
+show_always = true                   # Show on all sessions (local + SSH)
 style_user = "fg:#cdd6f4"           # Normal user: text color (subdued)
 style_root = "fg:#f38ba8 bold"      # Root user: red + bold (visual warning)
 format = '[$user]($style)'
 
 # --- Hostname Module ----------------------------------------------------------
-# Only appears over SSH — helps distinguish local vs remote sessions.
+# Always show the hostname — helps distinguish machines in local and SSH sessions.
 # Format: @hostname (prepended to directory path)
 [hostname]
-ssh_only = true                      # Hide on local sessions to reduce noise
+ssh_only = false                     # Show on all sessions, not just SSH
 style = "fg:#a6adc8"                # Subtext0 — intentionally subdued
 format = '[@$hostname]($style) '
 
@@ -179,7 +178,7 @@ format = '[$all_status$ahead_behind]($style)'
 # Shows how long the previous command took to execute.
 # Only appears when the command exceeds min_time threshold.
 [cmd_duration]
-min_time = 2_000                    # Show only for commands taking >2 seconds
+min_time = 500                      # Show for commands taking >500ms
 style = "fg:#f9e2af"                # Yellow — same as git status for consistency
 format = '[$duration]($style)'
 
