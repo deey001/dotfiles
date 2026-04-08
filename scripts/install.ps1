@@ -607,38 +607,33 @@ function Symlink-Dotfiles {
     try {
         Write-Host "Symlinking dotfiles to User Home..." -ForegroundColor Cyan
         
-        # Robustly find dotfiles directory
-        # 1. Check if we are in the repo already
+        # 1. Determine where the dotfiles are
         $dotfilesDir = ""
+        $userHome = $env:USERPROFILE
+        
         if (Test-Path (Join-Path (Get-Location) "stow")) {
             $dotfilesDir = (Get-Location).Path
-        } 
-        # 2. Check ~/dotfiles
-        elseif (Test-Path (Join-Path $env:USERPROFILE "dotfiles\stow")) {
-            $dotfilesDir = Join-Path $env:USERPROFILE "dotfiles"
-        }
-        # 3. Fallback: Auto-Clone
-        else {
-            $dotfilesDir = Join-Path $env:USERPROFILE "dotfiles"
-            Write-Status "Dotfiles directory not found. Attempting to clone..." "Warning"
+        } elseif (Test-Path (Join-Path $userHome "dotfiles\stow")) {
+            $dotfilesDir = Join-Path $userHome "dotfiles"
+        } else {
+            # Auto-Clone Fallback
+            $dotfilesDir = Join-Path $userHome "dotfiles"
+            Write-Status "Dotfiles not found at $dotfilesDir. Cloning repository..." "Warning"
             
             if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
-                Write-Status "Installing Git..." "Progress"
+                Write-Status "Git not found. Installing via Winget..." "Progress"
                 winget install --id Git.Git --silent --accept-package-agreements --accept-source-agreements | Out-Null
             }
 
-            try {
-                git clone "https://github.com/deey001/dotfiles.git" $dotfilesDir
-                Write-Status "Cloned successfully to $dotfilesDir" "Success"
-            } catch {
-                Write-Status "Failed to clone repository." "Error"
-                return
+            git clone "https://github.com/deey001/dotfiles.git" $dotfilesDir
+            if (-not (Test-Path $dotfilesDir)) {
+                throw "Failed to clone repository to $dotfilesDir"
             }
         }
 
-        Write-Log "Using dotfiles directory: $dotfilesDir"
+        Write-Host "  Using Source: $dotfilesDir" -ForegroundColor Gray
 
-        # Map files to their new 'stow' locations
+        # 2. Link Individual Files
         $fileMap = @{
             ".bashrc"       = "stow\bash\.bashrc"
             ".bash_profile" = "stow\bash\.bash_profile"
@@ -647,69 +642,64 @@ function Symlink-Dotfiles {
             ".tmux.conf"    = "stow\tmux\.tmux.conf"
             ".gitconfig"    = "stow\git\.gitconfig"
             ".inputrc"      = "stow\shell\.inputrc"
+            ".common_shell" = "stow\shell\.common_shell"
         }
 
         foreach ($file in $fileMap.Keys) {
             $source = Join-Path $dotfilesDir $fileMap[$file]
-            $target = Join-Path $env:USERPROFILE $file
+            $target = Join-Path $userHome $file
 
             if (Test-Path $source) {
                 if (Test-Path $target) {
-                    Write-Host "Backing up existing $file..." -ForegroundColor Gray
-                    $bakPath = "$target.bak"
-                    if (Test-Path $bakPath) { Remove-Item $bakPath -Force }
-                    Move-Item $target $bakPath -Force
+                    $bak = "$target.bak"
+                    if (Test-Path $bak) { Remove-Item $bak -Force }
+                    Move-Item $target $bak -Force
                 }
-                
-                Write-Host "Creating symlink for $file..." -ForegroundColor Cyan
                 New-Item -Path $target -ItemType SymbolLink -Value $source -Force | Out-Null
+                Write-Log "Linked $file"
             }
         }
 
-        # Symlink .config directory content from the 'config' meta-package
-        $configSource = Join-Path $dotfilesDir "stow\config\.config"
-        $configTarget = Join-Path $env:USERPROFILE ".config"
+        # 3. Link .config Subdirectories
+        $configSourceBase = Join-Path $dotfilesDir "stow\config\.config"
+        $configTargetBase = Join-Path $userHome ".config"
         
-        if (Test-Path $configSource) {
-            if (-not (Test-Path $configTarget)) {
-                New-Item -Path $configTarget -ItemType Directory -Force | Out-Null
+        if (Test-Path $configSourceBase) {
+            if (-not (Test-Path $configTargetBase)) {
+                New-Item -Path $configTargetBase -ItemType Directory -Force | Out-Null
             }
             
-            Get-ChildItem $configSource | ForEach-Object {
+            Get-ChildItem $configSourceBase | ForEach-Object {
                 $itemSource = $_.FullName
-                $itemTarget = Join-Path $configTarget $_.Name
+                $itemTarget = Join-Path $configTargetBase $_.Name
                 
                 if (Test-Path $itemTarget) {
-                    Write-Host "Backing up existing config/$($_.Name)..." -ForegroundColor Gray
-                    $bakPath = "$itemTarget.bak"
-                    if (Test-Path $bakPath) { 
-                        if ($_.PSIsContainer) { Remove-Item $bakPath -Recurse -Force } else { Remove-Item $bakPath -Force }
+                    $bak = "$itemTarget.bak"
+                    if (Test-Path $bak) { 
+                        if ($_.PSIsContainer) { Remove-Item $bak -Recurse -Force } else { Remove-Item $bak -Force }
                     }
-                    Move-Item $itemTarget $bakPath -Force
+                    Move-Item $itemTarget $bak -Force
                 }
-                
                 New-Item -Path $itemTarget -ItemType SymbolLink -Value $itemSource -Force | Out-Null
             }
         }
 
-        # Neovim Windows Path (AppData/Local/nvim)
-        $nvimSource = Join-Path $configSource "nvim"
+        # 4. Neovim AppData Link
+        $nvimSource = Join-Path $configSourceBase "nvim"
         $nvimTarget = Join-Path $env:LOCALAPPDATA "nvim"
         if (Test-Path $nvimSource) {
-            Write-Host "Symlinking Neovim config to AppData..." -ForegroundColor Cyan
             if (Test-Path $nvimTarget) {
-                Write-Host "Backing up existing AppData nvim..." -ForegroundColor Gray
-                $bakPath = Join-Path $env:LOCALAPPDATA "nvim.bak"
-                if (Test-Path $bakPath) { Remove-Item $bakPath -Recurse -Force }
-                Move-Item $nvimTarget $bakPath -Force
+                $bak = Join-Path $env:LOCALAPPDATA "nvim.bak"
+                if (Test-Path $bak) { Remove-Item $bak -Recurse -Force }
+                Move-Item $nvimTarget $bak -Force
             }
             New-Item -Path $nvimTarget -ItemType SymbolLink -Value $nvimSource -Force | Out-Null
         }
 
-        Add-Action "Symlinked dotfiles to $($env:USERPROFILE)"
+        Add-Action "Symlinked all dotfiles successfully"
         Write-Status "Dotfiles symlinked successfully" "Success"
     } catch {
-        Write-Status "Symlinking failed: $_" "Error"
+        Write-Status "Symlinking failed: $($_.Exception.Message)" "Error"
         Write-Log "Symlink error: $_" "ERROR"
     }
 }
