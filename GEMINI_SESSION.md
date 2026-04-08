@@ -1,97 +1,78 @@
-# Session Memory — March 2026
+# Session Memory — April 2026 Overhaul
 
 Persistent context for the dotfiles repo (github.com/deey001/dotfiles).
-User: Danny. Machines: macOS dev (dannyvillazon), ARM64 Ubuntu server (danny@containers / danny@10.10.1.250).
+User: Danny. 
 
 ---
 
-## Current Architecture
+## 🏗️ New Simplified Architecture
 
-Dotfiles use **GNU Stow** for symlink management. All configs live under `stow/`:
+The repository underwent a major simplification overhaul in April 2026 to reduce maintenance overhead and improve cross-platform reliability.
 
+### Stow Meta-Packages
+Individual tool packages were consolidated into logical groups:
 ```
 stow/
-  bash/       → ~/.bashrc, ~/.bash_aliases, ~/.bash_exports, ~/.bash_functions,
-                  ~/.bash_wrappers, ~/.bash_profile, ~/.blerc, ~/.inputrc
+  bash/       → ~/.bashrc, ~/.bash_aliases, ~/.blerc, ~/.bash_profile
   zsh/        → ~/.zshrc
   git/        → ~/.gitconfig
-  shell/      → ~/.inputrc (shared)
-  tmux/       → ~/.tmux.conf, ~/.config/tmux/scripts/
-  nvim/       → ~/.config/nvim/
-  starship/   → ~/.config/starship.toml
-  bat/        → ~/.config/bat/themes/
-  atuin/      → ~/.config/atuin/config.toml
-  fastfetch/  → ~/.config/fastfetch/config.jsonc
-  alacritty/  → ~/.config/alacritty/  (macOS only)
+  shell/      → ~/.common_shell (Shared logic), ~/.inputrc
+  tmux/       → ~/.tmux.conf
+  config/     → All ~/.config/ items (nvim, wezterm, starship, bat, atuin, fastfetch)
 ```
 
-Key files: `.stowrc` (--dir=stow --target=~ --no-folding), `scripts/install.sh` (handles stow + legacy symlink removal).
+### The "Unified Shell Brain"
+*   **`.common_shell`**: All shared aliases, environment variables (EDITOR, PAGER), and functions now live here.
+*   **Source Logic**: Both `.bashrc` and `.zshrc` source `~/.common_shell`. Update once, use everywhere.
+*   **Consolidation**: Legacy fragments (`.bash_exports`, `.bash_functions`, `.bash_wrappers`) were merged directly into `.bashrc`.
 
 ---
 
-## Install / Update
+## 📦 Automated Installation
 
+### macOS / Linux (One-Liner)
 ```bash
-# Fresh install
 curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash
-
-# Update existing install
-git pull && bash scripts/install.sh
-
-# Apply config changes only (no full reinstall)
-git pull && source ~/.blerc   # for bash/ble.sh changes
 ```
+*   **New Logic**: Uses distro-specific package lists in `meta/packages/*.txt`.
+*   **Auto-Clone**: Automatically clones the repo to `~/dotfiles` if run via pipe.
+*   **Repo Tools**: Use `make install`, `make test`, or `make uninstall`.
 
-No Makefile — removed as unnecessary complexity.
-
----
-
-## ble.sh — RE-ENABLED
-
-ble.sh is active in the bash config. The previous incompatibility with bash 5.2
-on ARM64 Linux (strict `read` validation errors) has been resolved by adding
-a `read()` wrapper in `~/.blerc` that silences noise from older completion
-scripts.
-
-Full feature set (syntax highlighting, autosuggestions, menu-complete) is now
-available in bash.
+### Windows (PowerShell 7+)
+```powershell
+irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" | iex
+```
+*   **Features**: Auto-installs Git/Nerd Fonts, cleans PowerShell profiles, and creates Windows-native symlinks for Git Bash/WSL compatibility.
+*   **Starship**: Double-linked to `~/.config/starship.toml` and `~/starship.toml` for maximum compatibility.
 
 ---
 
-## Key Shell Features
+## 🎨 Key Features & Theming
 
 | Feature | Tool | Notes |
-|---------|------|-------|
-| Prompt | Starship | Pure-inspired 2-line, Catppuccin Mocha |
-| Syntax highlight | ble.sh | Re-enabled (Bash 5.2 fix applied) |
-| Autosuggestions | ble.sh | Re-enabled |
-| History search | atuin | Ctrl+R fuzzy search |
-| Completions | carapace | Multi-shell, loaded in both bash/zsh |
-| Navigation | zoxide | `z dir` to jump, `zi` for fuzzy |
-| System info | fastfetch | Runs once per session (_FASTFETCH_RAN guard) |
+|:--- |:--- |:--- |
+| **Theme** | Catppuccin Mocha | Applied to Nvim, Tmux, WezTerm, Fzf, and Prompt. |
+| **Prompt** | Starship | "Smart" SSH-only username/host, native OS icon colors, right-aligned timer. |
+| **Terminal** | WezTerm | Primary terminal with Lua config and auto-SSH logging. |
+| **Editor** | LazyVim | Enhanced with `nvim-colorizer` for hex color backgrounds. |
+| **Tmux** | Community Plugins | Replaced custom 150-line network script with `0xAF/tmux-public-ip`. |
 
 ---
 
-## Known Working State
+## ✅ Known Working State (April 2026)
 
-- **macOS**: stow working, starship colors/icons OK, zsh fully functional
-- **Linux (ARM64)**: stow working, bash+ble.sh functional, ble.sh read error being fixed
-- **fastfetch double-run**: fixed with `_FASTFETCH_RAN` export guard
-- **Starship palette**: full Catppuccin Mocha defined in starship.toml
+- **Ubuntu 24.04+**: All symlinks verified, Starship icons and colors OK.
+- **Windows 11**: `install.ps1` handles auto-elevation and profile "Power-Wash" correctly.
+- **Git Bash**: Correctly inherits Bash/Starship settings via Windows-native symlinks.
+- **Encoding**: All Windows-side scripts use ASCII-safe icons to prevent parsing errors.
 
 ---
 
-## Files Reference
+## 🛠️ Maintenance Reference
 
 | Script | Purpose |
-|--------|---------|
-| `scripts/install.sh` | Full install: packages + stow |
-| `scripts/uninstall.sh` | Full cleanup |
-| `scripts/test.sh` | Validate symlinks/commands |
-| `scripts/install-blesh.sh` | Build+install ble.sh from git master |
-
----
-
-## Tmux Prefix: Ctrl+a
-
-Key bindings: `v`/`s` splits, `h/j/k/l` navigation, `Prefix+o` session switcher (sessionx), `Prefix+p` floating terminal (floax), `Prefix+I` install plugins.
+|:--- |:--- |
+| `scripts/install.sh` | Clean, package-list based bootstrapper (Linux/macOS). |
+| `scripts/install.ps1` | Full-featured Windows setup tool with interactive menu. |
+| `scripts/test.sh` | Validation suite (13+ symlink checks). |
+| `Makefile` | Standard shortcuts: `make`, `make test`, `make clean`. |
