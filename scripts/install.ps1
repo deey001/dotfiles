@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Dotfiles Windows Local Setup — Installs Nerd Fonts and configures terminals for proper icon display
-    One-liner: irm "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" | iex
+    One-liner: irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" | iex
 
 .DESCRIPTION
     This script prepares Windows machines so that Nerd Font icons display correctly
@@ -72,7 +72,7 @@ if (-not (Test-AdminPrivileges)) {
     $TempScript = "$env:TEMP\DotfilesSetup.ps1"
     try {
         Write-Host "Preparing setup file..." -ForegroundColor Cyan
-        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" -OutFile $TempScript -UseBasicParsing
+        Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" -OutFile $TempScript -UseBasicParsing
         
         # Launch the temp file as Admin
         Start-Process powershell -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$TempScript`""
@@ -141,7 +141,7 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
         # Use same temp file strategy for reliability
         $TempScript = "$env:TEMP\DotfilesSetup.ps1"
         if (-not (Test-Path $TempScript)) {
-            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/install.ps1" -OutFile $TempScript -UseBasicParsing
+            Invoke-WebRequest -Uri "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" -OutFile $TempScript -UseBasicParsing
         }
 
         Start-Process -FilePath $pwsh7Path -Verb RunAs -ArgumentList "-NoExit", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$TempScript`""
@@ -737,7 +737,7 @@ NEXT STEPS:
 function Install-RemoteDotfiles {
     Write-ColorText "`nREMOTE SERVER SETUP" "Cyan"
     Write-Host "Connect to your server, then run:"
-    Write-ColorText "bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/install.sh)\"" "Yellow"
+    Write-ColorText "bash -c \"\$(curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh)\"" "Yellow"
     Write-Host "`nThis will install your dotfiles on the server."
 
     $launch = Read-Host "`nLaunch Windows Terminal now? (y/n)"
