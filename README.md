@@ -49,7 +49,7 @@ dotfiles/
 │   ├── windows/        #   PowerShell profile, Windows Terminal settings.json
 │   └── packages/       #   ubuntu.txt, arch.txt, rhel.txt
 ├── scripts/            # install.sh, install.ps1, uninstall.sh, install-blesh.sh
-│   └── .bash_local.template  # Copy to ~/.bash_local for machine-local overrides
+│   └── install-blesh.sh      # ble.sh installer (manual step, see wiki)
 ├── Brewfile            # macOS Homebrew packages
 ├── Makefile            # make install / uninstall / theme-mocha / theme-latte
 └── README.md
@@ -84,13 +84,16 @@ Theme files live in `themes/`. All consumers (shell, bat, fzf, WezTerm, PSReadLi
 
 ## ⚙️ Machine-Local Overrides
 
-Copy the template and edit — it is never committed to git:
+Create `~/.bash_local` for secrets, tokens, host-specific `$PATH`, GOPATH, rbenv, etc. — it is never committed to git:
 
 ```bash
-cp ~/dotfiles/scripts/.bash_local.template ~/.bash_local
+# Example ~/.bash_local
+export GITHUB_TOKEN="..."
+export GOPATH="$HOME/go"
+export PATH="$GOPATH/bin:/usr/local/go/bin:$PATH"
 ```
 
-Use `~/.bash_local` for secrets, tokens, host-specific `$PATH`, GOPATH, rbenv, etc.
+See [New Machine](https://github.com/deey001/dotfiles/wiki/New-Machine) in the wiki for a full list of examples.
 
 ---
 

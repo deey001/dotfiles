@@ -33,7 +33,7 @@ irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.p
 - `platform/` — OS-specific files:
   - `platform/windows/` — `settings.json` (Windows Terminal), `Microsoft.PowerShell_profile.ps1`
   - `platform/packages/` — Per-distro package lists: `ubuntu.txt`, `arch.txt`, `rhel.txt`
-- `scripts/` — `install.sh`, `install.ps1`, `uninstall.sh`, `test.sh`, `install-blesh.sh`, `.bash_local.template`
+- `scripts/` — `install.sh`, `install.ps1`, `uninstall.sh`, `test.sh`, `install-blesh.sh`
 - `Brewfile` — macOS Homebrew packages
 
 ## Key Conventions
@@ -41,6 +41,6 @@ irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.p
 - **`set -euo pipefail`** on all shell scripts — strict error handling.
 - **`command -v` guards** on all modern tool aliases — always fall back gracefully.
 - **Theme system**: `make theme-mocha` symlinks `themes/catppuccin-mocha.sh` → `~/.config/dotfiles/theme.sh`. `.common_shell` sources it on every shell start. Windows uses `themes/windows/catppuccin-mocha.ps1` deployed by `Configure-PowerShell`.
-- **Secrets go in `~/.bash_local`** — never committed. Template at `scripts/.bash_local.template`.
+- **Secrets go in `~/.bash_local`** — never committed. See wiki [New Machine](https://github.com/deey001/dotfiles/wiki/New-Machine) for examples.
 - **tmux config** lives in `~/.config/tmux/tmux.conf` (stowed from `home/config/`).
 - **`.stowrc`** sets `--dir=home --target=~ --no-folding` as defaults.
