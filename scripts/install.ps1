@@ -756,49 +756,51 @@ function Configure-PowerShell {
     try {
         Write-Host "Cleaning and Configuring PowerShell Profiles..." -ForegroundColor Cyan
         
-        # We target both Windows PowerShell (5.1) and PowerShell (7+) profiles
         $profilePaths = @(
             "$env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1",
             "$env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1",
-            $PROFILE # The current session's profile
+            $PROFILE
         ) | Select-Object -Unique
 
         $starshipLine = 'starship init powershell | Invoke-Expression'
         
         foreach ($path in $profilePaths) {
             if (Test-Path $path) {
-                Write-Host "  Processing: $path" -ForegroundColor Gray
+                Write-Host "  Purging and fixing: $path" -ForegroundColor Gray
                 $content = Get-Content $path
                 
-                # Aggressively filter out any lines containing starship, oh-my-posh, or malformed commands
+                # Filter out EVERYTHING that looks like a prompt initializer or a broken command
                 $newContent = $content | Where-Object { 
                     $_ -notmatch "starship" -and 
                     $_ -notmatch "oh-my-posh" -and
-                    $_ -notmatch ".omp.json" -and
-                    $_ -notmatch "Invoke-Expression" -and # Removing all IEX lines to be safe
+                    $_ -notmatch "omp\.json" -and
+                    $_ -notmatch "Invoke-Expression" -and
                     -not [string]::IsNullOrWhiteSpace($_)
                 }
                 
-                # Add a clean Starship initialization
+                # Rebuild the file from scratch
                 $finalContent = @(
+                    "# ------------------------------------------------------------------",
                     "# Added by Dotfiles Setup ($BACKUP_TIMESTAMP)",
-                    $starshipLine
+                    "# ------------------------------------------------------------------",
+                    $starshipLine,
+                    ""
                 )
                 if ($newContent) { $finalContent = $newContent + $finalContent }
                 
-                $finalContent | Set-Content $path -Force
-                Write-Log "Cleaned profile: $path"
+                # Use UTF8 to prevent encoding-based parsing errors
+                $finalContent | Out-File -FilePath $path -Encoding UTF8 -Force
+                Write-Log "Power-washed profile: $path"
             } else {
-                # If it doesn't exist, create it cleanly
                 $dir = Split-Path -Parent $path
                 if (-not (Test-Path $dir)) { New-Item $dir -ItemType Directory -Force | Out-Null }
-                "# Added by Dotfiles Setup`n$starshipLine" | Set-Content $path -Force
+                "# Added by Dotfiles Setup`n$starshipLine" | Out-File -FilePath $path -Encoding UTF8 -Force
                 Write-Log "Created new profile: $path"
             }
         }
 
-        Add-Action "Configured all PowerShell Profiles with Starship"
-        Write-Status "All PowerShell Profiles cleaned and configured" "Success"
+        Add-Action "Power-washed and configured all PowerShell Profiles"
+        Write-Status "All PowerShell Profiles are now clean and using Starship" "Success"
     } catch {
         Write-Status "PowerShell configuration failed: $($_.Exception.Message)" "Error"
     }
