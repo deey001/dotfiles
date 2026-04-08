@@ -117,13 +117,157 @@ elif command -v batcat >/dev/null 2>&1; then
 fi
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
-# ── 10. Modular config files ──────────────────────────────────────────────────
-[[ -f ~/.bash_exports   ]] && source ~/.bash_exports
-[[ -f ~/.bash_aliases   ]] && source ~/.bash_aliases
-[[ -f ~/.bash_functions ]] && source ~/.bash_functions
-[[ -f ~/.bash_wrappers  ]] && source ~/.bash_wrappers
+# ── 10. Exports & Environment Variables ───────────────────────────────────────
+# XDG user bin (~/.local/bin) and ~/bin take priority over system bins
+export PATH="${HOME}/.local/bin:${HOME}/bin:${PATH}"
 
-# ── 11. Bash-completion (prefer local >= 2.12 over system 2.11) ───────────────
+# Deduplicate PATH entries
+if [[ -n "$PATH" ]]; then
+    export PATH=$(awk -v RS=':' -v ORS=':' '!seen[$0]++' <<< "$PATH" | sed 's/:$//')
+fi
+
+# CDPATH — quick cd from anywhere
+export CDPATH=":${HOME}:${HOME}/projects:${HOME}/work:${HOME}/src"
+
+# Editor
+for _editor in nvim vim vi nano; do
+    if command -v "$_editor" >/dev/null 2>&1; then
+        export EDITOR="$_editor"
+        export VISUAL="$_editor"
+        break
+    fi
+done
+unset _editor
+
+# Pager
+export LESS='-R'
+export LESSOPEN='|~/.lessfilter %s'
+
+# Go
+export GOPATH="${HOME}/gocode"
+export PATH="${GOPATH}/bin:/usr/local/go/bin:${PATH}"
+
+# rbenv (lazy-loaded)
+if [[ -d "${HOME}/.rbenv" ]]; then
+    export PATH="${HOME}/.rbenv/bin:${HOME}/.rbenv/plugins/ruby-build/bin:${PATH}"
+    rbenv() {
+        unset -f rbenv
+        eval "$(command rbenv init - bash)"
+        rbenv "$@"
+    }
+fi
+
+# bat
+export BAT_THEME="Catppuccin Mocha"
+export BAT_PAGING="never"
+
+# ── 11. Custom Functions & Wrappers ───────────────────────────────────────────
+extract() {
+    for archive in "$@"; do
+        if [ -f "$archive" ]; then
+            case $archive in
+                *.tar.bz2) tar xvjf "$archive" ;;
+                *.tar.gz) tar xvzf "$archive" ;;
+                *.bz2) bunzip2 "$archive" ;;
+                *.rar) rar x "$archive" ;;
+                *.gz) gunzip "$archive" ;;
+                *.tar) tar xvf "$archive" ;;
+                *.tbz2) tar xvjf "$archive" ;;
+                *.tgz) tar xvzf "$archive" ;;
+                *.zip) unzip "$archive" ;;
+                *.Z) uncompress "$archive" ;;
+                *.7z) 7z x "$archive" ;;
+                *) echo "don't know how to extract '$archive'..." ;;
+            esac
+        else
+            echo "'$archive' is not a valid file!"
+        fi
+    done
+}
+
+ftext() { grep -iIHrn --color=always "$1" . | less -r; }
+mkdirg() { mkdir -p "$1" && cd "$1"; }
+cpg() { if [ -d "$2" ]; then cp "$1" "$2" && cd "$2"; else cp "$1" "$2"; fi }
+mvg() { if [ -d "$2" ]; then mv "$1" "$2" && cd "$2"; else mv "$1" "$2"; fi }
+up() { local d=""; limit=${1:-1}; for ((i = 1; i <= limit; i++)); do d=$d/..; done; d=$(echo $d | sed 's/^\///'); cd ${d:-..}; }
+pwdtail() { pwd | awk -F/ '{nlast = NF -1;print $nlast"/"$NF}'; }
+
+ver() {
+    local dtype
+    dtype=$(distribution)
+    case $dtype in
+        "redhat") [ -s /etc/redhat-release ] && cat /etc/redhat-release || cat /etc/issue; uname -a ;;
+        "debian") lsb_release -a ;;
+        "arch") cat /etc/os-release ;;
+        *) [ -s /etc/issue ] && cat /etc/issue || echo "Error: Unknown distribution" ;;
+    esac
+}
+
+distribution() {
+    local dtype="unknown"
+    if [ -r /etc/os-release ]; then
+        source /etc/os-release
+        case $ID in
+            fedora|rhel|centos) dtype="redhat" ;;
+            ubuntu|debian) dtype="debian" ;;
+            arch|manjaro) dtype="arch" ;;
+            *)
+                if [ -n "$ID_LIKE" ]; then
+                    case $ID_LIKE in
+                        *fedora*|*rhel*|*centos*) dtype="redhat" ;;
+                        *ubuntu*|*debian*) dtype="debian" ;;
+                        *arch*) dtype="arch" ;;
+                    esac
+                fi
+                ;;
+        esac
+    fi
+    echo $dtype
+}
+
+fcd() { local dir; dir=$(find . -type d -not -path '*/.*' 2>/dev/null | fzf +m) && cd "$dir"; }
+fv() { local file; file=$(find . -type f -not -path '*/.*' 2>/dev/null | fzf +m) && nvim "$file"; }
+fp() {
+    local file; file=$(find . -type f -not -path '*/.*' 2>/dev/null | fzf +m)
+    if [ -n "$file" ]; then
+        echo -n "$file" | if command -v pbcopy >/dev/null 2>&1; then pbcopy; elif command -v xclip >/dev/null 2>&1; then xclip -selection clipboard; fi
+        echo "Copied: $file"
+    fi
+}
+
+if command -v xh >/dev/null 2>&1; then alias http='xh'; fi
+
+man() {
+    env LESS_TERMCAP_mb=$'\E[01;31m' \
+    LESS_TERMCAP_md=$'\E[01;38;5;74m' \
+    LESS_TERMCAP_me=$'\E[0m' \
+    LESS_TERMCAP_se=$'\E[0m' \
+    LESS_TERMCAP_so=$'\E[01;33;03;40m' \
+    LESS_TERMCAP_ue=$'\E[0m' \
+    LESS_TERMCAP_us=$'\E[04;38;5;146m' \
+    man "$@"
+}
+
+whatsgoingon() {
+    for i in $(find . -maxdepth 1 -type d | sed -e 's/\.\///' -e '/\./d'); do
+        if [ -d "$i/.git" ]; then
+            pushd "$i" >/dev/null 2>&1 || continue
+            echo "$(tput bold)$i$(tput sgr0)"
+            if [ -z "$(git status --porcelain)" ]; then
+                echo "is clean"
+            else
+                git status -s
+            fi
+            popd >/dev/null
+        fi
+    done
+}
+
+# ── 12. Modular config files ──────────────────────────────────────────────────
+[[ -f ~/.common_shell   ]] && source ~/.common_shell
+[[ -f ~/.bash_aliases   ]] && source ~/.bash_aliases
+
+# ── 13. Bash-completion (prefer local >= 2.12 over system 2.11) ───────────────
 if ! shopt -oq posix; then
     if [[ -f "${HOME}/.local/share/bash-completion/bash_completion" ]]; then
         source "${HOME}/.local/share/bash-completion/bash_completion"
@@ -203,3 +347,7 @@ fi
 # ble.sh was loaded in section 2 with --attach=none. Now that all completions,
 # prompts, and tools are configured, activate it.
 [[ ${BLE_VERSION-} ]] && ble-attach
+export PATH="$HOME/.npm-global/bin:$PATH"
+
+# OpenClaw Completion
+source "/home/danny/.openclaw/completions/openclaw.bash"

@@ -35,9 +35,10 @@ $golang\
 $rust\
 $java\
 $docker_context\
-$cmd_duration\
 $line_break\
 $character"""
+
+right_format = "$cmd_duration"
 
 # Insert a blank line between each prompt for visual breathing room.
 add_newline = true
@@ -99,31 +100,30 @@ vimcmd_symbol = "[❮](green)"        # Green reverse chevron in vi normal mode
 
 [os]
 disabled = false
-style = "fg:#cdd6f4"                # Text color from the palette
-format = '[$symbol]($style)'
+format = '$symbol'
 
 # Nerd Font icons for each supported OS. Requires a Nerd Font installed.
 
 [os.symbols]
-Windows = " "
-Ubuntu = " "
-Debian = " "
-Raspbian = " "
-Mint = "󰹮 "
-Macos = " "
-Manjaro = " "
-Linux = " "
-Gentoo = "󰹩 "
-Fedora = " "
-Alpine = " "
-Amazon = " "
-Android = " "
-Arch = " "
-Artix = " "
-CentOS = " "
-NixOS = " "
-Redhat = "󱄛 "
-SUSE = " "
+Windows = "[ ](fg:blue)"
+Ubuntu = "[ ](fg:peach)"
+Debian = "[ ](fg:red)"
+Raspbian = "[ ](fg:red)"
+Mint = "[󰹮 ](fg:green)"
+Macos = "[ ](fg:text)"
+Manjaro = "[ ](fg:green)"
+Linux = "[ ](fg:yellow)"
+Gentoo = "[󰹩 ](fg:mauve)"
+Fedora = "[ ](fg:blue)"
+Alpine = "[ ](fg:blue)"
+Amazon = "[ ](fg:peach)"
+Android = "[ ](fg:green)"
+Arch = "[ ](fg:sky)"
+Artix = "[ ](fg:sky)"
+CentOS = "[ ](fg:mauve)"
+NixOS = "[ ](fg:sapphire)"
+Redhat = "[󱄛 ](fg:red)"
+SUSE = "[ ](fg:green)"
 
 # --- Username Module ----------------------------------------------------------
 # Only shows when running as root (red + bold as a warning) or via SSH.
@@ -181,7 +181,7 @@ format = '[$all_status$ahead_behind]($style)'
 [cmd_duration]
 min_time = 2_000                    # Show only for commands taking >2 seconds
 style = "fg:#f9e2af"                # Yellow — same as git status for consistency
-format = '[$duration]($style) '
+format = '[$duration]($style)'
 
 # --- Language Detection Modules -----------------------------------------------
 # These modules auto-detect project languages by checking for config files

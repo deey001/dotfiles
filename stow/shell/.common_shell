@@ -1,0 +1,41 @@
+# ==============================================================================
+# .common_shell — Shared Aliases and Exports for Bash and Zsh
+# ==============================================================================
+
+# ── Aliases ──────────────────────────────────────────────────────────────────
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+alias g='git'
+alias lg='lazygit'
+alias d='docker'
+alias dc='docker compose'
+alias lzd='lazydocker'
+alias v='nvim'
+alias vi='nvim'
+alias vim='nvim'
+
+if command -v eza >/dev/null 2>&1; then
+    alias ls='eza --color=auto --icons'
+    alias ll='eza -alF --icons --git'
+    alias la='eza -A --icons'
+    alias l='eza -CF --icons'
+    alias tree='eza --tree --icons'
+fi
+
+if command -v bat >/dev/null 2>&1; then
+    alias cat='bat --paging=never'
+elif command -v batcat >/dev/null 2>&1; then
+    alias cat='batcat --paging=never'
+fi
+
+# ── Environment Variables ────────────────────────────────────────────────────
+export EDITOR='nvim'
+export VISUAL='nvim'
+export PAGER='less'
+export LANG='en_US.UTF-8'
+export LC_ALL='en_US.UTF-8'
+
+# ── Functions ────────────────────────────────────────────────────────────────
+# mkcd — Create and enter a directory
+mkcd() { mkdir -p "$1" && cd "$1"; }

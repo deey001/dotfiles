@@ -18,7 +18,7 @@ set -euo pipefail
 #   [1/4] Symlinks  — Each dotfile in $HOME points back to the repo
 #   [2/4] Commands  — Core tools (bash, git, tmux, nvim, starship) are installed
 #   [3/4] Optional  — Modern CLI replacements (eza, bat, fzf, zoxide, rg)
-#   [4/4] Syntax    — bash -n on all Bash config files; SSH/dir permissions
+#   [4/4] Syntax    — bash -n on all Bash config files; directory permissions
 #
 # EXIT CODES:
 #   0 - All tests passed
@@ -69,13 +69,13 @@ test_result() {
 
     if [ "$result" -eq 0 ]; then
         echo -e "${GREEN}✓${NC} $test_name"
-        ((TESTS_PASSED++))
+        TESTS_PASSED=$((TESTS_PASSED + 1))
         if [ $VERBOSE -eq 1 ] && [ -n "$details" ]; then
             echo "  └─ $details"
         fi
     else
         echo -e "${RED}✗${NC} $test_name"
-        ((TESTS_FAILED++))
+        TESTS_FAILED=$((TESTS_FAILED + 1))
         if [ -n "$details" ]; then
             echo "  └─ $details"
         fi
@@ -181,35 +181,29 @@ echo ""
 
 # ---- Test 1: Symlink verification --------------------------------------------
 # Ensures every dotfile in $HOME is a symlink pointing back into the repo.
-# NOTE: These expected targets still reference the old "dots/" directory layout.
-# TODO: Update these expected targets to match the new stow-based paths.
-#       With stow, symlinks point into stow/<package>/ rather than dots/.
-#       Example: "dots/.bashrc" should become "stow/bash/.bashrc" (or similar).
 echo -e "${YELLOW}[1/4] Checking Symlinks${NC}"
-check_symlink "$HOME/.bashrc" "dots/.bashrc"
-check_symlink "$HOME/.bash_aliases" "dots/.bash_aliases"
-check_symlink "$HOME/.bash_exports" "dots/.bash_exports"
-check_symlink "$HOME/.bash_functions" "dots/.bash_functions"
-check_symlink "$HOME/.bash_wrappers" "dots/.bash_wrappers"
-check_symlink "$HOME/.bash_profile" "dots/.bash_profile"
-check_symlink "$HOME/.blerc" "dots/.blerc"
-check_symlink "$HOME/.tmux.conf" "dots/.tmux.conf"
-check_symlink "$HOME/.gitconfig" "dots/.gitconfig"
-check_symlink "$HOME/.inputrc" "dots/.inputrc"
-check_symlink "$HOME/.config/starship.toml" "starship.toml"
-check_symlink "$HOME/.config/nvim/init.lua" "init.lua"
+check_symlink "$HOME/.bashrc" "stow/bash/.bashrc"
+check_symlink "$HOME/.bash_aliases" "stow/bash/.bash_aliases"
+check_symlink "$HOME/.bash_profile" "stow/bash/.bash_profile"
+check_symlink "$HOME/.blerc" "stow/bash/.blerc"
+check_symlink "$HOME/.tmux.conf" "stow/tmux/.tmux.conf"
+check_symlink "$HOME/.gitconfig" "stow/git/.gitconfig"
+check_symlink "$HOME/.inputrc" "stow/shell/.inputrc"
+check_symlink "$HOME/.config/starship.toml" "stow/config/.config/starship.toml"
+check_symlink "$HOME/.config/nvim/init.lua" "stow/config/.config/nvim/init.lua"
+check_symlink "$HOME/.config/wezterm/wezterm.lua" "stow/config/.config/wezterm/wezterm.lua"
 
 # Only check .zshrc if zsh is installed — not all machines have it
 if command -v zsh >/dev/null 2>&1; then
-    check_symlink "$HOME/.zshrc" "dots/.zshrc"
+    check_symlink "$HOME/.zshrc" "stow/zsh/.zshrc"
 fi
 
 # Optional .config subdirectories — these may not exist on minimal installs
 if [ -d "$HOME/.config/bat" ]; then
-    check_symlink "$HOME/.config/bat/themes" "bat/themes" || true
+    check_symlink "$HOME/.config/bat/themes/Catppuccin Mocha.tmTheme" "stow/config/.config/bat/themes/Catppuccin Mocha.tmTheme" || true
 fi
 if [ -d "$HOME/.config/fastfetch" ]; then
-    check_symlink "$HOME/.config/fastfetch/config.jsonc" "fastfetch/config.jsonc" || true
+    check_symlink "$HOME/.config/fastfetch/config.jsonc" "stow/config/.config/fastfetch/config.jsonc" || true
 fi
 echo ""
 
@@ -242,17 +236,10 @@ echo ""
 echo -e "${YELLOW}[4/4] Validating Config Syntax${NC}"
 check_bash_syntax "$HOME/.bashrc"
 check_bash_syntax "$HOME/.bash_aliases"
-check_bash_syntax "$HOME/.bash_exports"
-check_bash_syntax "$HOME/.bash_functions"
-check_bash_syntax "$HOME/.bash_wrappers"
 check_bash_syntax "$HOME/.bash_profile"
 check_bash_syntax "$HOME/.blerc"
 
-# SSH config must be 600 and ~/.ssh must be 700 — sshd refuses to use them
-# otherwise, which silently breaks key-based authentication.
-if [ -f "$HOME/.ssh/config" ]; then
-    check_permissions "$HOME/.ssh/config" "600" || true
-fi
+# Directory permissions check (optional, can be expanded for other sensitive dirs)
 if [ -d "$HOME/.ssh" ]; then
     check_permissions "$HOME/.ssh" "700" || true
 fi

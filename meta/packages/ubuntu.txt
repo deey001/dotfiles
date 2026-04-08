@@ -1,0 +1,29 @@
+# Core tools (prerequisites)
+make
+gcc
+g++
+gawk
+curl
+xz-utils
+tar
+unzip
+bzip2
+build-essential
+
+# Core tools (shell-agnostic)
+tmux
+git
+fzf
+xclip
+hstr
+bat
+cmatrix
+btop
+tldr
+ncurses-term
+
+# Shell-specific
+bash-completion
+zsh
+zsh-syntax-highlighting
+zsh-autosuggestions

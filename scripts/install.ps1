@@ -30,7 +30,6 @@
     - Neovim on Windows lives in $env:LOCALAPPDATA\nvim (not ~/.config/nvim).
 
     SUGGESTED ADDITIONS (not yet implemented):
-    TODO: Export/import Windows Terminal settings.json from the repo (full theme, keybindings)
     TODO: Install additional winget packages: Microsoft.WindowsTerminal, JanDeDobbeleer.OhMyPosh
     TODO: Configure Windows Defender exclusions for ~/.local and ~/dotfiles (performance)
     TODO: Set up SSH agent service (ssh-agent) auto-start on Windows
@@ -611,11 +610,10 @@ function Symlink-Dotfiles {
         $homeDir = $env:USERPROFILE
 
         $filesToLink = @(
-            ".bashrc", ".bash_profile", ".bash_aliases", ".bash_exports", 
-            ".bash_functions", ".bash_wrappers", ".tmux.conf", ".gitconfig", 
+            ".bashrc", ".bash_profile", ".bash_aliases",
+            ".tmux.conf", ".gitconfig",
             ".inputrc", ".blerc"
         )
-
         foreach ($file in $filesToLink) {
             $source = Join-Path $dotfilesDir "dots\$file"
             $target = Join-Path $homeDir $file

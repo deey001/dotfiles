@@ -1,5 +1,8 @@
+# Source shared shell configuration
+[[ -f ~/.common_shell ]] && source ~/.common_shell
+
 # ==============================================================================
-# .zshrc - Zsh Configuration File
+# .zshrc — Zsh Configuration
 # ==============================================================================
 # Provides a consistent experience with your Bash setup, including Starship,
 # aliases, and advanced completion.

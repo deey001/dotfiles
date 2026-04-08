@@ -29,15 +29,6 @@
 # CONFIGURATION:
 #   ble.sh reads ~/.blerc for customization (keybindings, theme, features).
 #   See stow/bash/.blerc in this repo.
-#
-# IMPROVEMENT SUGGESTIONS:
-#   TODO: Pin to a specific ble.sh release tag instead of cloning master.
-#         This would make builds reproducible across machines and avoid
-#         surprise breakage from upstream nightly changes.
-#         Example: git clone --branch v0.4.0-devel3 --depth 1 ...
-#   TODO: Add checksum/signature verification after cloning to ensure the
-#         source hasn't been tampered with (git verify-tag or sha256sum).
-#   TODO: Consider caching the built artifacts to speed up reinstalls.
 # ==============================================================================
 set -euo pipefail
 
@@ -85,8 +76,9 @@ fi
 # ---- Clone -------------------------------------------------------------------
 # --recursive pulls submodules (ble.sh uses them for contrib scripts)
 # --depth 1 and --shallow-submodules keep the clone small (~15 MB vs ~80 MB)
-echo "Cloning ble.sh master (with submodules)..."
-git clone --recursive --depth 1 --shallow-submodules \
+# Pinned to v0.4.0-devel3 to ensure reproducible builds.
+echo "Cloning ble.sh v0.4.0-devel3 (with submodules)..."
+git clone --branch v0.4.0-devel3 --recursive --depth 1 --shallow-submodules \
     "$REPO" "$TMPDIR/ble.sh"
 
 # ---- Build & Install ---------------------------------------------------------
