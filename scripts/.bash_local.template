@@ -1,113 +1,40 @@
 # ==============================================================================
-# .bash_local.template — Machine-Specific Configuration Template
+# .bash_local — Machine-Local Overrides (NOT tracked in git)
 # ==============================================================================
-# Copy this file to ~/.bash_local to add settings unique to this machine.
-# This file is NOT tracked in git and is automatically sourced by .bashrc
-# at the end of the Bash config load order (after .bash_exports, .bash_aliases,
-# .bash_functions, and .bash_wrappers).
+# Copy to ~/.bash_local and edit for this machine only.
+# Sourced at the end of .bashrc and .zshrc.
+# Use for: secrets, tokens, machine-specific PATH, work proxies, etc.
 #
-# WHY THIS EXISTS:
-#   Every machine has unique needs — API keys, proxy settings, custom PATHs,
-#   work-specific aliases. Putting these in .bash_local keeps the git-tracked
-#   dotfiles clean and prevents accidentally committing secrets.
-#
-# USAGE:
-#   cp ~/dotfiles/templates/.bash_local.template ~/.bash_local
-#   chmod 600 ~/.bash_local    # restrict permissions since it may contain secrets
-#   vim ~/.bash_local          # customize for this machine
-#
-# LOAD ORDER:
-#   .bash_profile → .bashrc → .common_shell → .bash_aliases → .bash_local (this file, last)
-#   Being last means you can override ANY setting from the earlier files.
-#   (.common_shell loads the active theme; .bash_aliases sets all aliases)
+# Setup:
+#   cp ~/dotfiles/scripts/.bash_local.template ~/.bash_local
 # ==============================================================================
 
-# ------------------------------------------------------------------------------
-# Private Environment Variables
-# ------------------------------------------------------------------------------
-# API keys, tokens, and secrets that must NEVER be committed to git.
-# Use the exact format shown — many tools auto-detect these variable names.
-#
-# GitHub Personal Access Token (for gh CLI, API access)
-# export GITHUB_TOKEN="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-#
-# OpenAI API Key (for AI tools, Copilot plugins)
-# export OPENAI_API_KEY="sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-#
-# AWS credentials (if not using ~/.aws/credentials)
-# export AWS_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"
-# export AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
-# export AWS_DEFAULT_REGION="us-east-1"
-#
-# Docker Hub token (for private image pulls)
-# export DOCKER_TOKEN="dckr_pat_xxxxxxxxxxxxxxxxxxxx"
+# ── Secrets & tokens (never commit these) ────────────────────────────────────
+# export GITHUB_TOKEN=""
+# export AWS_ACCESS_KEY_ID=""
+# export OPENAI_API_KEY=""
 
-# ------------------------------------------------------------------------------
-# Proxy Settings (for corporate networks)
-# ------------------------------------------------------------------------------
-# If you're behind a corporate proxy, uncomment and set these.
-# Most CLI tools (curl, wget, git, pip, npm) respect these variables.
-#
-# export HTTP_PROXY="http://proxy.example.com:8080"
-# export HTTPS_PROXY="http://proxy.example.com:8080"
-# export NO_PROXY="localhost,127.0.0.1,.example.com"
-# export http_proxy="$HTTP_PROXY"    # some tools check lowercase
-# export https_proxy="$HTTPS_PROXY"
-# export no_proxy="$NO_PROXY"
+# ── Machine-specific PATH ─────────────────────────────────────────────────────
+# export PATH="$HOME/my-tool/bin:$PATH"
 
-# ------------------------------------------------------------------------------
-# Custom Path Additions
-# ------------------------------------------------------------------------------
-# Add machine-specific directories to PATH. These are prepended so they take
-# priority over system-installed versions.
-#
-# Local tools directory
-# export PATH="$HOME/opt/mytools/bin:$PATH"
-#
-# Go workspace
+# ── Go (if installed on this machine) ────────────────────────────────────────
 # export GOPATH="$HOME/go"
-# export PATH="$GOPATH/bin:$PATH"
-#
-# Rust/Cargo binaries
-# export PATH="$HOME/.cargo/bin:$PATH"
-#
-# Node.js version manager (nvm, fnm, volta)
-# export PATH="$HOME/.volta/bin:$PATH"
-#
-# Python virtual environment base (pyenv)
-# export PYENV_ROOT="$HOME/.pyenv"
-# export PATH="$PYENV_ROOT/bin:$PATH"
-# eval "$(pyenv init -)"
+# export PATH="$GOPATH/bin:/usr/local/go/bin:$PATH"
 
-# ------------------------------------------------------------------------------
-# Machine-Specific Aliases
-# ------------------------------------------------------------------------------
-# Aliases that only make sense on this particular machine.
-#
-# VPN shortcuts
-# alias work-vpn='sudo openvpn --config ~/work.ovpn'
-# alias vpn-status='curl -s https://ifconfig.me'
-#
-# Project shortcuts
-# alias proj='cd ~/projects/my-main-project'
-# alias logs='tail -f /var/log/app/production.log'
-#
-# SSH shortcuts (supplement ~/.ssh/config)
-# alias prod='ssh production-server'
-# alias staging='ssh staging-server'
+# ── rbenv (if used on this machine) ──────────────────────────────────────────
+# if [[ -d "$HOME/.rbenv" ]]; then
+#     export PATH="$HOME/.rbenv/bin:$PATH"
+#     eval "$(rbenv init - bash)"
+# fi
 
-# ------------------------------------------------------------------------------
-# Override Default Settings
-# ------------------------------------------------------------------------------
-# Override any value set in .bash_exports or .bash_aliases.
-# Since .bash_local loads last, these take precedence.
-#
-# Increase history size beyond the default
-# export HISTSIZE=50000
-# export HISTFILESIZE=100000
-#
-# Use a different editor on this machine
-# export EDITOR="code --wait"
-#
-# Disable specific aliases from .bash_aliases
-# unalias ll 2>/dev/null
+# ── CDPATH (if you want quick cd from anywhere) ───────────────────────────────
+# export CDPATH=":$HOME:$HOME/projects:$HOME/work"
+
+# ── Work proxy ────────────────────────────────────────────────────────────────
+# export HTTP_PROXY="http://proxy.corp:8080"
+# export HTTPS_PROXY="$HTTP_PROXY"
+# export NO_PROXY="localhost,127.0.0.1,.corp"
+
+# ── SSH agent (if not handled by systemd or keychain) ─────────────────────────
+# eval "$(ssh-agent -s)"
+# ssh-add ~/.ssh/id_ed25519
