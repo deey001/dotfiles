@@ -762,18 +762,18 @@ function Show-Menu {
     Write-ColorText "║      Nerd Fonts + Terminal Configuration         ║" "Cyan"
     Write-ColorText "╚══════════════════════════════════════════════════╝" "Cyan"
     Write-Host ""
-    Write-ColorText " [1] Install JetBrainsMono Nerd Font only" "Yellow"
-    Write-ColorText " [2] Configure Windows Terminal only" "Yellow"
-    Write-ColorText " [3] Configure PuTTY Default Settings (KeePass!)" "Yellow"
-    Write-ColorText " [4] Install Core Developer Tools (Neovim, Git, etc)" "Yellow"
-    Write-Host "     (Uses Winget to install essential CLI tools)" -ForegroundColor Gray
-    Write-ColorText " [5] Full Local Setup (Fonts + WT + Tools + PuTTY)" "Green"
-    Write-ColorText " [6] Symlink dotfiles to Windows User Home" "Green"
-    Write-Host "     (Required for Git Bash to see your settings)" -ForegroundColor Gray
+    Write-ColorText " [1] Install JetBrainsMono Nerd Font (System-wide)" "Yellow"
+    Write-ColorText " [2] Set Nerd Font in Windows Terminal (Default Profile)" "Yellow"
+    Write-ColorText " [3] Set Nerd Font in PuTTY (Default Settings for KeePass)" "Yellow"
+    Write-ColorText " [4] Install Core Developer Tools via Winget (Nvim, Git, etc)" "Yellow"
+    Write-Host "     (Installs Neovim, Git, Ripgrep, Fd, Starship, Eza, Fastfetch)" -ForegroundColor Gray
+    Write-ColorText " [5] Full Local Setup (Run tasks 1-4 automatically)" "Green"
+    Write-ColorText " [6] Symlink Dotfiles to Windows Home (for Git Bash/WSL)" "Green"
+    Write-Host "     (Creates links for .bashrc, .tmux.conf, .config, etc)" -ForegroundColor Gray
     Write-Host ""
     Write-ColorText " [7] Install dotfiles on remote server (guide)" "Yellow"
-    Write-ColorText " [8] Complete Workflow (Local + Remote + Symlink)" "Yellow"
-    Write-ColorText " [9] Reset / Remove Configuration" "Yellow"
+    Write-ColorText " [8] Complete Workflow (Tasks 1-7 in sequence)" "Yellow"
+    Write-ColorText " [9] Reset / Remove Configuration (Restore from backup)" "Yellow"
     Write-ColorText " [10] Restore from Backup" "Yellow"
     Write-ColorText " [0] Exit" "Red"
     Write-Host ""
