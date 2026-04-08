@@ -261,18 +261,18 @@ function Write-Status {
         [ValidateSet("Success","Error","Progress","Warning","Info")][string]$StatusType
     )
     $statusMap = @{
-        Success  = @{ Icon = "✓"; Color = "Green" }
-        Error    = @{ Icon = "✗"; Color = "Red" }
-        Progress = @{ Icon = "→"; Color = "Cyan" }
-        Warning  = @{ Icon = "!"; Color = "Yellow" }
-        Info     = @{ Icon = "i"; Color = "Gray" }
+        Success  = @{ Icon = "[OK]"; Color = "Green" }
+        Error    = @{ Icon = "[!!]"; Color = "Red" }
+        Progress = @{ Icon = "[>>]"; Color = "Cyan" }
+        Warning  = @{ Icon = "[! ]"; Color = "Yellow" }
+        Info     = @{ Icon = "[i ]"; Color = "Gray" }
     }
     if ($statusMap.ContainsKey($StatusType)) {
         $status = $statusMap[$StatusType]
     } else {
         $status = $statusMap["Info"]
     }
-    $formatted = "[$($status.Icon)] $Message"
+    $formatted = "$($status.Icon) $Message"
     Write-ColorText $formatted $status.Color
 }
 
