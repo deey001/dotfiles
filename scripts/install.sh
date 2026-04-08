@@ -272,6 +272,23 @@ echo "  Linking: theme-catppuccin-mocha (default)"
 mkdir -p "$HOME/.config/dotfiles"
 ln -sf "$DOTFILES_DIR/themes/catppuccin-mocha.sh" "$HOME/.config/dotfiles/theme.sh"
 
+# ── 8. Install ble.sh (bash only) ──────────────────────────────────────────────
+#
+# ble.sh adds syntax highlighting, autosuggestions, and improved line editing
+# to Bash. It must be built from source — no distro package exists.
+#
+# We only install it when the user's login shell is bash ($SHELL ends in /bash).
+# If the default shell is zsh or fish, ble.sh is not needed.
+#
+# install-blesh.sh is idempotent: re-running it updates an existing install.
+
+if echo "$SHELL" | grep -q "/bash$"; then
+    echo "--- Detected bash as default shell --- Installing ble.sh ---"
+    bash "$DOTFILES_DIR/scripts/install-blesh.sh"
+else
+    echo "--- Default shell is not bash (${SHELL}) --- Skipping ble.sh ---"
+fi
+
 echo "======================================================================"
 echo "INSTALLATION PROCESS FINISHED!"
 echo "======================================================================"
