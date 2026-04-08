@@ -608,18 +608,35 @@ function Symlink-Dotfiles {
         Write-Host "Symlinking dotfiles to User Home..." -ForegroundColor Cyan
         
         # Robustly find dotfiles directory
-        # If run via file: $PSScriptRoot works.
-        # If run via iex: we assume ~/dotfiles or check relative to current location.
         $scriptPath = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
         $dotfilesDir = $scriptPath | Split-Path -Parent
         
-        # Fallback for iex users who haven't manually cd'd into the repo
+        # Auto-Clone Logic: if repo not found, offer to clone it
         if (-not (Test-Path (Join-Path $dotfilesDir "stow"))) {
             $dotfilesDir = Join-Path $env:USERPROFILE "dotfiles"
+            
+            if (-not (Test-Path $dotfilesDir)) {
+                Write-Status "Dotfiles directory not found. Attempting to clone repository..." "Warning"
+                
+                # Check if git is installed
+                if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+                    Write-Status "Git is required to clone the repository. Installing Git via Winget..." "Progress"
+                    winget install --id Git.Git --silent --accept-package-agreements --accept-source-agreements | Out-Null
+                }
+
+                # Clone the repository
+                try {
+                    git clone "https://github.com/deey001/dotfiles.git" $dotfilesDir
+                    Write-Status "Repository cloned successfully to $dotfilesDir" "Success"
+                } catch {
+                    Write-Status "Failed to clone repository. Please clone manually to ~/dotfiles." "Error"
+                    return
+                }
+            }
         }
 
         if (-not (Test-Path $dotfilesDir)) {
-            Write-Status "Dotfiles directory not found at $dotfilesDir. Please clone the repo first." "Error"
+            Write-Status "Dotfiles directory not found at $dotfilesDir." "Error"
             return
         }
 

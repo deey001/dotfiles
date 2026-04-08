@@ -27,9 +27,21 @@ BASH_COMPLETION_VERSION="2.12.0"
 # ── 2. Environment Detection ─────────────────────────────────────────────────
 ARCH=$(uname -m)
 OS_RAW="$(uname)"
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 _cleanup_dirs=()
 trap 'for dir in "${_cleanup_dirs[@]}"; do rm -rf "$dir"; done' EXIT
+
+# Determine if we are running from a local clone or piped from curl
+if [[ "${BASH_SOURCE[0]}" == "$0" ]] || [[ "${BASH_SOURCE[0]}" == "" ]]; then
+    # Script is being piped to bash (e.g., curl | bash) or run directly
+    DOTFILES_DIR="$HOME/dotfiles"
+    if [ ! -d "$DOTFILES_DIR" ]; then
+        echo "--- Dotfiles repository not found at $DOTFILES_DIR. Cloning... ---"
+        git clone https://github.com/deey001/dotfiles.git "$DOTFILES_DIR"
+    fi
+else
+    # Script is being sourced or run from a local clone
+    DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+fi
 
 # Normalize OS string
 case "$OS_RAW" in
