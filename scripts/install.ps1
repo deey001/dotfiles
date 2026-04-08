@@ -451,40 +451,68 @@ function Configure-WindowsTerminal {
             return
         }
 
-        $existing = Get-Content $wtPath -Raw | ConvertFrom-Json
-        $repoSettings = if ($script:dotfilesDir) { Join-Path $script:dotfilesDir "windows\settings.json" } else { $null }
+        # Catppuccin Mocha colour scheme — embedded so it is always applied even
+        # when the repo clone is not available.  This is the single source of truth
+        # for the Windows Terminal colour scheme; windows/settings.json in the repo
+        # carries the same values but is not required.
+        $catppuccinMocha = [PSCustomObject]@{
+            name                = "Catppuccin Mocha"
+            background          = "#1E1E2E"
+            foreground          = "#CDD6F4"
+            black               = "#45475A"
+            red                 = "#F38BA8"
+            green               = "#A6E3A1"
+            yellow              = "#F9E2AF"
+            blue                = "#89B4FA"
+            purple              = "#F5C2E7"
+            cyan                = "#94E2D5"
+            white               = "#BAC2DE"
+            brightBlack         = "#585B70"
+            brightRed           = "#F38BA8"
+            brightGreen         = "#A6E3A1"
+            brightYellow        = "#F9E2AF"
+            brightBlue          = "#89B4FA"
+            brightPurple        = "#F5C2E7"
+            brightCyan          = "#94E2D5"
+            brightWhite         = "#A6ADC8"
+            cursorColor         = "#F5E0DC"
+            selectionBackground = "#585B70"
+        }
 
+        $existing = Get-Content $wtPath -Raw | ConvertFrom-Json
+
+        # Ensure nested objects exist before setting properties.
+        if (-not $existing.profiles) {
+            $existing | Add-Member NoteProperty profiles ([PSCustomObject]@{}) -Force
+        }
+        if (-not $existing.profiles.defaults) {
+            $existing.profiles | Add-Member NoteProperty defaults ([PSCustomObject]@{}) -Force
+        }
+        if (-not $existing.profiles.defaults.font) {
+            $existing.profiles.defaults | Add-Member NoteProperty font ([PSCustomObject]@{}) -Force
+        }
+
+        # Apply font and colour scheme — always, regardless of whether the repo is present.
+        $existing.profiles.defaults.font | Add-Member NoteProperty face "JetBrainsMono Nerd Font" -Force
+        $existing.profiles.defaults | Add-Member NoteProperty colorScheme "Catppuccin Mocha" -Force
+
+        # Merge colour schemes — additive only; never remove user-added schemes.
+        if (-not $existing.schemes) {
+            $existing | Add-Member NoteProperty schemes @() -Force
+        }
+        $schemeExists = $existing.schemes | Where-Object { $_.name -eq "Catppuccin Mocha" }
+        if (-not $schemeExists) { $existing.schemes += $catppuccinMocha }
+
+        # If the repo is available, also merge any additional schemes it defines.
+        $repoSettings = if ($script:dotfilesDir) { Join-Path $script:dotfilesDir "windows\settings.json" } else { $null }
         if ($repoSettings -and (Test-Path $repoSettings)) {
             $repo = Get-Content $repoSettings -Raw | ConvertFrom-Json
-
-            # Ensure the nested defaults and font objects exist before setting properties;
-            # Add-Member throws if the parent object doesn't have the property yet.
-            if (-not $existing.profiles.defaults) {
-                $existing.profiles | Add-Member NoteProperty defaults ([PSCustomObject]@{}) -Force
-            }
-            if (-not $existing.profiles.defaults.font) {
-                $existing.profiles.defaults | Add-Member NoteProperty font ([PSCustomObject]@{}) -Force
-            }
-            $existing.profiles.defaults.font | Add-Member NoteProperty face "JetBrainsMono Nerd Font" -Force
-            $existing.profiles.defaults | Add-Member NoteProperty colorScheme "Catppuccin Mocha" -Force
-
-            # Merge colour schemes from the repo — additive only; never remove existing schemes.
-            if (-not $existing.schemes) {
-                $existing | Add-Member NoteProperty schemes @() -Force
-            }
             foreach ($scheme in $repo.schemes) {
                 $exists = $existing.schemes | Where-Object { $_.name -eq $scheme.name }
                 if (-not $exists) { $existing.schemes += $scheme }
             }
         } else {
-            Write-Status "Repo windows/settings.json not found - applying font only" "Warning"
-            if (-not $existing.profiles.defaults) {
-                $existing.profiles | Add-Member NoteProperty defaults ([PSCustomObject]@{}) -Force
-            }
-            if (-not $existing.profiles.defaults.font) {
-                $existing.profiles.defaults | Add-Member NoteProperty font ([PSCustomObject]@{}) -Force
-            }
-            $existing.profiles.defaults.font | Add-Member NoteProperty face "JetBrainsMono Nerd Font" -Force
+            Write-Status "Repo windows/settings.json not found - using embedded scheme" "Info"
         }
 
         $existing | ConvertTo-Json -Depth 100 | Set-Content $wtPath -Encoding UTF8
@@ -587,20 +615,58 @@ function Configure-PowerShell {
 
         # ── Deploy active theme to ~/.config\dotfiles\theme.ps1 ──────────────
         # The PS profile dot-sources this file for PSReadLine colors + palette vars.
-        # Defaults to catppuccin-mocha; swap by copying a different themes/windows/*.ps1.
-        if ($script:dotfilesDir) {
-            $themeDir = Join-Path $script:dotfilesDir "themes\windows"
-            $srcTheme = Join-Path $themeDir "catppuccin-mocha.ps1"   # default theme
-            $dstThemeDir = "$env:USERPROFILE\.config\dotfiles"
-            $dstTheme    = "$dstThemeDir\theme.ps1"
-            if (Test-Path $srcTheme) {
-                if (-not (Test-Path $dstThemeDir)) { New-Item $dstThemeDir -ItemType Directory -Force | Out-Null }
-                Copy-Item -Path $srcTheme -Destination $dstTheme -Force
-                Add-Action "Deployed theme: catppuccin-mocha → $dstTheme"
-                Write-Status "Theme deployed (Catppuccin Mocha)" "Success"
-            } else {
-                Write-Status "themes/windows/catppuccin-mocha.ps1 not found - PSReadLine will use inline fallback" "Warning"
-            }
+        # Try the repo file first; if unavailable write the Catppuccin Mocha theme
+        # inline so the profile always gets colours regardless of clone state.
+        $dstThemeDir = "$env:USERPROFILE\.config\dotfiles"
+        $dstTheme    = "$dstThemeDir\theme.ps1"
+        if (-not (Test-Path $dstThemeDir)) { New-Item $dstThemeDir -ItemType Directory -Force | Out-Null }
+
+        $srcTheme = if ($script:dotfilesDir) { Join-Path $script:dotfilesDir "themes\windows\catppuccin-mocha.ps1" } else { $null }
+        if ($srcTheme -and (Test-Path $srcTheme)) {
+            Copy-Item -Path $srcTheme -Destination $dstTheme -Force
+            Add-Action "Deployed theme from repo: $dstTheme"
+            Write-Status "Theme deployed (Catppuccin Mocha)" "Success"
+        } else {
+            # Inline Catppuccin Mocha theme — written when repo is not yet available.
+            # Matches themes/windows/catppuccin-mocha.ps1 exactly.
+            $inlineTheme = @'
+# Catppuccin Mocha - inline fallback written by install.ps1
+# This file is overwritten with the repo version on next setup run.
+$env:DOTFILES_COLOR_BASE        = "#1E1E2E"
+$env:DOTFILES_COLOR_TEXT        = "#CDD6F4"
+$env:DOTFILES_COLOR_BLUE        = "#89B4FA"
+$env:DOTFILES_COLOR_GREEN       = "#A6E3A1"
+$env:DOTFILES_COLOR_RED         = "#F38BA8"
+$env:DOTFILES_COLOR_YELLOW      = "#F9E2AF"
+$env:DOTFILES_COLOR_MAUVE       = "#CBA6F7"
+$env:DOTFILES_COLOR_PEACH       = "#FAB387"
+$env:DOTFILES_COLOR_TEAL        = "#94E2D5"
+$env:DOTFILES_COLOR_SURFACE0    = "#313244"
+$env:DOTFILES_COLOR_OVERLAY1    = "#7F849C"
+$env:DOTFILES_COLOR_SUBTEXT1    = "#BAC2DE"
+$env:DOTFILES_WEZTERM_THEME     = "Catppuccin Mocha"
+$env:DOTFILES_THEME_NAME        = "catppuccin-mocha"
+if (Get-Module -ListAvailable -Name PSReadLine) {
+    Set-PSReadLineOption -Colors @{
+        Command            = "#89B4FA"
+        Parameter          = "#A6E3A1"
+        String             = "#A6E3A1"
+        Variable           = "#CBA6F7"
+        Comment            = "#7F849C"
+        Keyword            = "#CBA6F7"
+        Error              = "#F38BA8"
+        Operator           = "#94E2D5"
+        Number             = "#FAB387"
+        Type               = "#F9E2AF"
+        Member             = "#89DCEB"
+        InlinePrediction   = "#7F849C"
+        ContinuationPrompt = "#7F849C"
+    }
+}
+'@
+            [System.IO.File]::WriteAllText($dstTheme, $inlineTheme, [System.Text.UTF8Encoding]::new($true))
+            Add-Action "Wrote inline Catppuccin Mocha theme to $dstTheme"
+            Write-Status "Theme deployed inline (Catppuccin Mocha)" "Success"
         }
 
         # Locate the tracked PowerShell profile from the dotfiles repo
@@ -692,8 +758,12 @@ function Symlink-Dotfiles {
         if (-not $dotfilesDir) {
             $dotfilesDir = Join-Path $userHome "dotfiles"
             if (-not (Test-Path $dotfilesDir)) {
-                Write-Status "Cloning repository..." "Warning"
+                Write-Status "Cloning repository..." "Info"
                 git clone "https://github.com/deey001/dotfiles.git" $dotfilesDir
+            } else {
+                # Pull latest changes so newly-added files (themes, settings.json) are present.
+                Write-Status "Updating repository (git pull)..." "Info"
+                git -C $dotfilesDir pull --ff-only 2>&1 | Out-Null
             }
             # Update the script-scoped variable so subsequent functions
             # (Configure-WindowsTerminal, Configure-PowerShell) can find
@@ -701,6 +771,10 @@ function Symlink-Dotfiles {
             # $PSScriptRoot pointed to %TEMP%.
             $script:dotfilesDir = $dotfilesDir
             Add-Action "Resolved dotfiles dir: $dotfilesDir"
+        } else {
+            # Repo was already known — still pull to get any new files.
+            Write-Status "Updating repository (git pull)..." "Info"
+            git -C $dotfilesDir pull --ff-only 2>&1 | Out-Null
         }
         $fileMap = @{ ".bashrc"="stow\bash\.bashrc"; ".bash_aliases"="stow\bash\.bash_aliases"; ".blerc"="stow\bash\.blerc"; ".tmux.conf"="stow\tmux\.tmux.conf"; ".gitconfig"="stow\git\.gitconfig"; ".inputrc"="stow\shell\.inputrc"; ".common_shell"="stow\shell\.common_shell" }
         foreach ($f in $fileMap.Keys) {
@@ -861,24 +935,24 @@ function Main {
         do {
             Show-Menu
             $c = Read-Host
-            switch ($c) {
+        # Use -CaseSensitive to prevent PS default case-insensitive matching from
+        # running both "A" and "a" cases when the user types uppercase A.
+        switch -CaseSensitive ($c) {
                 "1" { Install-NerdFont }
                 "2" { Configure-WindowsTerminal }
                 "3" { Configure-PuTTY }
                 "4" { Install-CoreTools }
                 "5" { Configure-PowerShell }
                 "6" { Configure-CMD }
-                # Option 7: Full local setup — Symlink-Dotfiles runs FIRST so the repo
-                # is cloned (updating $script:dotfilesDir) before Configure-* functions
-                # try to read windows/settings.json and themes/windows/*.ps1.
+                # Option 7: Full local setup - Symlink-Dotfiles runs FIRST so the repo
+                # is cloned/updated before Configure-* functions try to read repo files.
                 "7" { Install-NerdFont; Install-CoreTools; Symlink-Dotfiles; Configure-WindowsTerminal; Configure-PuTTY; Configure-PowerShell; Configure-CMD }
                 "8" { Symlink-Dotfiles }
                 "9" { Install-RemoteDotfiles }
-                # Option A: Complete workflow — same ordering rationale as option 7.
-                "A" { Install-NerdFont; Install-CoreTools; Symlink-Dotfiles; Configure-WindowsTerminal; Configure-PuTTY; Configure-PowerShell; Configure-CMD; Install-RemoteDotfiles }
-                "a" { Install-NerdFont; Install-CoreTools; Symlink-Dotfiles; Configure-WindowsTerminal; Configure-PuTTY; Configure-PowerShell; Configure-CMD; Install-RemoteDotfiles }
+                # Option A/a: Complete workflow - same ordering rationale as option 7.
+                { $_ -in "A","a" } { Install-NerdFont; Install-CoreTools; Symlink-Dotfiles; Configure-WindowsTerminal; Configure-PuTTY; Configure-PowerShell; Configure-CMD; Install-RemoteDotfiles }
                 "0" { break }
-            }
+        }
             if ($c -ne "0") { Read-Host "`nPress Enter to continue" }
         } while ($c -ne "0")
     } catch { Write-Error "Error: $_" }
