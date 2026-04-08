@@ -246,6 +246,18 @@ echo "--- Symlinking Configurations via GNU Stow ---"
 STOW_PKGS=(bash zsh git shell config)
 
 cd "$DOTFILES_DIR"
+
+# Remove any symlinks that still point to the old stow/ directory (pre-rename).
+# Without this, stow -R refuses to restow because it didn't create those links.
+echo "  Checking for legacy symlinks (stow/ → home/ rename)..."
+while IFS= read -r -d '' link; do
+    target=$(readlink "$link" 2>/dev/null)
+    if [[ "$target" == *"dotfiles/stow/"* ]]; then
+        echo "  Removing legacy: $link → $target"
+        rm "$link"
+    fi
+done < <(find "$HOME" -maxdepth 4 -type l -print0 2>/dev/null)
+
 for pkg in "${STOW_PKGS[@]}"; do
     echo "  Stowing: $pkg"
     stow -R "$pkg"
