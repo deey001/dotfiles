@@ -751,43 +751,54 @@ function Install-RemoteDotfiles {
 # 7-8 bridge to remote server setup, 9-10 handle reset/restore.
 # ========================================================================================
 
-# Configure PowerShell Profile to use Starship and clean up old errors.
+# Configure PowerShell Profiles to use Starship and clean up old errors.
 function Configure-PowerShell {
     try {
-        Write-Host "Configuring PowerShell Profile..." -ForegroundColor Cyan
+        Write-Host "Cleaning and Configuring PowerShell Profiles..." -ForegroundColor Cyan
         
-        # Ensure the profile directory exists
-        $profileDir = Split-Path -Parent $PROFILE
-        if (-not (Test-Path $profileDir)) {
-            New-Item -Path $profileDir -ItemType Directory -Force | Out-Null
-        }
+        # We target both Windows PowerShell (5.1) and PowerShell (7+) profiles
+        $profilePaths = @(
+            "$env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1",
+            "$env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1",
+            $PROFILE # The current session's profile
+        ) | Select-Object -Unique
 
-        # Content to add to profile
         $starshipLine = 'starship init powershell | Invoke-Expression'
         
-        if (Test-Path $PROFILE) {
-            $currentContent = Get-Content $PROFILE
-            # Remove the specific broken line mentioned by the user and any other starship/omp lines
-            # We filter out lines containing 'starship' or '.omp.json' to start fresh
-            $newContent = $currentContent | Where-Object { 
-                $_ -notmatch "starship" -and 
-                $_ -notmatch ".omp.json" -and
-                -not [string]::IsNullOrWhiteSpace($_)
+        foreach ($path in $profilePaths) {
+            if (Test-Path $path) {
+                Write-Host "  Processing: $path" -ForegroundColor Gray
+                $content = Get-Content $path
+                
+                # Aggressively filter out any lines containing starship, oh-my-posh, or malformed commands
+                $newContent = $content | Where-Object { 
+                    $_ -notmatch "starship" -and 
+                    $_ -notmatch "oh-my-posh" -and
+                    $_ -notmatch ".omp.json" -and
+                    $_ -notmatch "Invoke-Expression" -and # Removing all IEX lines to be safe
+                    -not [string]::IsNullOrWhiteSpace($_)
+                }
+                
+                # Add a clean Starship initialization
+                $finalContent = @(
+                    "# Added by Dotfiles Setup ($BACKUP_TIMESTAMP)",
+                    $starshipLine
+                )
+                if ($newContent) { $finalContent = $newContent + $finalContent }
+                
+                $finalContent | Set-Content $path -Force
+                Write-Log "Cleaned profile: $path"
+            } else {
+                # If it doesn't exist, create it cleanly
+                $dir = Split-Path -Parent $path
+                if (-not (Test-Path $dir)) { New-Item $dir -ItemType Directory -Force | Out-Null }
+                "# Added by Dotfiles Setup`n$starshipLine" | Set-Content $path -Force
+                Write-Log "Created new profile: $path"
             }
-            
-            # Append Starship
-            $newContent += "`n# Added by Dotfiles Setup"
-            $newContent += $starshipLine
-            
-            $newContent | Set-Content $PROFILE -Force
-            Write-Log "Cleaned and updated PowerShell Profile"
-        } else {
-            Set-Content $PROFILE -Value "# Added by Dotfiles Setup`n$starshipLine" -Force
-            Write-Log "Created new PowerShell Profile"
         }
 
-        Add-Action "Configured PowerShell Profile with Starship"
-        Write-Status "PowerShell Profile configured successfully" "Success"
+        Add-Action "Configured all PowerShell Profiles with Starship"
+        Write-Status "All PowerShell Profiles cleaned and configured" "Success"
     } catch {
         Write-Status "PowerShell configuration failed: $($_.Exception.Message)" "Error"
     }
