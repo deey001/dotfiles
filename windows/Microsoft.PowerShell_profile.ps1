@@ -69,7 +69,12 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
     Set-PSReadLineOption -PredictionViewStyle ListView
     # Key bindings
     Set-PSReadLineKeyHandler -Key Tab             -Function MenuComplete
-    Set-PSReadLineKeyHandler -Key Shift+Tab       -Function BackwardMenuComplete
+    # BackwardMenuComplete was added in PSReadLine 2.2 (ships with PS7+).
+    # On Windows PowerShell 5.1 (PSReadLine 2.x < 2.2) it does not exist -- skip it.
+    $psrlVersion = (Get-Module PSReadLine).Version
+    if ($psrlVersion -ge [version]'2.2') {
+        Set-PSReadLineKeyHandler -Key Shift+Tab   -Function BackwardMenuComplete
+    }
     Set-PSReadLineKeyHandler -Key UpArrow         -Function HistorySearchBackward
     Set-PSReadLineKeyHandler -Key DownArrow       -Function HistorySearchForward
     Set-PSReadLineKeyHandler -Key Ctrl+d          -Function DeleteCharOrExit
