@@ -248,16 +248,29 @@ STOW_PKGS=(bash zsh git shell config)
 cd "$DOTFILES_DIR"
 
 # Remove any symlinks in $HOME that point into this dotfiles repo.
+#
+# Scoped intentionally to only the two locations stow ever writes to:
+#   1. $HOME depth-1 — direct dotfiles (.bashrc, .zshrc, .gitconfig, etc.)
+#   2. $HOME/.config  — the config stow package (.config/starship.toml, nvim/, etc.)
+#
+# We do NOT scan all of $HOME; on macOS that crawls ~/Library which contains
+# hundreds of SIP-protected directories and produces a wall of "Operation not
+# permitted" errors without ever finding a dotfile symlink.
+#
 # Uses find -exec sh (POSIX, no bash process substitution) so it works
-# correctly even when bash itself is reading from a pipe (curl|bash).
-# Handles filenames with spaces via the {} + batching form.
+# correctly even when bash reads from a curl pipe. {} + batches files per
+# invocation and handles filenames with spaces (e.g. "Catppuccin Mocha.tmTheme").
 echo "  Cleaning up existing dotfile symlinks..."
-find "$HOME" -maxdepth 6 -type l -exec sh -c '
-    for f do
-        t=$(readlink "$f" 2>/dev/null) || continue
-        case "$t" in *dotfiles/*) rm -f "$f" ;; esac
-    done
-' sh {} +
+_cleanup_symlinks() {
+    find "$1" -maxdepth "$2" -type l -exec sh -c '
+        for f do
+            t=$(readlink "$f" 2>/dev/null) || continue
+            case "$t" in *dotfiles/*) rm -f "$f" ;; esac
+        done
+    ' sh {} +
+}
+_cleanup_symlinks "$HOME"           1   # depth-1: direct dotfiles in ~
+_cleanup_symlinks "$HOME/.config"   5   # depth-5: .config/ subtree
 
 for pkg in "${STOW_PKGS[@]}"; do
     echo "  Stowing: $pkg"
