@@ -270,7 +270,7 @@ _cleanup_symlinks() {
     ' sh {} +
 }
 _cleanup_symlinks "$HOME"           1   # depth-1: direct dotfiles in ~
-_cleanup_symlinks "$HOME/.config"   5   # depth-5: .config/ subtree
+[ -d "$HOME/.config" ] && _cleanup_symlinks "$HOME/.config" 5   # depth-5: .config/ subtree
 
 for pkg in "${STOW_PKGS[@]}"; do
     echo "  Stowing: $pkg"
