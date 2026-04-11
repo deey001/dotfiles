@@ -126,7 +126,7 @@ if (-not (Test-AdminPrivileges)) {
     try {
         # Detect the repo root NOW, before we lose context in the elevated process.
         $preElevateDir = $null
-        if ($DotfilesDir -and (Test-Path (Join-Path $DotfilesDir "stow"))) {
+        if ($DotfilesDir -and (Test-Path (Join-Path $DotfilesDir "home"))) {
             $preElevateDir = $DotfilesDir          # already passed from a prior relaunch
         } elseif ($PSCommandPath -and (Test-Path $PSCommandPath)) {
             $candidate = Split-Path (Split-Path $PSCommandPath -Parent) -Parent
@@ -179,7 +179,7 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
     $pwsh7Path = "C:\Program Files\PowerShell\7\pwsh.exe"
     if (Test-Path $pwsh7Path) {
         # Resolve dotfiles dir before relaunching so we can pass it forward.
-        $preUpgradeDir = if ($DotfilesDir -and (Test-Path (Join-Path $DotfilesDir "stow"))) {
+        $preUpgradeDir = if ($DotfilesDir -and (Test-Path (Join-Path $DotfilesDir "home"))) {
             $DotfilesDir
         } elseif ($PSCommandPath -and (Test-Path $PSCommandPath)) {
             $candidate = Split-Path (Split-Path $PSCommandPath -Parent) -Parent
@@ -253,12 +253,12 @@ $script:ActionsPerformed = @()
 #   caller that uses the result must guard with `if ($script:dotfilesDir)`.
 function Get-DotfilesDir {
     # 1. Explicit parameter (passed by the re-launch / elevation logic)
-    if ($DotfilesDir -and (Test-Path (Join-Path $DotfilesDir "stow"))) { return $DotfilesDir }
+    if ($DotfilesDir -and (Test-Path (Join-Path $DotfilesDir "home"))) { return $DotfilesDir }
 
     # 2. $PSScriptRoot — works for local clone direct invocation
     $scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Get-Location }
     $candidate = Split-Path $scriptDir -Parent
-    if (Test-Path (Join-Path $candidate "stow")) { return $candidate }
+    if (Test-Path (Join-Path $candidate "home")) { return $candidate }
 
     # 3. Default clone location
     $candidate = Join-Path $env:USERPROFILE "dotfiles"
@@ -739,7 +739,7 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
 
 # ── Symlink-Dotfiles ────────────────────────────────────────────────────────────
 # Creates symbolic links in %USERPROFILE% pointing to the tracked source files in
-# the dotfiles repository's stow\ directory tree.
+# the dotfiles repository's home\ directory tree.
 #
 # Why SymbolicLink requires Administrator:
 #   By default, creating symbolic links on Windows requires the
@@ -748,18 +748,17 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
 #   This script always runs elevated, so this is not an issue.
 #
 # What each symlink does:
-#   .bashrc          → stow\bash\.bashrc         — Bash config (WSL sessions)
-#   .bash_aliases    → stow\bash\.bash_aliases   — Shared aliases (WSL + cross-platform tools)
-#   .tmux.conf       → stow\tmux\.tmux.conf      — tmux config (WSL/SSH sessions)
-#   .gitconfig       → stow\git\.gitconfig       — Git user/alias/tool settings (native Windows)
-#   .inputrc         → stow\shell\.inputrc       — Readline keybindings (bash + python REPL)
-#   .common_shell    → stow\shell\.common_shell  — Cross-shell env vars
+#   .bashrc          → home\.bashrc              — Bash config (WSL sessions)
+#   .bash_aliases    → home\.bash_aliases        — Shared aliases (WSL + cross-platform tools)
+#   .gitconfig       → home\.gitconfig           — Git user/alias/tool settings (native Windows)
+#   .inputrc         → home\.inputrc             — Readline keybindings (bash + python REPL)
+#   .common_shell    → home\.common_shell        — Cross-shell env vars
 #
 #   NOT symlinked on Windows (Linux/WSL-only):
 #   .blerc           — ble.sh is a Linux bash enhancement, irrelevant in PS/CMD
 #
 # .config\ directory:
-#   Each subdirectory of stow\config\.config\ is symlinked into %USERPROFILE%\.config\.
+#   Each subdirectory of home\.config\ is symlinked into %USERPROFILE%\.config\.
 #   This covers Starship (starship.toml), Neovim (nvim\), and any other XDG config.
 #   starship.toml also gets a root-level symlink at %USERPROFILE%\starship.toml for
 #   compatibility with tools that look there instead of .config\.
@@ -811,18 +810,17 @@ function Symlink-Dotfiles {
         #   .blerc  — ble.sh is a Linux/WSL bash enhancement, not used in PS/CMD
         #   (tmux.conf is kept because WSL users benefit from it)
         $fileMap = @{
-            ".bashrc"       = "stow\bash\.bashrc"          # WSL bash config
-            ".bash_aliases" = "stow\bash\.bash_aliases"    # Shared aliases (WSL + tools)
-            ".tmux.conf"    = "stow\tmux\.tmux.conf"       # tmux (WSL/SSH sessions)
-            ".gitconfig"    = "stow\git\.gitconfig"        # Git — used natively on Windows
-            ".inputrc"      = "stow\shell\.inputrc"        # Readline keybindings
-            ".common_shell" = "stow\shell\.common_shell"   # Cross-shell env vars
+            ".bashrc"       = "home\.bashrc"               # WSL bash config
+            ".bash_aliases" = "home\.bash_aliases"         # Shared aliases (WSL + tools)
+            ".gitconfig"    = "home\.gitconfig"            # Git — used natively on Windows
+            ".inputrc"      = "home\.inputrc"              # Readline keybindings
+            ".common_shell" = "home\.common_shell"         # Cross-shell env vars
         }
         foreach ($f in $fileMap.Keys) {
             $src = Join-Path $dotfilesDir $fileMap[$f]; $tgt = Join-Path $userHome $f
             if (Test-Path $src) { if (Test-Path $tgt) { Remove-Item $tgt -Force }; New-Item -ItemType SymbolicLink -Path $tgt -Value $src -Force | Out-Null }
         }
-        $configSrc = Join-Path $dotfilesDir "stow\config\.config"; $configTgt = Join-Path $userHome ".config"
+        $configSrc = Join-Path $dotfilesDir "home\.config"; $configTgt = Join-Path $userHome ".config"
         if (Test-Path $configSrc) {
             if (-not (Test-Path $configTgt)) { New-Item $configTgt -ItemType Directory -Force | Out-Null }
             Get-ChildItem $configSrc | ForEach-Object {

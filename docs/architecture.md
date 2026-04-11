@@ -78,9 +78,9 @@ DOTFILES_WEZTERM_THEME, and the full DOTFILES_COLOR_* palette.
 
 ## Stow
 
-GNU Stow manages symlinks. `.stowrc` sets `--dir=home --target=~`.
-Each directory under `home/` is a stow package. `stow -R <pkg>` creates
-symlinks mirroring the package's directory tree into `$HOME`.
+GNU Stow manages symlinks. `.stowrc` sets `--dir=. --target=~`.
+`home/` is a single stow package whose structure mirrors `$HOME` directly.
+`stow -R home` creates symlinks for all dotfiles and the `.config/` subtree.
 
 ## Dependencies
 

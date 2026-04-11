@@ -22,12 +22,12 @@ irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.p
 
 ## Directory Layout
 
-- `home/` — GNU Stow packages, each symlinked into `$HOME`:
-  - `home/bash/`   → `.bashrc`, `.bash_aliases`, `.bash_profile`, `.blerc`
-  - `home/zsh/`    → `.zshrc`
-  - `home/git/`    → `.gitconfig`, `.gitattributes`, `.gitignore`
-  - `home/shell/`  → `.common_shell`, `.inputrc`, `.editorconfig`
-  - `home/config/` → `~/.config/`: nvim, wezterm, starship, tmux (conf + scripts), bat, atuin, fastfetch
+- `home/` — Single GNU Stow package symlinked into `$HOME`:
+  - `home/.bashrc`, `home/.bash_aliases`, `home/.bash_profile`, `home/.blerc`
+  - `home/.zshrc`
+  - `home/.gitconfig`, `home/.gitattributes`, `home/.gitignore`
+  - `home/.common_shell`, `home/.inputrc`, `home/.editorconfig`
+  - `home/.config/` → `~/.config/`: nvim, wezterm, starship, tmux (conf + scripts), bat, atuin, fastfetch
 - `themes/` — Shell theme definitions sourced into `~/.config/dotfiles/theme.sh`
   - `themes/windows/` — PS1 variants for Windows PSReadLine
 - `platform/` — OS-specific files:
@@ -42,5 +42,5 @@ irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.p
 - **`command -v` guards** on all modern tool aliases — always fall back gracefully.
 - **Theme system**: `make theme-mocha` symlinks `themes/catppuccin-mocha.sh` → `~/.config/dotfiles/theme.sh`. `.common_shell` sources it on every shell start. Windows uses `themes/windows/catppuccin-mocha.ps1` deployed by `Configure-PowerShell`.
 - **Secrets go in `~/.bash_local`** — never committed. See wiki [New Machine](https://github.com/deey001/dotfiles/wiki/New-Machine) for examples.
-- **tmux config** lives in `~/.config/tmux/tmux.conf` (stowed from `home/config/`).
-- **`.stowrc`** sets `--dir=home --target=~ --no-folding` as defaults.
+- **tmux config** lives in `~/.config/tmux/tmux.conf` (stowed from `home/.config/tmux/`).
+- **`.stowrc`** sets `--dir=. --target=~ --no-folding` as defaults.

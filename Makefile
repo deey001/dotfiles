@@ -49,7 +49,7 @@ all: install
 #   1. Detects OS (macOS / Debian / Arch / RHEL)
 #   2. Installs system packages from platform/packages/<distro>.txt
 #   3. Installs GNU Stow if missing
-#   4. Stows all packages (bash, zsh, git, shell, config) into $HOME
+#   4. Stows home/ package into $HOME
 #   5. Symlinks the default theme (themes/catppuccin-mocha.sh)
 install:
 	@echo "--- Starting Dotfiles Installation ---"

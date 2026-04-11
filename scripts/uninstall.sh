@@ -19,10 +19,8 @@ echo -e "${YELLOW}Target:${NC} $DOTFILES_DIR"
 # ── 1. Unstow Packages ───────────────────────────────────────────────────────
 if command -v stow &>/dev/null; then
     echo "--- Unstowing packages ---"
-    for pkg in bash zsh git shell config; do
-        echo "  Unstowing: $pkg"
-        stow -D --dir="$DOTFILES_DIR/home" --target="$HOME" "$pkg" 2>/dev/null || true
-    done
+    echo "  Unstowing: home"
+    stow -D --dir="$DOTFILES_DIR" --target="$HOME" home 2>/dev/null || true
 else
     echo -e "${RED}Warning:${NC} GNU Stow not found — falling back to manual cleanup."
 fi

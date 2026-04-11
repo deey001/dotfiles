@@ -182,28 +182,28 @@ echo ""
 # ---- Test 1: Symlink verification --------------------------------------------
 # Ensures every dotfile in $HOME is a symlink pointing back into the repo.
 echo -e "${YELLOW}[1/4] Checking Symlinks${NC}"
-check_symlink "$HOME/.bashrc" "home/bash/.bashrc"
-check_symlink "$HOME/.bash_aliases" "home/bash/.bash_aliases"
-check_symlink "$HOME/.bash_profile" "home/bash/.bash_profile"
-check_symlink "$HOME/.blerc" "home/bash/.blerc"
-check_symlink "$HOME/.config/tmux/tmux.conf" "home/config/.config/tmux/tmux.conf"
-check_symlink "$HOME/.gitconfig" "home/git/.gitconfig"
-check_symlink "$HOME/.inputrc" "home/shell/.inputrc"
-check_symlink "$HOME/.config/starship.toml" "home/config/.config/starship.toml"
-check_symlink "$HOME/.config/nvim/init.lua" "home/config/.config/nvim/init.lua"
-check_symlink "$HOME/.config/wezterm/wezterm.lua" "home/config/.config/wezterm/wezterm.lua"
+check_symlink "$HOME/.bashrc" "home/.bashrc"
+check_symlink "$HOME/.bash_aliases" "home/.bash_aliases"
+check_symlink "$HOME/.bash_profile" "home/.bash_profile"
+check_symlink "$HOME/.blerc" "home/.blerc"
+check_symlink "$HOME/.config/tmux/tmux.conf" "home/.config/tmux/tmux.conf"
+check_symlink "$HOME/.gitconfig" "home/.gitconfig"
+check_symlink "$HOME/.inputrc" "home/.inputrc"
+check_symlink "$HOME/.config/starship.toml" "home/.config/starship.toml"
+check_symlink "$HOME/.config/nvim/init.lua" "home/.config/nvim/init.lua"
+check_symlink "$HOME/.config/wezterm/wezterm.lua" "home/.config/wezterm/wezterm.lua"
 
 # Only check .zshrc if zsh is installed — not all machines have it
 if command -v zsh >/dev/null 2>&1; then
-    check_symlink "$HOME/.zshrc" "home/zsh/.zshrc"
+    check_symlink "$HOME/.zshrc" "home/.zshrc"
 fi
 
 # Optional .config subdirectories — these may not exist on minimal installs
 if [ -d "$HOME/.config/bat" ]; then
-    check_symlink "$HOME/.config/bat/themes/Catppuccin Mocha.tmTheme" "home/config/.config/bat/themes/Catppuccin Mocha.tmTheme" || true
+    check_symlink "$HOME/.config/bat/themes/Catppuccin Mocha.tmTheme" "home/.config/bat/themes/Catppuccin Mocha.tmTheme" || true
 fi
 if [ -d "$HOME/.config/fastfetch" ]; then
-    check_symlink "$HOME/.config/fastfetch/config.jsonc" "home/config/.config/fastfetch/config.jsonc" || true
+    check_symlink "$HOME/.config/fastfetch/config.jsonc" "home/.config/fastfetch/config.jsonc" || true
 fi
 echo ""
 

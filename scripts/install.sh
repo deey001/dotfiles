@@ -22,7 +22,7 @@
 #   3. Detect OS & architecture  – Darwin / Linux (Debian, Arch, RHEL)
 #   4. Install system packages   – via Homebrew / apt / pacman / dnf|yum
 #   5. Ensure GNU Stow exists    – install if missing
-#   6. Stow dotfile packages     – symlink bash, zsh, git, shell, tmux, config
+#   6. Stow dotfile packages     – symlink home/ package into $HOME
 #
 # DEPENDENCIES
 #   bash  – version 4+ recommended (macOS ships bash 3; Homebrew provides bash 5)
@@ -229,21 +229,14 @@ command -v stow &>/dev/null || {
 
 # ── 7. Stow Dotfile Packages ────────────────────────────────────────────────────
 #
-# Each entry in STOW_PKGS corresponds to a subdirectory under home/ in the repo.
-# The directory tree mirrors $HOME, so Stow creates the correct symlinks.
+# The home/ directory is a single stow package whose structure mirrors $HOME.
+# home/.bashrc → ~/.bashrc, home/.config/tmux/ → ~/.config/tmux/, etc.
 #
-# Package breakdown:
-#   bash    – .bashrc, .bash_profile, .bash_aliases, .blerc
-#   zsh     – .zshrc
-#   git     – .gitconfig, .gitignore_global
-#   shell   – .inputrc, .common_shell (shared env + functions)
-#   config  – .config/ subtree (starship.toml, nvim/, wezterm/, tmux.conf, etc.)
-#
-# .stowrc declares --dir=home and --target=~ so flags are not needed here.
+# .stowrc declares --dir=. and --target=~ so flags are not needed here.
 # -R (restow) is idempotent: safe to run on every update.
 
 echo "--- Symlinking Configurations via GNU Stow ---"
-STOW_PKGS=(bash zsh git shell config)
+STOW_PKGS=(home)
 
 cd "$DOTFILES_DIR"
 
@@ -251,7 +244,7 @@ cd "$DOTFILES_DIR"
 #
 # Scoped intentionally to only the two locations stow ever writes to:
 #   1. $HOME depth-1 — direct dotfiles (.bashrc, .zshrc, .gitconfig, etc.)
-#   2. $HOME/.config  — the config stow package (.config/starship.toml, nvim/, etc.)
+#   2. $HOME/.config  — XDG config subtree (starship.toml, nvim/, tmux/, etc.)
 #
 # We do NOT scan all of $HOME; on macOS that crawls ~/Library which contains
 # hundreds of SIP-protected directories and produces a wall of "Operation not
@@ -274,7 +267,7 @@ _cleanup_symlinks "$HOME"           1   # depth-1: direct dotfiles in ~
 
 for pkg in "${STOW_PKGS[@]}"; do
     echo "  Stowing: $pkg"
-    stow -R "$pkg"
+    stow -R --dir="$DOTFILES_DIR" "$pkg"
 done
 
 # ── Deploy default theme ───────────────────────────────────────────────────
