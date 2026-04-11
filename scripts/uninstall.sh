@@ -35,7 +35,7 @@ _links=(
     "$HOME/.bash_aliases"
     "$HOME/.blerc"
     "$HOME/.zshrc"
-    "$HOME/.tmux.conf"
+    "$HOME/.config/tmux/tmux.conf"
     "$HOME/.inputrc"
     "$HOME/.gitconfig"
     "$HOME/.common_shell"
