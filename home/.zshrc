@@ -26,13 +26,25 @@ setopt append_history extended_history hist_expire_dups_first \
        hist_ignore_dups hist_ignore_space hist_verify share_history
 
 # ── Completion ────────────────────────────────────────────────────────────────
-autoload -Uz compinit && compinit
+# Fast compinit: full security check at most once per 24h; skip otherwise.
+# compaudit is the slowest step in a cold zsh startup.
+autoload -Uz compinit
+if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
+    compinit
+else
+    compinit -C
+fi
 
-# Carapace — multi-shell completion engine (600+ tools, bridges fish/bash completions)
+# Carapace — multi-shell completion engine (600+ tools, bridges fish/bash completions).
+# Cached init — avoids spawning carapace on every shell startup.
 if command -v carapace >/dev/null 2>&1; then
     export CARAPACE_BRIDGES='zsh,fish,bash,inshellisense'
     zstyle ':completion:*' format $'\e[2;37mCompleting %d\e[m'
-    source <(carapace _carapace zsh)
+    _cc="${HOME}/.cache/carapace_init.zsh"
+    [[ ! -f "$_cc" || "$(command -v carapace)" -nt "$_cc" ]] && \
+        carapace _carapace zsh > "$_cc" 2>/dev/null
+    source "$_cc"
+    unset _cc
 fi
 
 # fzf-tab — replaces TAB menu with fzf dropdown; auto-clones on first run

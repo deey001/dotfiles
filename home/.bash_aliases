@@ -81,7 +81,6 @@ command -v colordiff >/dev/null 2>&1 && alias diff='colordiff'
 # ── Quick search ──────────────────────────────────────────────────────────────
 alias h='history | grep '
 alias p='ps aux | grep '
-alias f='find . | grep '
 
 # ── System info ───────────────────────────────────────────────────────────────
 alias openports='netstat -nape --inet'

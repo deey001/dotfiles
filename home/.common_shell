@@ -2,7 +2,7 @@
 # .common_shell — Shared Environment for Bash and Zsh
 # ==============================================================================
 # LOCATION:  ~/.common_shell  (symlinked by install.sh via stow home/)
-# SOURCED BY: ~/.bashrc (section 12) and ~/.zshrc (top of file)
+# SOURCED BY: ~/.bashrc (section 9) and ~/.zshrc (top of file)
 #
 # PURPOSE:
 #   This file is the single source of truth for environment variables and

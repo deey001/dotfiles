@@ -73,11 +73,17 @@ if [[ "${BASH_SOURCE[0]:-}" == "${0:-}" ]] || [[ "${BASH_SOURCE[0]:-}" == "" ]];
         [ -d "$DOTFILES_DIR" ] && rm -rf "$DOTFILES_DIR"
         git clone https://github.com/deey001/dotfiles.git "$DOTFILES_DIR"
     else
-        # Repo already exists — pull the latest changes so package lists and stow
-        # packages are always up to date on every run.
+        # Repo already exists — pull latest. Guard against dirty tree so we
+        # never silently nuke local edits (e.g. an openclaw installer that
+        # wrote through stow symlinks into the repo).
         echo "--- Updating dotfiles repository... ---"
-        git -C "$DOTFILES_DIR" fetch origin master 2>&1
-        git -C "$DOTFILES_DIR" reset --hard origin/master 2>&1
+        git -C "$DOTFILES_DIR" fetch origin master
+        if [ -z "$(git -C "$DOTFILES_DIR" status --porcelain)" ]; then
+            git -C "$DOTFILES_DIR" reset --hard origin/master
+        else
+            echo "  ! Working tree has local changes — skipping reset."
+            echo "  ! Resolve manually in $DOTFILES_DIR then re-run."
+        fi
     fi
 else
     # Running via `make install` or sourced from inside the repo.

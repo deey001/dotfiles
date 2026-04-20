@@ -44,8 +44,18 @@ fi
 
 # ── 7. PATH + environment ─────────────────────────────────────────────────────
 export PATH="${HOME}/.local/bin:${HOME}/bin:${PATH}"
-# Deduplicate PATH (prevents bloat on repeated sourcing)
-export PATH=$(awk -v RS=':' -v ORS=':' '!seen[$0]++' <<< "$PATH" | sed 's/:$//')
+# Deduplicate PATH — pure-bash, no forks. Keeps first occurrence of each entry.
+_dedup_path() {
+    local IFS=: seen=":" out="" p
+    for p in $PATH; do
+        case "$seen" in *":$p:"*) continue ;; esac
+        seen="$seen$p:"
+        out="${out:+$out:}$p"
+    done
+    PATH="$out"
+}
+_dedup_path
+unset -f _dedup_path
 
 # Editor — prefer nvim, fall back gracefully
 for _e in nvim vim vi nano; do

@@ -27,13 +27,6 @@ set -euo pipefail
 # DEPENDENCIES:
 #   • bash, stat, readlink (standard coreutils)
 #   • The dotfiles must already be installed (via install.sh or stow)
-#
-# SUGGESTED ADDITIONAL TESTS:
-#   TODO: Check that ~/.local/bin is on PATH (required for ble.sh, starship, etc.)
-#   TODO: Verify bash-completion version >= 2.12 (needed for bash 5.2 compat)
-#   TODO: Check ble.sh is installed (~/.local/share/blesh/ble.sh exists)
-#   TODO: Verify starship.toml is valid (starship config check, if available)
-#   TODO: Check tmux plugin manager is installed (~/.tmux/plugins/tpm)
 # ==============================================================================
 
 # ---- ANSI color codes for terminal output ------------------------------------
