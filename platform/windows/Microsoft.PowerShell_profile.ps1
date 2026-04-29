@@ -35,40 +35,57 @@ if (Test-Path $_themeFile) {
     # ── Fallback: inline Catppuccin Mocha colors ──────────────────────────────
     # Used when no theme file is deployed (fresh install, or theme step skipped).
     # Keeps the profile functional and themed even without the theme system.
-    if (Get-Module -ListAvailable -Name PSReadLine) {
+    $_psrl = Get-Module -ListAvailable -Name PSReadLine | Select-Object -First 1
+    if ($_psrl) {
         Import-Module PSReadLine
-        Set-PSReadLineOption -Colors @{
-            Command            = '#89b4fa'   # blue   — valid commands
-            Parameter          = '#cba6f7'   # mauve  — flags/parameters
-            Operator           = '#89dceb'   # sky    — operators (=, +, |, etc.)
-            Variable           = '#cdd6f4'   # text   — $variables
-            String             = '#a6e3a1'   # green  — string literals
-            Number             = '#fab387'   # peach  — number literals
-            Type               = '#94e2d5'   # teal   — [type] casts
-            Comment            = '#585b70'   # surface2 — # comments
-            Keyword            = '#f38ba8'   # red    — keywords (if, for, function)
-            Error              = '#f38ba8'   # red    — error state
-            Default            = '#cdd6f4'   # text   — default foreground
-            Emphasis           = '#f5c2e7'   # pink   — emphasis
-            Selection          = '#313244'   # surface0 — selected text background
-            InlinePrediction   = '#585b70'   # surface2 — ghost-text suggestions
+        $_colors = @{
+            Command   = '#89b4fa'   # blue   — valid commands
+            Parameter = '#cba6f7'   # mauve  — flags/parameters
+            Operator  = '#89dceb'   # sky    — operators (=, +, |, etc.)
+            Variable  = '#cdd6f4'   # text   — $variables
+            String    = '#a6e3a1'   # green  — string literals
+            Number    = '#fab387'   # peach  — number literals
+            Type      = '#94e2d5'   # teal   — [type] casts
+            Comment   = '#585b70'   # surface2 — # comments
+            Keyword   = '#f38ba8'   # red    — keywords (if, for, function)
+            Error     = '#f38ba8'   # red    — error state
+            Default   = '#cdd6f4'   # text   — default foreground
+            Emphasis  = '#f5c2e7'   # pink   — emphasis
+            Selection = '#313244'   # surface0 — selected text background
         }
+        # InlinePrediction color key requires PSReadLine 2.1.0+ (Win PS 5.1
+        # ships 2.0.x, which throws "not a valid color property" on this key).
+        if ($_psrl.Version -ge [Version]'2.1.0') {
+            $_colors.InlinePrediction = '#585b70'
+        }
+        Set-PSReadLineOption -Colors $_colors
+        Remove-Variable _colors -ErrorAction SilentlyContinue
     }
+    Remove-Variable _psrl -ErrorAction SilentlyContinue
     $env:BAT_THEME = 'Catppuccin Mocha'
 }
 Remove-Variable _themeFile -ErrorAction SilentlyContinue
 
 # ── 2. PSReadLine Behaviour (non-color settings) ──────────────────────────────
 # Color settings are handled by the theme file above.
-# These behaviour settings are theme-independent.
-if (Get-Module -ListAvailable -Name PSReadLine) {
+# These behaviour settings are theme-independent — but predictive features
+# require newer PSReadLine versions than Windows PowerShell 5.1 ships.
+$_psrl = Get-Module -ListAvailable -Name PSReadLine | Select-Object -First 1
+if ($_psrl) {
     Import-Module PSReadLine
     Set-PSReadLineOption -EditMode Emacs
-    # History-based autosuggestion (like ble.sh / zsh-autosuggestions)
-    Set-PSReadLineOption -PredictionSource History
-    Set-PSReadLineOption -PredictionViewStyle ListView
-    # Key bindings
-    # Tab cycles forward through completions; Shift+Tab cycles backward.
+
+    # Predictive IntelliSense — PSReadLine 2.1+ for -PredictionSource,
+    # 2.2+ for ListView. Older versions throw "parameter cannot be found".
+    # Upgrade with: Install-Module PSReadLine -Force -SkipPublisherCheck
+    if ($_psrl.Version -ge [Version]'2.1.0') {
+        Set-PSReadLineOption -PredictionSource History
+    }
+    if ($_psrl.Version -ge [Version]'2.2.0') {
+        Set-PSReadLineOption -PredictionViewStyle ListView
+    }
+
+    # Key bindings — Tab cycles forward through completions; Shift+Tab cycles backward.
     Set-PSReadLineKeyHandler -Key Tab             -Function MenuComplete
     Set-PSReadLineKeyHandler -Key Shift+Tab       -Function TabCompletePrevious
     Set-PSReadLineKeyHandler -Key UpArrow         -Function HistorySearchBackward
@@ -77,6 +94,7 @@ if (Get-Module -ListAvailable -Name PSReadLine) {
     Set-PSReadLineKeyHandler -Key Ctrl+LeftArrow  -Function BackwardWord
     Set-PSReadLineKeyHandler -Key Ctrl+RightArrow -Function ForwardWord
 }
+Remove-Variable _psrl -ErrorAction SilentlyContinue
 
 # ── 3. Environment Variables ──────────────────────────────────────────────────
 $env:EDITOR = 'nvim'

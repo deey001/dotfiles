@@ -59,21 +59,28 @@ $env:DOTFILES_WEZTERM_THEME = "Catppuccin Mocha"
 # ── PSReadLine Syntax Highlighting ───────────────────────────────────────────
 # Applies Catppuccin Mocha colors to the interactive PowerShell prompt.
 # Colors use the palette variables defined above for consistency.
-if (Get-Module -ListAvailable -Name PSReadLine) {
-    Set-PSReadLineOption -Colors @{
-        Command            = $env:DOTFILES_COLOR_BLUE      # valid commands
-        Parameter          = $env:DOTFILES_COLOR_MAUVE     # flags/parameters
-        Operator           = $env:DOTFILES_COLOR_SKY       # operators (=, +, |)
-        Variable           = $env:DOTFILES_COLOR_TEXT      # $variables
-        String             = $env:DOTFILES_COLOR_GREEN     # string literals
-        Number             = $env:DOTFILES_COLOR_PEACH     # number literals
-        Type               = $env:DOTFILES_COLOR_TEAL      # [type] casts
-        Comment            = $env:DOTFILES_COLOR_SURFACE2  # # comments
-        Keyword            = $env:DOTFILES_COLOR_RED       # if, for, function
-        Error              = $env:DOTFILES_COLOR_RED       # error state
-        Default            = $env:DOTFILES_COLOR_TEXT      # default foreground
-        Emphasis           = $env:DOTFILES_COLOR_PINK      # emphasis
-        Selection          = $env:DOTFILES_COLOR_SURFACE0  # selected text bg
-        InlinePrediction   = $env:DOTFILES_COLOR_SURFACE2  # ghost-text suggestions
+$_psrl = Get-Module -ListAvailable -Name PSReadLine | Select-Object -First 1
+if ($_psrl) {
+    $_colors = @{
+        Command   = $env:DOTFILES_COLOR_BLUE      # valid commands
+        Parameter = $env:DOTFILES_COLOR_MAUVE     # flags/parameters
+        Operator  = $env:DOTFILES_COLOR_SKY       # operators (=, +, |)
+        Variable  = $env:DOTFILES_COLOR_TEXT      # $variables
+        String    = $env:DOTFILES_COLOR_GREEN     # string literals
+        Number    = $env:DOTFILES_COLOR_PEACH     # number literals
+        Type      = $env:DOTFILES_COLOR_TEAL      # [type] casts
+        Comment   = $env:DOTFILES_COLOR_SURFACE2  # # comments
+        Keyword   = $env:DOTFILES_COLOR_RED       # if, for, function
+        Error     = $env:DOTFILES_COLOR_RED       # error state
+        Default   = $env:DOTFILES_COLOR_TEXT      # default foreground
+        Emphasis  = $env:DOTFILES_COLOR_PINK      # emphasis
+        Selection = $env:DOTFILES_COLOR_SURFACE0  # selected text bg
     }
+    # InlinePrediction needs PSReadLine 2.1+; Win PS 5.1 ships 2.0.x.
+    if ($_psrl.Version -ge [Version]'2.1.0') {
+        $_colors.InlinePrediction = $env:DOTFILES_COLOR_SURFACE2
+    }
+    Set-PSReadLineOption -Colors $_colors
+    Remove-Variable _colors -ErrorAction SilentlyContinue
 }
+Remove-Variable _psrl -ErrorAction SilentlyContinue

@@ -38,21 +38,28 @@ $env:DOTFILES_COLOR_CRUST     = "#dce0e8"
 $env:BAT_THEME              = "Catppuccin Latte"
 $env:DOTFILES_WEZTERM_THEME = "Catppuccin Latte"
 
-if (Get-Module -ListAvailable -Name PSReadLine) {
-    Set-PSReadLineOption -Colors @{
-        Command            = $env:DOTFILES_COLOR_BLUE
-        Parameter          = $env:DOTFILES_COLOR_MAUVE
-        Operator           = $env:DOTFILES_COLOR_SKY
-        Variable           = $env:DOTFILES_COLOR_TEXT
-        String             = $env:DOTFILES_COLOR_GREEN
-        Number             = $env:DOTFILES_COLOR_PEACH
-        Type               = $env:DOTFILES_COLOR_TEAL
-        Comment            = $env:DOTFILES_COLOR_SURFACE2
-        Keyword            = $env:DOTFILES_COLOR_RED
-        Error              = $env:DOTFILES_COLOR_RED
-        Default            = $env:DOTFILES_COLOR_TEXT
-        Emphasis           = $env:DOTFILES_COLOR_PINK
-        Selection          = $env:DOTFILES_COLOR_SURFACE0
-        InlinePrediction   = $env:DOTFILES_COLOR_SURFACE2
+$_psrl = Get-Module -ListAvailable -Name PSReadLine | Select-Object -First 1
+if ($_psrl) {
+    $_colors = @{
+        Command   = $env:DOTFILES_COLOR_BLUE
+        Parameter = $env:DOTFILES_COLOR_MAUVE
+        Operator  = $env:DOTFILES_COLOR_SKY
+        Variable  = $env:DOTFILES_COLOR_TEXT
+        String    = $env:DOTFILES_COLOR_GREEN
+        Number    = $env:DOTFILES_COLOR_PEACH
+        Type      = $env:DOTFILES_COLOR_TEAL
+        Comment   = $env:DOTFILES_COLOR_SURFACE2
+        Keyword   = $env:DOTFILES_COLOR_RED
+        Error     = $env:DOTFILES_COLOR_RED
+        Default   = $env:DOTFILES_COLOR_TEXT
+        Emphasis  = $env:DOTFILES_COLOR_PINK
+        Selection = $env:DOTFILES_COLOR_SURFACE0
     }
+    # InlinePrediction needs PSReadLine 2.1+; Win PS 5.1 ships 2.0.x.
+    if ($_psrl.Version -ge [Version]'2.1.0') {
+        $_colors.InlinePrediction = $env:DOTFILES_COLOR_SURFACE2
+    }
+    Set-PSReadLineOption -Colors $_colors
+    Remove-Variable _colors -ErrorAction SilentlyContinue
 }
+Remove-Variable _psrl -ErrorAction SilentlyContinue
