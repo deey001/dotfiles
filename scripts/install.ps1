@@ -425,6 +425,50 @@ function Install-NerdFont {
     } catch { Write-Status "Font failed: $_" "Error" }
 }
 
+# ── Ensure-WindowsTerminal ──────────────────────────────────────────────────────
+# Verifies Windows Terminal is installed and offers to install it via winget.
+# Older Windows builds (Server 2019/2022 base, Win10 < 1809) ship without winget
+# AND without WT — in that case we surface manual install instructions and
+# return $false so the caller can skip the WT-dependent step cleanly.
+#
+# Returns: $true if Windows Terminal is present after this function runs;
+#          $false if the user declined or auto-install was not possible.
+function Ensure-WindowsTerminal {
+    if (Get-AppxPackage -Name Microsoft.WindowsTerminal -ErrorAction SilentlyContinue) { return $true }
+    if (Get-Command wt.exe -ErrorAction SilentlyContinue) { return $true }
+
+    Write-Status "Windows Terminal is required for theming + Nerd Font rendering, but is not installed." "Warning"
+
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        $resp = Read-Host "Install Windows Terminal via winget now? [Y/n]"
+        if ($resp -match '^(n|no)$') { return $false }
+        try {
+            Write-Host "Running: winget install Microsoft.WindowsTerminal" -ForegroundColor Cyan
+            winget install --id Microsoft.WindowsTerminal -e --silent `
+                --accept-package-agreements --accept-source-agreements
+            if ($LASTEXITCODE -eq 0 -and `
+                (Get-AppxPackage -Name Microsoft.WindowsTerminal -ErrorAction SilentlyContinue)) {
+                Add-Action "Installed Windows Terminal (winget)"
+                Write-Status "Windows Terminal installed" "Success"
+                return $true
+            }
+            Write-Status "winget exited $LASTEXITCODE without installing WT" "Error"
+        } catch {
+            Write-Status "winget install failed: $_" "Error"
+        }
+    } else {
+        Write-Status "winget not available on this Windows build." "Warning"
+    }
+
+    Write-Host ""
+    Write-ColorText "Cannot auto-install Windows Terminal on this system." "Yellow"
+    Write-ColorText "Install it manually, then re-run this script:" "Yellow"
+    Write-Host "  - Microsoft Store: https://aka.ms/terminal"
+    Write-Host "  - GitHub releases: https://github.com/microsoft/terminal/releases/latest"
+    Write-Host "  - winget (if installed): winget install Microsoft.WindowsTerminal"
+    return $false
+}
+
 # ── Configure-WindowsTerminal ───────────────────────────────────────────────────
 # Merges dotfiles repository settings into the live Windows Terminal settings.json,
 # setting the default font to JetBrainsMono Nerd Font and the colour scheme to
@@ -444,20 +488,28 @@ function Install-NerdFont {
 #                                   present (matched by .name property)
 #
 # What can go wrong:
-#   • settings.json not found — Windows Terminal may not be installed or has never
-#     been opened (the file is created on first launch).  Reported as a warning.
+#   • Windows Terminal not installed — Ensure-WindowsTerminal prompts to install
+#     via winget; on systems without winget (older Windows) we print manual
+#     install instructions and skip this step rather than aborting the run.
+#   • settings.json not found despite WT being installed — WT has never been
+#     opened (the file is created on first launch).  Reported as a warning.
 #   • Malformed existing JSON — ConvertFrom-Json throws; caught and reported.
 #   • File locked by Windows Terminal — Set-Content fails; caught and reported.
 #
-# Prerequisites: Windows Terminal must be installed; $script:dotfilesDir should be
-#   set for repo-side colour scheme injection to work.
+# Prerequisites: $script:dotfilesDir should be set for repo-side colour scheme
+#   injection to work (optional — embedded scheme is the canonical fallback).
 function Configure-WindowsTerminal {
     try {
+        if (-not (Ensure-WindowsTerminal)) {
+            Write-Status "Skipping Windows Terminal configuration — terminal not installed." "Warning"
+            return
+        }
+
         Write-Host "Configuring Windows Terminal..." -ForegroundColor Cyan
         $wtPath = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
 
         if (-not (Test-Path $wtPath)) {
-            Write-Status "Windows Terminal settings.json not found - is Windows Terminal installed?" "Warning"
+            Write-Status "Windows Terminal installed but settings.json not found — launch WT once, then re-run." "Warning"
             return
         }
 
