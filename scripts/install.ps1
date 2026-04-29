@@ -444,6 +444,22 @@ function Install-NerdFont {
     } catch { Write-Status "Font failed: $_" "Error" }
 }
 
+# ── Test-WindowsTerminalInstalled ───────────────────────────────────────────────
+# Detects Windows Terminal without using Get-AppxPackage, which fails in
+# PowerShell 7 on Server SKUs with:
+#   Operation is not supported on this platform. (0x80131539)
+# because the Appx cmdlets require the Desktop App Installer feature that
+# Server Core / hardened Server installs do not load by default.
+#
+# Detection (any one is sufficient):
+#   1. wt.exe is on PATH (the WindowsApps stub gets created on install).
+#   2. The MSIX package folder exists in %LOCALAPPDATA%\Packages.
+function Test-WindowsTerminalInstalled {
+    if (Get-Command wt.exe -ErrorAction SilentlyContinue) { return $true }
+    if (Test-Path "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe") { return $true }
+    return $false
+}
+
 # ── Ensure-WindowsTerminal ──────────────────────────────────────────────────────
 # Verifies Windows Terminal is installed and offers to install it via winget.
 # Older Windows builds (Server 2019/2022 base, Win10 < 1809) ship without winget
@@ -453,8 +469,7 @@ function Install-NerdFont {
 # Returns: $true if Windows Terminal is present after this function runs;
 #          $false if the user declined or auto-install was not possible.
 function Ensure-WindowsTerminal {
-    if (Get-AppxPackage -Name Microsoft.WindowsTerminal -ErrorAction SilentlyContinue) { return $true }
-    if (Get-Command wt.exe -ErrorAction SilentlyContinue) { return $true }
+    if (Test-WindowsTerminalInstalled) { return $true }
 
     Write-Status "Windows Terminal is required for theming + Nerd Font rendering, but is not installed." "Warning"
 
@@ -465,8 +480,7 @@ function Ensure-WindowsTerminal {
             Write-Host "Running: winget install Microsoft.WindowsTerminal" -ForegroundColor Cyan
             winget install --id Microsoft.WindowsTerminal -e --silent `
                 --accept-package-agreements --accept-source-agreements
-            if ($LASTEXITCODE -eq 0 -and `
-                (Get-AppxPackage -Name Microsoft.WindowsTerminal -ErrorAction SilentlyContinue)) {
+            if ($LASTEXITCODE -eq 0 -and (Test-WindowsTerminalInstalled)) {
                 Add-Action "Installed Windows Terminal (winget)"
                 Write-Status "Windows Terminal installed" "Success"
                 return $true
