@@ -380,48 +380,67 @@ function Backup-Settings {
 }
 
 # ── Install-NerdFont ────────────────────────────────────────────────────────────
-# Downloads and installs JetBrainsMono Nerd Font for all users via the Windows
-# Shell COM object, then cleans up the temporary download directory.
+# Downloads and installs JetBrainsMono Nerd Font system-wide via direct file
+# copy + registry entry — bypassing Shell.Application's CopyHere COM call,
+# which on Server 2022 / Win10 LTSC throws a "<font> is already installed.
+# Replace it?" dialog for every file on rerun (the 0x10 flag suppresses the
+# progress dialog, NOT the replace-confirmation dialog).
 #
-# How the COM font install works:
-#   Shell.Namespace(0x14) returns a reference to the system Fonts folder as a
-#   Shell folder object.  Calling .CopyHere() on a .ttf file triggers the same
-#   code path as dragging a font file into the Fonts folder in Explorer — Windows
-#   copies it to %SystemRoot%\Fonts and registers it in the registry automatically.
-#   The 0x10 flag suppresses the "overwrite?" progress dialog.
+# How the install works:
+#   1. Copy each .ttf to %SystemRoot%\Fonts.
+#   2. Register each font under
+#      HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts
+#      with value name "<basename> (TrueType)" → file name. The Windows
+#      Font Cache Service picks up new fonts within seconds; restart any
+#      already-running terminal/app to see them in font pickers.
 #
-# Why check for existing fonts before copying:
-#   CopyHere with 0x10 would silently overwrite, but checking first avoids the
-#   overhead of re-registering fonts that are already present (faster re-runs).
+# Idempotency:
+#   • Early-exit if any JetBrainsMono*NerdFont*.ttf already exists in the
+#     system Fonts folder — avoids the ~25 MB download on every rerun.
+#   • Per-file Test-Path skip prevents double-copy on partial prior runs.
 #
-# What it modifies:
-#   • %SystemRoot%\Fonts — copies *.ttf files extracted from the zip
-#   • HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts — font registry
-#
-# What can go wrong:
-#   • Download failure (no internet, GitHub rate-limit) — caught, logged, reported.
-#   • CopyHere is asynchronous internally, but Expand-Archive blocks long enough
-#     that fonts are fully extracted before the copy loop starts in practice.
-#
-# Prerequisites: Administrator privileges (font registry is HKLM).
+# Prerequisites: Administrator privileges (HKLM registry + system Fonts dir).
 function Install-NerdFont {
+    $fontsDir = "$env:SystemRoot\Fonts"
+    $regKey   = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
+
     try {
         Write-Host "Installing Nerd Font..." -ForegroundColor Cyan
+
+        # Fast path on reruns: if any JetBrainsMono Nerd Font face is already
+        # present, skip download + install entirely. No prompts, no overhead.
+        if (Get-ChildItem $fontsDir -Filter "JetBrainsMono*NerdFont*.ttf" -ErrorAction SilentlyContinue) {
+            Write-Status "JetBrainsMono Nerd Font already installed — skipping" "Info"
+            return
+        }
+
         New-Item $TEMP_DIR -ItemType Directory -Force | Out-Null
         $zip = Join-Path $TEMP_DIR "font.zip"
         Invoke-WebRequest -Uri $FONT_DOWNLOAD_URL -OutFile $zip
         Expand-Archive $zip $TEMP_DIR -Force
-        $shell = New-Object -ComObject Shell.Application
-        $fontsFolder = $shell.Namespace(0x14)   # 0x14 = CSIDL_FONTS — the system Fonts folder
-        Get-ChildItem $TEMP_DIR -Filter "*.ttf" -Recurse | ForEach-Object {
-            # Skip fonts that are already installed to avoid unnecessary re-registration.
-            if (-not (Test-Path "$env:SystemRoot\Fonts\$($_.Name)")) {
-                $fontsFolder.CopyHere($_.FullName, 0x10)   # 0x10 = suppress progress dialogs
+
+        $installed = 0
+        foreach ($ttf in Get-ChildItem $TEMP_DIR -Filter "*.ttf" -Recurse) {
+            $dest = Join-Path $fontsDir $ttf.Name
+            if (Test-Path $dest) { continue }
+            try {
+                Copy-Item $ttf.FullName $dest -Force -ErrorAction Stop
+                $regName = [IO.Path]::GetFileNameWithoutExtension($ttf.Name) + " (TrueType)"
+                New-ItemProperty -Path $regKey -Name $regName -Value $ttf.Name `
+                    -PropertyType String -Force -ErrorAction Stop | Out-Null
+                $installed++
+            } catch {
+                Write-Status "Font install failed for $($ttf.Name): $_" "Warning"
             }
         }
+
         Remove-Item $TEMP_DIR -Recurse -Force
-        Add-Action "Installed JetBrainsMono Nerd Font"
-        Write-Status "Nerd Font installed" "Success"
+        if ($installed -gt 0) {
+            Add-Action "Installed JetBrainsMono Nerd Font ($installed files)"
+            Write-Status "Nerd Font installed ($installed files) — restart your terminal to use" "Success"
+        } else {
+            Write-Status "All Nerd Font files already present — nothing to install" "Info"
+        }
     } catch { Write-Status "Font failed: $_" "Error" }
 }
 
