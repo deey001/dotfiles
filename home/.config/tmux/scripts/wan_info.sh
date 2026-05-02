@@ -39,6 +39,7 @@ shorten_isp() {
         *Cox*)            echo "Cox" ;;
         *Frontier*)       echo "Frontier" ;;
         *CenturyLink*|*Lumen*) echo "CenturyLink" ;;
+        *MIAMI-DADE*|*"Miami-Dade"*) echo "MDC" ;;
         *)  echo "$1" | sed 's/AS[0-9]* //; s/ LLC//; s/ Inc//; s/ Corp//' | cut -c1-24 ;;
     esac
 }
