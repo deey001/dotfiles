@@ -27,6 +27,9 @@ if command -v bat >/dev/null 2>&1; then
     export MANPAGER="sh -c 'col -bx | bat -l man -p'"
     export MANROFFOPT="-c"
 elif command -v batcat >/dev/null 2>&1; then
+    # Debian/Ubuntu ship the binary as `batcat` (conflicts with bacula-common).
+    # Expose it under the upstream name `bat` so muscle memory + scripts work.
+    alias bat='batcat'
     alias cat='batcat --paging=never'
     alias oldcat='/bin/cat'
     export MANPAGER="sh -c 'col -bx | batcat -l man -p'"
