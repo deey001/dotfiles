@@ -19,6 +19,7 @@ git                    # Version control — required by stow, fzf-tab auto-clon
 tmux                   # Terminal multiplexer — persistent sessions, split panes
 fzf                    # Fuzzy finder — Ctrl+R history, Ctrl+T file picker, Alt+C cd
 neovim                 # Editor — LazyVim config lives in home/.config/nvim/
+bat                    # cat replacement — syntax highlighting, Catppuccin theme
 eza                    # ls replacement — colors, icons, git status in directory listing
 fastfetch              # System info display on login (replaces neofetch)
 btop                   # Resource monitor — replaces top/htop (aliased as 'top')
