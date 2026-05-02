@@ -195,3 +195,6 @@ fi
 # ── Machine-specific completions ─────────────────────────────────────────────
 [[ -f "$HOME/.openclaw/completions/openclaw.bash" ]] && \
     source "$HOME/.openclaw/completions/openclaw.bash"
+
+# OpenClaw Completion
+source "/home/danny/.openclaw/completions/openclaw.bash"

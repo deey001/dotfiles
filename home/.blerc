@@ -31,9 +31,6 @@ bleopt history_share=
 # Accept pasted lines immediately (no C-j confirmation)
 bleopt accept_line_threshold=0
 
-# Suppress mode markers
-bleopt edit_marker=
-
 bleopt term_bracketed_paste_mode=1
 
 # ------------------------------------------------------------------------------
