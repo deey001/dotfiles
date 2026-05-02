@@ -191,10 +191,3 @@ fi
 
 # ── 19. ble.sh activation (MUST be last) ─────────────────────────────────────
 [[ ${BLE_VERSION-} ]] && ble-attach
-
-# ── Machine-specific completions ─────────────────────────────────────────────
-[[ -f "$HOME/.openclaw/completions/openclaw.bash" ]] && \
-    source "$HOME/.openclaw/completions/openclaw.bash"
-
-# OpenClaw Completion
-source "/home/danny/.openclaw/completions/openclaw.bash"
