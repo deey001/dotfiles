@@ -284,6 +284,20 @@ echo "  Linking: theme-catppuccin-mocha (default)"
 mkdir -p "$HOME/.config/dotfiles"
 ln -sf "$DOTFILES_DIR/themes/catppuccin-mocha.sh" "$HOME/.config/dotfiles/theme.sh"
 
+# ── Rebuild bat theme cache ────────────────────────────────────────────────
+# bat reads custom themes from ~/.config/bat/themes/ but only after `cache --build`.
+# Without this step BAT_THEME=Catppuccin Mocha falls back with:
+#   [bat warning]: Unknown theme 'Catppuccin Mocha', using default.
+# Detect both the upstream binary name (bat) and Debian's batcat. Silent on
+# distros where neither is installed (bat may come from a PPA later).
+if command -v bat >/dev/null 2>&1; then
+    echo "  Rebuilding bat theme cache..."
+    bat cache --build >/dev/null
+elif command -v batcat >/dev/null 2>&1; then
+    echo "  Rebuilding batcat theme cache..."
+    batcat cache --build >/dev/null
+fi
+
 # ── 8. Install ble.sh (bash only) ──────────────────────────────────────────────
 #
 # ble.sh adds syntax highlighting, autosuggestions, and improved line editing
