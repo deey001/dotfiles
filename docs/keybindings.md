@@ -29,7 +29,7 @@ Configured in `.inputrc`. Also applies to python REPL, psql, gdb, etc.
 |-----|--------|
 | Up / Down | Search history by typed prefix |
 | Ctrl+Up / Ctrl+Down | Sequential history (ignores prefix) |
-| Ctrl+R | Reverse search (atuin overrides this) |
+| Ctrl+R | Reverse search (Bash/Zsh built-in; hstr if installed) |
 | Alt+. | Insert last argument from previous command |
 
 ### Completion

@@ -27,7 +27,7 @@ irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.p
   - `home/.zshrc`
   - `home/.gitconfig`, `home/.gitattributes`, `home/.gitignore`
   - `home/.common_shell`, `home/.inputrc`, `home/.editorconfig`
-  - `home/.config/` → `~/.config/`: nvim, wezterm, starship, tmux (conf + scripts), bat, atuin, fastfetch
+  - `home/.config/` → `~/.config/`: nvim, wezterm, starship, tmux (conf + scripts), bat, fastfetch
 - `themes/` — Shell theme definitions sourced into `~/.config/dotfiles/theme.sh`
   - `themes/windows/` — PS1 variants for Windows PSReadLine
 - `platform/` — OS-specific files:

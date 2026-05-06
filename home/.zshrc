@@ -10,9 +10,8 @@
 #   4. fzf-tab         — fzf-powered completion dropdown
 #   5. zoxide, fzf     — smarter cd + fuzzy finder
 #   6. zsh plugins     — syntax-highlighting, autosuggestions, history-substring-search
-#   7. atuin           — SQLite-backed shell history
-#   8. starship        — cross-shell prompt (MUST be last)
-#   9. .zsh_local / .bash_local — machine-specific overrides (not in git)
+#   7. starship        — cross-shell prompt (MUST be last)
+#   8. .zsh_local / .bash_local — machine-specific overrides (not in git)
 # ==============================================================================
 
 # ── Shared environment (theme, EDITOR, PAGER, LANG, mkcd) ────────────────────
@@ -127,9 +126,6 @@ if _zsh_plugin zsh-history-substring-search; then
     bindkey '^[[B' history-substring-search-down
 fi
 unset -f _zsh_plugin
-
-# ── atuin — SQLite shell history ──────────────────────────────────────────────
-command -v atuin >/dev/null 2>&1 && eval "$(atuin init zsh)"
 
 # ── direnv — per-directory env vars ──────────────────────────────────────────
 command -v direnv >/dev/null 2>&1 && eval "$(direnv hook zsh)"

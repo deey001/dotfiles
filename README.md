@@ -28,7 +28,7 @@ irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.p
 | **Shell** | Bash (+ ble.sh), Zsh, Starship prompt |
 | **Editor** | Neovim + LazyVim |
 | **Terminal** | WezTerm, Windows Terminal (Catppuccin Mocha) |
-| **CLI** | bat, ripgrep, fd, fzf, eza, atuin, zoxide, tmux, delta |
+| **CLI** | bat, ripgrep, fd, fzf, eza, zoxide, tmux, delta |
 | **Font** | JetBrainsMono Nerd Font |
 
 ---
@@ -42,7 +42,7 @@ dotfiles/
 │   ├── zsh/            #   .zshrc
 │   ├── git/            #   .gitconfig, .gitattributes, .gitignore
 │   ├── shell/          #   .common_shell, .inputrc, .editorconfig
-│   └── config/         #   ~/.config/: nvim, wezterm, starship, tmux, atuin, bat…
+│   └── config/         #   ~/.config/: nvim, wezterm, starship, tmux, bat…
 ├── themes/             # Theme definitions sourced by ~/.config/dotfiles/theme.sh
 │   └── windows/        #   PS1 variants for Windows Terminal
 ├── platform/           # OS-specific files

@@ -26,7 +26,7 @@ tmux                   # Terminal multiplexer — persistent sessions, split pan
 git                    # Version control — required by stow, fzf-tab auto-clone, etc.
 fzf                    # Fuzzy finder — Ctrl+R history, Ctrl+T file picker, Alt+C cd
 xclip                  # X11 clipboard integration — used by tmux yank.sh for copy
-hstr                   # History browser — alternative Ctrl+R (atuin takes over if installed)
+hstr                   # History browser — alternative Ctrl+R
 bat                    # cat replacement — syntax highlighting, Catppuccin theme
 cmatrix                # Matrix rain screensaver (fun, not required)
 btop                   # Resource monitor — replaces top/htop (aliased as 'top')

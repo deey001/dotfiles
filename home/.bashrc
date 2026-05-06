@@ -169,19 +169,16 @@ fi
 # ── 13. zoxide ────────────────────────────────────────────────────────────────
 command -v zoxide >/dev/null 2>&1 && { eval "$(zoxide init bash)" 2>/dev/null; alias cdi='zi'; }
 
-# ── 14. atuin ─────────────────────────────────────────────────────────────────
-command -v atuin >/dev/null 2>&1 && eval "$(atuin init bash)"
-
-# ── 15. direnv ────────────────────────────────────────────────────────────────
+# ── 14. direnv ────────────────────────────────────────────────────────────────
 command -v direnv >/dev/null 2>&1 && eval "$(direnv hook bash)"
 
-# ── 16. Starship ─────────────────────────────────────────────────────────────
+# ── 15. Starship ─────────────────────────────────────────────────────────────
 command -v starship >/dev/null 2>&1 && eval "$(starship init bash)"
 
-# ── 17. Local config (secrets, machine-specific PATH, etc.) ──────────────────
+# ── 16. Local config (secrets, machine-specific PATH, etc.) ──────────────────
 [[ -f ~/.bash_local ]] && source ~/.bash_local
 
-# ── 18. Fastfetch (login shells only, skip inside tmux) ──────────────────────
+# ── 17. Fastfetch (login shells only, skip inside tmux) ──────────────────────
 if command -v fastfetch >/dev/null 2>&1 \
     && shopt -q login_shell \
     && [[ -z "${TMUX:-}" && -z "${_FASTFETCH_RAN:-}" ]]; then
@@ -189,5 +186,5 @@ if command -v fastfetch >/dev/null 2>&1 \
     fastfetch
 fi
 
-# ── 19. ble.sh activation (MUST be last) ─────────────────────────────────────
+# ── 18. ble.sh activation (MUST be last) ─────────────────────────────────────
 [[ ${BLE_VERSION-} ]] && ble-attach

@@ -30,7 +30,7 @@ dotfiles/
                                                   ├─ PATH dedup
                                                   ├─ bash-completion, carapace
                                                   ├─ fzf keybindings
-                                                  ├─ zoxide, atuin, direnv, starship
+                                                  ├─ zoxide, direnv, starship
                                                   ├─ ~/.bash_local
                                                   ├─ fastfetch (login only)
                                                   └─ ble.sh (attach)
@@ -47,7 +47,7 @@ dotfiles/
   ├─ ~/.bash_aliases
   ├─ zoxide, fzf keybindings
   ├─ zsh plugins (syntax-highlighting, autosuggestions, history-substring-search)
-  ├─ atuin, direnv, starship
+  ├─ direnv, starship
   ├─ ~/.zsh_local / ~/.bash_local
   └─ fastfetch
 ```
@@ -86,7 +86,7 @@ GNU Stow manages symlinks. `.stowrc` sets `--dir=. --target=~`.
 
 **Required:** bash, git, stow, curl (for remote bootstrap)
 **Core tools:** tmux, nvim, starship
-**Optional (guarded):** eza, bat, fzf, fd, zoxide, atuin, ripgrep, direnv,
+**Optional (guarded):** eza, bat, fzf, fd, zoxide, ripgrep, direnv,
 carapace, delta, dust, duf, procs, btop, xh, ble.sh
 
 ## Platforms

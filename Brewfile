@@ -89,9 +89,6 @@ brew "bottom"
 # Fzf - Command-line fuzzy finder
 brew "fzf"
 
-# Atuin - Magical shell history (replaces hstr)
-brew "atuin"
-
 # Carapace - Multi-shell completion engine with descriptions for 1000+ commands
 brew "carapace"
 

@@ -51,7 +51,7 @@ ftext() { grep -iIHrn --color=always "$1" . | less -r; }
 [gpg]
     format = ssh
 [user]
-    signingkey = ~/.ssh/id_ed25519.pub
+    signingkey = ~/.ssh/id_ecdsa.pub  # ECDSA P-256 (FIPS 140-3 approved)
 ```
 
 ### Difftastic (structural diffs)
@@ -175,16 +175,3 @@ show_notifications = true
 min_time_to_notify = 30_000
 ```
 
-## Atuin
-
-### Daemon mode (faster search)
-```toml
-[daemon]
-enabled = true
-```
-
-### Self-hosted sync
-```toml
-sync_address = "https://atuin.myserver.com"
-sync_frequency = "5m"
-```

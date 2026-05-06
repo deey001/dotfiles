@@ -250,5 +250,7 @@
 # [gpg]
 # 	format = ssh            # Use SSH keys for signing (simpler than GPG)
 # [user]
-# 	signingkey = ~/.ssh/id_ed25519.pub  # SSH key to use for signing
+# 	signingkey = ~/.ssh/id_ecdsa.pub    # ECDSA P-256 — FIPS 140-3 approved
+# 	# Avoid Ed25519 / X25519 keys on FIPS 140-3 systems — Edwards curves are
+# 	# not on the SP 800-186 approved list.
 # ==============================================================================
