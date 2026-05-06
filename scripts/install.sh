@@ -315,6 +315,14 @@ else
     echo "--- Default shell is not bash (${SHELL}) --- Skipping ble.sh ---"
 fi
 
+# ── 9. Ensure Neovim meets LazyVim's minimum version ──────────────────────────
+# Distro-shipped nvim is usually too old (Ubuntu 24.04 → 0.9.5; LazyVim needs
+# >= 0.11.2). install-nvim.sh installs an upstream tarball into ~/.local on
+# Linux when the system nvim is missing or below the minimum. macOS uses brew.
+if [ "$OS" = "Linux" ]; then
+    bash "$DOTFILES_DIR/scripts/install-nvim.sh"
+fi
+
 echo "======================================================================"
 echo "INSTALLATION PROCESS FINISHED!"
 echo "======================================================================"
