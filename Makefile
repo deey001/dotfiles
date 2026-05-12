@@ -38,6 +38,7 @@
 
 .PHONY: all install uninstall test test-verbose \
         theme theme-mocha theme-latte \
+        install-fips uninstall-fips test-fips \
         help
 
 # ── Default Target ────────────────────────────────────────────────────────────
@@ -114,6 +115,23 @@ theme-latte:
 	@echo "[OK] Theme set to Catppuccin Latte"
 	@echo "     Run: source ~/.config/dotfiles/theme.sh (or open a new terminal)"
 
+# ── FIPS 140-3 Install Path ───────────────────────────────────────────────────
+# Parallel install for hardened hosts. Refuses to run on anything other than
+# Oracle Linux 9.x with kernel FIPS mode enforcing. See docs/FIPS.md.
+#   make install-fips    Stow home-fips/ after gate + blocklist checks
+#   make uninstall-fips  Unstow home-fips/
+#   make test-fips       Run the blocklist grep (no install side effects)
+install-fips:
+	@echo "--- FIPS 140-3 install path ---"
+	@bash scripts/install-fips.sh
+
+uninstall-fips:
+	@echo "--- Unstowing FIPS tree ---"
+	@stow -D --dir="$(CURDIR)" --target="$(HOME)" home-fips
+
+test-fips:
+	@bash scripts/test-fips.sh
+
 # ── Help ──────────────────────────────────────────────────────────────────────
 help:
 	@echo ""
@@ -127,6 +145,11 @@ help:
 	@echo "  make theme          Show currently active theme"
 	@echo "  make theme-mocha    Switch to Catppuccin Mocha (dark, default)"
 	@echo "  make theme-latte    Switch to Catppuccin Latte (light)"
+	@echo ""
+	@echo "  FIPS 140-3 path (Oracle Linux 9.x only, see docs/FIPS.md):"
+	@echo "    make install-fips    Deploy hardened tree (refuses if not FIPS host)"
+	@echo "    make uninstall-fips  Remove FIPS tree symlinks"
+	@echo "    make test-fips       Run blocklist grep (no install changes)"
 	@echo ""
 	@echo "  Windows: use scripts/install.ps1 (see README.md)"
 	@echo ""

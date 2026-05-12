@@ -1,0 +1,25 @@
+# ==============================================================================
+# platform/packages-fips.txt — Oracle Linux 9.x packages (FIPS install path)
+# ==============================================================================
+# Used by: scripts/install-fips.sh (later phase)
+# Command: sudo dnf install -y <packages>
+#
+# Scope:
+#   - Only packages that ship in OL9 base, AppStream, or EPEL (FOSS, no paid
+#     subscription required).
+#   - Only packages whose crypto (if any) comes from the system OpenSSL FIPS
+#     module — no tool that bundles its own cipher.
+#
+# Format: one package name per line; lines starting with # are comments.
+# Inline comments after the package name are stripped by install-fips.sh.
+#
+# Phase 4 fills the package list. Phase 1 keeps this file as a placeholder so
+# install-fips.sh, test-fips.sh, and the Makefile target can reference a
+# stable path immediately.
+# ==============================================================================
+
+# ── Build essentials (filled in phase 4) ──────────────────────────────────────
+
+# ── Core CLI (filled in phase 4) ──────────────────────────────────────────────
+
+# ── Shell + completion (filled in phase 4) ────────────────────────────────────
