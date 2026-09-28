@@ -1,109 +1,208 @@
 # Dotfiles
 
-A small, [Omarchy](https://omarchy.org)-style shell and editor setup, built mainly for headless Linux servers reached over SSH. It also works on Omarchy desktops, Arch, Debian/Ubuntu, RHEL/Fedora/Oracle Linux, macOS, and Windows.
+A small, [Omarchy](https://omarchy.org)-style shell and editor setup, built mainly for **headless Linux servers reached over SSH**. It also works on Omarchy desktops, macOS, and Windows.
 
-On Omarchy, these files sit on top of Omarchy's own defaults and change only what's personal. Everywhere else, a portable copy of those defaults is loaded instead, so every machine behaves the same way.
+- **One shell setup everywhere.** On Omarchy these files sit on top of Omarchy's own defaults. Everywhere else, a copy of those same defaults ships with the repo, so every machine has the same aliases, keys, and prompt.
+- **Copy/paste that works over SSH.** Copy from the shell, tmux, or Neovim on a remote server, and it lands on your local clipboard.
+- **Nothing extra.** No plugin managers, no theme switcher, no login banners. It's about 1,500 lines, not counting the bundled copy of Omarchy's shell files.
+
+| Platform | Supported |
+|---|---|
+| Linux | Omarchy / Arch, Debian / Ubuntu, RHEL / Fedora / Oracle Linux |
+| macOS | via Homebrew (bash, not zsh) |
+| Windows | PowerShell 7 + Windows Terminal, and PuTTY for session logging |
+
+---
 
 ## Install
 
-**macOS / Linux**
+**Linux / macOS**
 ```bash
 curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash
 ```
 
-**Windows** (elevated PowerShell)
+**Windows** (from an elevated PowerShell, or with Developer Mode on)
 ```powershell
 irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" | iex
 ```
 
-On Windows this installs the tools with winget (Git, PowerShell 7, Windows Terminal, PuTTY, Neovim, starship, fzf, zoxide, eza, bat, fd, ripgrep, delta, lazygit, jq, zig, and JetBrainsMono Nerd Font) plus the PSFzf module. It then links the configs, sets up Windows Terminal through a settings fragment (so your own `settings.json` is never edited), and sets PuTTY's default session settings. Undo it with `.\scripts\uninstall.ps1`.
+Both installers clone the repo to `~/dotfiles`, install packages, and link the configs into your home folder. Any existing file they would replace is moved to `~/.dotfiles-backup/<timestamp>/` first. Both are safe to run again at any time, for example after a `git pull`.
 
-On Linux and macOS, the install script installs packages, then links `home/` into `$HOME` with GNU Stow. Before linking, it moves any existing file it would replace to `~/.dotfiles-backup/<timestamp>/`. You can run it again safely at any time.
+### What gets installed
+
+| | Linux / macOS | Windows (winget) |
+|---|---|---|
+| Shell & prompt | bash, bash-completion, starship | PowerShell 7, starship, PSFzf |
+| Editor | Neovim (upstream build if the distro's is older than 0.11.2) | Neovim, zig (C compiler for treesitter) |
+| CLI tools | tmux, fzf, zoxide, eza, bat, fd, ripgrep, delta, lazygit, btop, jq | fzf, zoxide, eza, bat, fd, ripgrep, delta, lazygit, jq |
+| Terminal | (whatever you connect from) | Windows Terminal, PuTTY, JetBrainsMono Nerd Font |
+
+The package lists live in `platform/packages/` (`arch.txt`, `ubuntu.txt`, `rhel.txt`, `winget.txt`) and in `Brewfile`. Packages are installed one at a time, so a name that's missing on an older release is skipped instead of stopping the install.
+
+### Everyday commands
 
 ```bash
-make install        # install packages + link
-make uninstall      # remove links, restore the files install backed up
-make test           # syntax check + stow dry run
-make sync-omarchy   # refresh the bundled Omarchy shell defaults (on Omarchy)
+cd ~/dotfiles
+git pull && make install   # update
+make uninstall             # remove links and restore the original files
+make test                  # syntax check + stow dry run
+make sync-omarchy          # refresh the bundled Omarchy shell defaults (run on Omarchy)
 ```
 
-## Layout
+On Windows, run `.\scripts\install.ps1` to update and `.\scripts\uninstall.ps1` to undo.
 
-The shell setup follows Omarchy's own layout exactly. `~/.bashrc` is Omarchy's stock `.bashrc`: it sources `$OMARCHY_PATH/default/bash/rc`, and your own additions go below that line.
+---
 
-- **On Omarchy,** `OMARCHY_PATH` is `/usr/share/omarchy`, so the rc comes from Omarchy itself.
-- **Everywhere else,** `OMARCHY_PATH` points to `~/.local/share/omarchy-shell`. That folder holds an unmodified copy of Omarchy's `default/bash` (aliases, functions, inputrc, and so on), plus a small `portable` file that swaps out Omarchy-only pieces such as `omarchy-launch-editor`.
+## How the shell is set up
 
-To refresh the copy after an Omarchy update, run `make sync-omarchy` on an Omarchy machine and commit the result.
+`~/.bashrc` is Omarchy's stock `.bashrc`. It sources `$OMARCHY_PATH/default/bash/rc`, and your own additions go below that line.
 
-```
-home/                               stowed into $HOME
-  .bashrc                           Omarchy's stock .bashrc + fallback path
-  .bash_profile
-  .local/share/omarchy-shell/       copy of Omarchy's default/bash + portable fix-ups
-  .local/bin/clip                   copy to the local clipboard via OSC 52
-  .gitconfig                        git settings + identity (override in ~/.gitconfig.local)
-  .config/nvim/                     LazyVim + a few overrides
-  .config/tmux/                     Omarchy keys + Catppuccin status bar, no plugins
-  .config/starship.toml             Omarchy-style prompt
-  .config/wezterm/                  terminal for macOS / non-Omarchy Linux
-  .config/git/ignore                global gitignore
-platform/packages/                  per-distro package lists
-platform/windows/profile.ps1        PowerShell profile: Omarchy's aliases, keys and tools
-platform/windows/terminal.json      Windows Terminal fragment (font + colors)
-platform/windows/putty.ps1          PuTTY default session: font, colours, logging
-platform/windows/links.ps1          where each file is linked on Windows
-platform/packages/winget.txt        Windows packages
-scripts/                            install / uninstall (+ FIPS path, see docs/FIPS.md)
-Brewfile                            macOS packages
-```
+- **On Omarchy,** `OMARCHY_PATH` is `/usr/share/omarchy`, so everything comes from Omarchy itself and follows its updates.
+- **Everywhere else,** `OMARCHY_PATH` points to `~/.local/share/omarchy-shell`. That folder holds an unmodified copy of Omarchy's `default/bash`, plus a small `portable` file that fixes the few Omarchy-only pieces:
+  - `EDITOR` becomes `nvim`.
+  - macOS keeps its own `open`.
+  - Homebrew bash-completion and Debian's fzf key bindings are loaded.
+  - `TERM` falls back to `xterm-256color` when the server doesn't know your terminal (Ghostty, Kitty, foot).
 
-On macOS the config is bash-only, like Omarchy. The Brewfile installs a current bash; switch to it with `chsh -s /opt/homebrew/bin/bash` (add that path to `/etc/shells` first).
+After an Omarchy update, run `make sync-omarchy` on an Omarchy machine and commit the result.
 
-## Clipboard over SSH
+On Windows, `platform/windows/profile.ps1` gives PowerShell the same aliases and keys.
 
-Copying works the same way everywhere, whether you're at the machine, SSH'd into a server, or inside tmux on that server. It uses OSC 52, a terminal escape sequence that asks *your local terminal* to put text on *your local clipboard*. The server needs no X11, Wayland, or xclip.
+### Aliases and functions (from Omarchy)
+
+| Command | Does |
+|---|---|
+| `ls`, `lsa`, `lt`, `lta` | eza long list, with hidden files, tree, tree with hidden |
+| `cd <dir>` | normal `cd`, or jumps with zoxide when `<dir>` isn't a path |
+| `ff`, `eff` | fuzzy-find a file with preview; open the result in `$EDITOR` |
+| `n [file]` | Neovim (opens the current folder with no argument) |
+| `g`, `gcm`, `gcam`, `gcad` | `git`, commit -m, commit -a -m, commit -a --amend |
+| `ga <branch>`, `gd` | create / remove a git worktree for a branch (`gd` needs `gum`) |
+| `t` | attach to tmux, or start a session called `Work` |
+| `d` | `docker` |
+| `compress`, `decompress` | tar.gz a folder / extract one |
+| `fip`, `dip`, `lip` | start / stop / list SSH port forwards |
+| `..`, `...`, `....` | go up 1, 2, or 3 folders |
+| `clip` | copy to your local clipboard (see below) |
+
+**Keys:** Tab and Shift+Tab cycle completions. Up/Down search history for what you've typed. Ctrl+R searches history with fzf, and Ctrl+T finds files with fzf.
+
+---
+
+## Copy / paste over SSH
+
+Copying works the same way at the machine, over SSH, and inside tmux on a server. It uses **OSC 52**, a terminal escape sequence that asks *your local terminal* to put text on *your local clipboard*. The server needs no X11, Wayland, or xclip.
 
 | Where | Copy | Paste |
 |---|---|---|
-| Terminal | select with the mouse (hold Shift inside tmux) | terminal paste key (Ctrl+Shift+V / Cmd+V) |
-| Shell | `clip "text"`, `cmd \| clip`, `clip < file` | terminal paste key |
-| tmux | `prefix [`, select with `v`, copy with `y`/Enter, or drag with the mouse | terminal paste key, or `prefix ]` |
-| Neovim | `y` (goes to the `+` register) | terminal paste key, or `p` for the last yank |
+| Shell | `clip "text"`, `cmd \| clip`, `clip < file` | terminal paste key (Ctrl+Shift+V / Cmd+V) |
+| tmux | `prefix [`, then `v` to select and `y`/Enter to copy, or drag with the mouse | terminal paste key, or `prefix ]` |
+| Neovim | `y` (over SSH, yanks go to your local clipboard) | terminal paste key, or `p` for the last yank |
+| Terminal selection | hold **Shift** while selecting inside tmux or Neovim | terminal paste key |
 
-This relies on the *local* terminal supporting OSC 52 writes:
+Your *local* terminal must allow OSC 52:
 
-- **Work out of the box:** Ghostty, Kitty, Alacritty, WezTerm, foot, and Windows Terminal.
-- **iTerm2:** turn on *Applications in terminal may access clipboard* first.
-- **No OSC 52 support:** macOS Terminal.app and PuTTY.
+- **Works out of the box:** Ghostty, Kitty, Alacritty, WezTerm, foot, Windows Terminal.
+- **iTerm2:** turn on *Applications in terminal may access clipboard*.
+- **Not supported:** macOS Terminal.app and PuTTY.
 
-**PuTTY** is still installed and configured for its session logging. The install script applies the following to *Default Settings and every saved session*:
+In PuTTY, use its own selection instead: Shift + mouse to select, then right-click to paste.
 
-- the same font and colours as the other terminals
-- UTF-8 and `xterm-256color`
-- logging to `~\logs\putty\<host>-<date>-<time>.log`, but only for sessions where logging was off, so an existing log setup is left alone
+Paste always goes through your terminal's paste key, because terminals don't let remote programs read your clipboard.
 
-The original sessions are exported to `~\.dotfiles-backup` before the first change, and `uninstall.ps1` re-imports them. Because PuTTY ignores OSC 52, copy there with PuTTY's own selection: select with the mouse (hold **Shift** inside tmux or nvim, which otherwise take the mouse) and right-click to paste. `y` in tmux or nvim won't reach the Windows clipboard from PuTTY.
+---
 
-Pasting always goes through the terminal's own paste key, because terminals don't let remote programs read your clipboard.
+## tmux
+
+tmux uses Omarchy's key bindings and a Catppuccin status bar with Nerd Font icons. No plugins are needed.
+
+- **Prefix:** `Ctrl+Space`, with `Ctrl+A` also working.
+- **Panes:**
+  - Split with `prefix -` / `prefix \`, or `Alt+Enter` / `Alt+Shift+Enter`.
+  - Move with `prefix h/j/k/l` or `Ctrl+Alt+arrows`, and resize with `Ctrl+Alt+Shift+arrows`.
+  - `prefix x` closes a pane, and `prefix S` types into all panes at once.
+- **Windows:**
+  - Switch with `Alt+1…9` or `Alt+Left/Right`, and reorder with `Alt+Shift+Left/Right`.
+  - `prefix c` creates a window and `prefix r` renames it.
+- **Sessions:** `prefix C` creates one, `prefix R` renames it, and `Alt+Up/Down` switches between them.
+- **Other:** `prefix q` reloads the config, and `prefix ?` lists every binding.
+- **Status bar:** shows the session (red while the prefix is held), the current folder, the date and time, the LAN IP, and the ISP with the WAN IP.
+  - `~/.config/tmux/scripts/wan_info.sh` gets the WAN details from ifconfig.co, at most once every 5 minutes.
+  - The icons need a Nerd Font in the terminal you connect *from*.
+
+For per-machine changes, create `~/.config/tmux/local.conf`.
+
+---
+
+## Neovim
+
+Neovim runs [LazyVim](https://www.lazyvim.org) with a few changes:
+
+- 4-space indents, mouse off, a column marker at 80
+- `:w!!` saves with sudo
+- OSC 52 clipboard over SSH
+- color highlighting and Markdown rendering
+
+On Omarchy, the colorscheme follows the Omarchy theme. Everywhere else it's Catppuccin Mocha.
+
+---
 
 ## Theming
 
-The terminal is the only place a theme is set. bat (`BAT_THEME=ansi`), fzf, tmux, and starship all use ANSI colors, so they follow the terminal's palette automatically.
+Colors come from the terminal where possible.
 
-- **Omarchy:** `omarchy-theme-set` themes everything, including Neovim through Omarchy's `plugins/theme.lua`.
-- **Elsewhere:** WezTerm and Neovim use Catppuccin Mocha.
+- **Terminal palette:** bat (`BAT_THEME=ansi`), fzf, and starship use the terminal's colors, so they follow Omarchy's theme or your terminal's color scheme.
+- **Fixed Catppuccin Mocha:** the tmux status bar, WezTerm, Windows Terminal, and PuTTY. The installers set this up for the Windows terminals.
 
-## tmux status bar
+---
 
-The status bar shows the session name (it turns red while the prefix is held), then the current directory, the date and time, the LAN IP, and the ISP with the WAN IP. `~/.config/tmux/scripts/wan_info.sh` looks up the WAN IP and ISP from ifconfig.co at most once every 5 minutes and caches the result. The icons need a Nerd Font in the terminal you connect *from*.
+## Windows details
 
-## Machine-local overrides
+- **Windows Terminal** gets a *fragment* file, installed alongside its settings, that sets the font and colors on the PowerShell profiles. Your own `settings.json` is never edited. If Terminal still opens Windows PowerShell 5, choose PowerShell 7 as the default profile once in Terminal's settings.
+- **PuTTY** is kept for its session logging. The installer applies the following to *Default Settings and every saved session*:
+  - the Nerd Font, Catppuccin colors, UTF-8, and `xterm-256color`
+  - logging to `~\logs\putty\<host>-<date>-<time>.log`, but only for sessions where logging was off, so an existing log setup is left alone
 
-These files are never committed:
+  Your sessions are exported to `~\.dotfiles-backup` before the first change, and `uninstall.ps1` re-imports them.
+- **Where files are linked** is listed in `platform/windows/links.ps1`. For example, Neovim's config goes to `%LOCALAPPDATA%\nvim`, and the profile goes to both PowerShell 7 and Windows PowerShell 5.
+- **For servers**, use the Linux one-liner above on each server.
+
+---
+
+## Machine-local settings
+
+These files are never committed. Create them as needed:
 
 | File | Use |
 |---|---|
-| `~/.bash_local` / `~\.pwsh_local.ps1` | tokens, extra `PATH` entries (Go, npm, etc.) |
+| `~/.bash_local` | exports, aliases, tokens, extra `PATH` entries (Go, npm, etc.) |
+| `~\.pwsh_local.ps1` | the same for PowerShell |
 | `~/.gitconfig.local` | credential helper, signing key, a different `user.email` for work |
 | `~/.config/tmux/local.conf` | tmux overrides |
+
+Git's name and email are set in `home/.gitconfig`. A `user.email` in `~/.gitconfig.local` overrides it on that machine.
+
+---
+
+## Repo layout
+
+```
+home/                                 linked into $HOME (GNU Stow on Linux/macOS)
+  .bashrc, .bash_profile              Omarchy's stock files + fallback path
+  .local/share/omarchy-shell/         copy of Omarchy's default/bash + portable fix-ups
+  .local/bin/clip                     copy to the local clipboard (OSC 52)
+  .gitconfig, .gitattributes          git settings
+  .config/git/ignore                  global gitignore
+  .config/nvim/                       LazyVim + overrides
+  .config/tmux/                       tmux.conf + wan_info.sh for the status bar
+  .config/starship.toml               prompt
+  .config/wezterm/                    WezTerm (macOS / Linux desktops)
+platform/
+  packages/                           arch.txt, ubuntu.txt, rhel.txt, winget.txt
+  windows/                            profile.ps1, terminal.json, putty.ps1, links.ps1
+scripts/                              install / uninstall for each platform
+Brewfile                              macOS packages
+Makefile                              install, uninstall, test, sync-omarchy
+```
+
+A separate hardened install path for FIPS 140-3 hosts running Oracle Linux 9 (`make install-fips`) is described in [docs/FIPS.md](docs/FIPS.md).
