@@ -1,13 +1,21 @@
 #!/bin/bash
 # Install packages and symlink home/ into $HOME with GNU Stow.
 #
-#   curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash
+# Preferred (reviewable, pinned locally):
+#   git clone https://github.com/deey001/dotfiles.git ~/dotfiles
+#   cd ~/dotfiles && bash scripts/install.sh
+#
+# Optional one-liner — pin a commit SHA, review the script, then pipe:
+#   curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/8879ae54aa55021cf909a9fbe9b834d93cdc5fab/scripts/install.sh | bash
+# Avoid .../master/... — that ref moves. Supply-chain risk if you skip review.
+#
 #   ~/dotfiles/scripts/install.sh                  # from a local clone
 #   ~/dotfiles/scripts/install.sh --test           # syntax check + stow dry run, changes nothing
 #   ~/dotfiles/scripts/install.sh --sync-omarchy   # refresh the bundled Omarchy shell defaults (on Omarchy)
 #
 # Safe to re-run. Existing files that would be replaced are moved to
 # ~/.dotfiles-backup/<timestamp>/ first; scripts/uninstall.sh puts them back.
+# Secrets belong in untracked locals (.bash_local, .gitconfig.local) — see .gitignore.
 
 REPO=https://github.com/deey001/dotfiles.git
 

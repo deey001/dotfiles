@@ -16,17 +16,49 @@ A small, [Omarchy](https://omarchy.org)-style shell and editor setup, built main
 
 ## Install
 
+**Recommended:** clone, then run the installer from the checkout. You control the revision, and nothing is piped into a shell from the network.
+
 **Linux / macOS**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash
+git clone https://github.com/deey001/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+# optional: git checkout <tag-or-sha>   # pin before install
+bash scripts/install.sh
 ```
 
 **Windows** (from an elevated PowerShell, or with Developer Mode on)
 ```powershell
-irm "https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1" | iex
+git clone https://github.com/deey001/dotfiles.git $HOME\dotfiles
+cd $HOME\dotfiles
+# optional: git checkout <tag-or-sha>
+.\scripts\install.ps1
 ```
 
-Both installers clone the repo to `~/dotfiles`, install packages, and link the configs into your home folder. Any existing file they would replace is moved to `~/.dotfiles-backup/<timestamp>/` first. Both are safe to run again at any time, for example after a `git pull`.
+Both installers install packages and link the configs into your home folder. Any existing file they would replace is moved to `~/.dotfiles-backup/<timestamp>/` first. Both are safe to run again at any time, for example after a `git pull`.
+
+### One-liner (optional, pinned)
+
+Piping a remote script into `bash` / `iex` is a supply-chain risk: the URL can change under you, and `master` moves. If you still want a one-liner, **pin a commit SHA**, review the script first, then exec.
+
+Example pin (current `HEAD` as of this doc: `8879ae5` / `8879ae54aa55021cf909a9fbe9b834d93cdc5fab`):
+
+**Linux / macOS**
+```bash
+# Review first:
+#   curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/8879ae54aa55021cf909a9fbe9b834d93cdc5fab/scripts/install.sh
+curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/8879ae54aa55021cf909a9fbe9b834d93cdc5fab/scripts/install.sh | bash
+```
+
+**Windows**
+```powershell
+# Review first:
+#   irm "https://raw.githubusercontent.com/deey001/dotfiles/8879ae54aa55021cf909a9fbe9b834d93cdc5fab/scripts/install.ps1"
+irm "https://raw.githubusercontent.com/deey001/dotfiles/8879ae54aa55021cf909a9fbe9b834d93cdc5fab/scripts/install.ps1" | iex
+```
+
+Prefer a release **tag** when one exists (`…/refs/tags/vX.Y.Z/…` or `git checkout vX.Y.Z` after clone). Re-check the SHA/tag before each install; do not leave `master` in the URL.
+
+Secrets (tokens, keys, work email) belong in untracked locals — see [Machine-local settings](#machine-local-settings). Never put them in tracked files.
 
 ### What gets installed
 
@@ -165,13 +197,13 @@ Colors come from the terminal where possible.
 
   Your sessions are exported to `~\.dotfiles-backup` before the first change, and `uninstall.ps1` re-imports them.
 - **Where files are linked** is listed in `platform/windows/links.ps1`. For example, Neovim's config goes to `%LOCALAPPDATA%\nvim`, and the profile goes to both PowerShell 7 and Windows PowerShell 5.
-- **For servers**, use the Linux one-liner above on each server.
+- **For servers**, clone (or use a SHA-pinned one-liner) on each server — see [Install](#install).
 
 ---
 
 ## Machine-local settings
 
-These files are never committed. Create them as needed:
+These files are never committed (listed in `.gitignore`, along with `.env*`, key material, and credential stores). Put secrets and machine-only tweaks here — not in tracked configs. Create them as needed:
 
 | File | Use |
 |---|---|
