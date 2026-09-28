@@ -8,6 +8,24 @@
 # macOS already has open(1)
 [[ $OSTYPE == darwin* ]] && unset -f open
 
+# Homebrew on macOS (Apple Silicon needs shellenv for PATH)
+if command -v brew &> /dev/null; then
+  eval "$(brew shellenv)"
+fi
+
+# Prefer installer nvim (LazyVim) over distro nvim. default/ APPENDs ~/.local/bin
+# (and gets overwritten by --sync-omarchy), so strip any existing entry and PREPEND.
+_local_bin="$HOME/.local/bin"
+case ":$PATH:" in
+  *":$_local_bin:"*)
+    PATH=":${PATH}:"
+    PATH="${PATH//:$_local_bin:/:}"
+    PATH="${PATH#:}"; PATH="${PATH%:}"
+    ;;
+esac
+export PATH="$_local_bin${PATH:+:$PATH}"
+unset _local_bin
+
 # Completion on macOS (Homebrew) — Omarchy only looks in /usr/share
 if [[ -z ${BASH_COMPLETION_VERSINFO:-} && -r ${HOMEBREW_PREFIX:-/opt/homebrew}/etc/profile.d/bash_completion.sh ]]; then
   source "${HOMEBREW_PREFIX:-/opt/homebrew}/etc/profile.d/bash_completion.sh"
