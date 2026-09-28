@@ -43,10 +43,10 @@ The package lists live in `platform/packages/` (`arch.txt`, `ubuntu.txt`, `rhel.
 
 ```bash
 cd ~/dotfiles
-git pull && make install   # update
-make uninstall             # remove links and restore the original files
-make test                  # syntax check + stow dry run
-make sync-omarchy          # refresh the bundled Omarchy shell defaults (run on Omarchy)
+git pull && scripts/install.sh      # update
+scripts/uninstall.sh                # remove links and restore the original files
+scripts/install.sh --test           # syntax check + stow dry run, changes nothing
+scripts/install.sh --sync-omarchy   # refresh the bundled Omarchy shell defaults (run on Omarchy)
 ```
 
 On Windows, run `.\scripts\install.ps1` to update and `.\scripts\uninstall.ps1` to undo.
@@ -64,7 +64,7 @@ On Windows, run `.\scripts\install.ps1` to update and `.\scripts\uninstall.ps1` 
   - Homebrew bash-completion and Debian's fzf key bindings are loaded.
   - `TERM` falls back to `xterm-256color` when the server doesn't know your terminal (Ghostty, Kitty, foot).
 
-After an Omarchy update, run `make sync-omarchy` on an Omarchy machine and commit the result.
+After an Omarchy update, run `scripts/install.sh --sync-omarchy` on an Omarchy machine and commit the result.
 
 On Windows, `platform/windows/profile.ps1` gives PowerShell the same aliases and keys.
 
@@ -202,7 +202,6 @@ platform/
   windows/                            profile.ps1, terminal.json, putty.ps1, links.ps1
 scripts/                              install / uninstall for each platform
 Brewfile                              macOS packages
-Makefile                              install, uninstall, test, sync-omarchy
 ```
 
-A separate hardened install path for FIPS 140-3 hosts running Oracle Linux 9 (`make install-fips`) is described in [docs/FIPS.md](docs/FIPS.md).
+A separate hardened install path for FIPS 140-3 hosts running Oracle Linux 9 (`scripts/install-fips.sh`) is described in [docs/FIPS.md](docs/FIPS.md).

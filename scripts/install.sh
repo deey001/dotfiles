@@ -2,10 +2,12 @@
 # Install packages and symlink home/ into $HOME with GNU Stow.
 #
 #   curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash
-#   make install            # from a local clone
+#   ~/dotfiles/scripts/install.sh                  # from a local clone
+#   ~/dotfiles/scripts/install.sh --test           # syntax check + stow dry run, changes nothing
+#   ~/dotfiles/scripts/install.sh --sync-omarchy   # refresh the bundled Omarchy shell defaults (on Omarchy)
 #
 # Safe to re-run. Existing files that would be replaced are moved to
-# ~/.dotfiles-backup/<timestamp>/ first; `make uninstall` puts them back.
+# ~/.dotfiles-backup/<timestamp>/ first; scripts/uninstall.sh puts them back.
 
 REPO=https://github.com/deey001/dotfiles.git
 
@@ -23,6 +25,27 @@ fi
 
 set -euo pipefail
 cd "$DOTFILES_DIR"
+
+case "${1:-}" in
+  "") ;;
+  --test)
+    bash -n home/.bashrc home/.local/share/omarchy-shell/portable scripts/*.sh
+    stow -n --no-folding --dir="$DOTFILES_DIR" --target="$HOME" home
+    echo "ok"
+    exit
+    ;;
+  --sync-omarchy)
+    src=/usr/share/omarchy/default/bash dest=home/.local/share/omarchy-shell/default/bash
+    [[ -d $src ]] || { echo "Omarchy not found at $src" >&2; exit 1; }
+    rm -rf "$dest" && cp -r "$src" "$dest"
+    git status --short "$dest"
+    exit
+    ;;
+  *)
+    echo "Usage: install.sh [--test | --sync-omarchy]" >&2
+    exit 1
+    ;;
+esac
 
 # Install each package on its own so one missing name doesn't abort the rest.
 install_list() {

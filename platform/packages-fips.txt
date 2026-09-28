@@ -14,7 +14,7 @@
 # Inline comments after the package name are stripped by install-fips.sh.
 #
 # Phase 4 fills the package list. Phase 1 keeps this file as a placeholder so
-# install-fips.sh, test-fips.sh, and the Makefile target can reference a
+# install-fips.sh and test-fips.sh can reference a
 # stable path immediately.
 # ==============================================================================
 

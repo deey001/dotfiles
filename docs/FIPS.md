@@ -90,3 +90,9 @@ strace -e trace=network -f bash -lc exit 2>&1 | \
 
 Any new tool added to `home-fips/` or `platform/packages-fips.txt` must be
 appended to the Allowlist above with its crypto-source justification.
+
+## Uninstall
+
+```bash
+stow -D --dir="$HOME/dotfiles" --target="$HOME" home-fips
+```

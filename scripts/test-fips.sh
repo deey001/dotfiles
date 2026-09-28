@@ -17,7 +17,7 @@
 #                                     guarded by ALLOW_DOC)
 #
 # USAGE:
-#   bash scripts/test-fips.sh        # CI / make test-fips
+#   bash scripts/test-fips.sh        # CI
 #
 # EXIT CODES:
 #   0 — clean

@@ -5,7 +5,7 @@
 [[ $- != *i* ]] && return
 
 # Not on Omarchy: use the copy of Omarchy's defaults that ships with these dotfiles
-# (refresh it with `make sync-omarchy` on an Omarchy machine)
+# (refresh it with `scripts/install.sh --sync-omarchy` on an Omarchy machine)
 [[ -z ${OMARCHY_PATH:-} ]] && OMARCHY_PATH="$HOME/.local/share/omarchy-shell"
 
 # All the default Omarchy aliases and functions
