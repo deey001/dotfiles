@@ -1,155 +1,27 @@
-# ==============================================================================
-# Makefile — Dotfiles Management Shortcuts
-# ==============================================================================
-# Provides a simple interface for the most common dotfiles operations.
-# Run 'make help' to see all available targets.
-#
-# USAGE:
-#   make              → Install (default target: runs install.sh)
-#   make install      → Install packages + symlink all dotfiles via GNU Stow
-#   make uninstall    → Remove all managed symlinks from $HOME
-#   make test         → Run the validation suite (13+ checks)
-#   make test-verbose → Same, with symlink targets and tool versions printed
-#   make theme-mocha  → Switch to Catppuccin Mocha (dark, default)
-#   make theme-latte  → Switch to Catppuccin Latte (light)
-#   make theme        → Show currently active theme
-#   make help         → Display this usage message
-#
-# WORKFLOW — First-time setup on a new Linux/macOS machine:
-#   git clone https://github.com/deey001/dotfiles.git ~/dotfiles
-#   cd ~/dotfiles && make install
-#
-# WORKFLOW — After pulling updates:
-#   cd ~/dotfiles && git pull && make install
-#   (Stow's -R/--restow is idempotent — safe to run multiple times)
-#
-# WORKFLOW — Switching themes:
-#   cd ~/dotfiles && make theme-latte   # switch to light mode
-#   source ~/.config/dotfiles/theme.sh  # apply in current shell (or restart)
-#
-# WINDOWS:
-#   Use scripts/install.ps1 instead — Makefile targets are Unix-only.
-#   See README.md → Windows Setup for details.
-#
-# DEPENDENCIES:
-#   - bash (all targets shell out to bash scripts)
-#   - GNU Stow (installed automatically by install.sh if missing)
-# ==============================================================================
+.PHONY: install uninstall test sync-omarchy install-fips uninstall-fips test-fips
 
-.PHONY: all install uninstall test test-verbose \
-        theme theme-mocha theme-latte \
-        install-fips uninstall-fips test-fips \
-        help
-
-# ── Default Target ────────────────────────────────────────────────────────────
-# Running 'make' with no arguments triggers the full install.
-all: install
-
-# ── Install ───────────────────────────────────────────────────────────────────
-# Runs scripts/install.sh which:
-#   1. Detects OS (macOS / Debian / Arch / RHEL)
-#   2. Installs system packages from platform/packages/<distro>.txt
-#   3. Installs GNU Stow if missing
-#   4. Stows home/ package into $HOME
-#   5. Symlinks the default theme (themes/catppuccin-mocha.sh)
 install:
-	@echo "--- Starting Dotfiles Installation ---"
 	@bash scripts/install.sh
 
-# ── Uninstall ─────────────────────────────────────────────────────────────────
-# Removes all symlinks created by 'make install'.
-# Does NOT delete the repo or any backed-up files.
-# After uninstalling, your shell will fall back to system defaults.
 uninstall:
-	@echo "--- Removing Dotfiles Symlinks ---"
 	@bash scripts/uninstall.sh
 
-# ── Test ──────────────────────────────────────────────────────────────────────
-# Validates the installation with 4 test groups:
-#   [1/4] Symlinks     — each $HOME dotfile points back into the repo
-#   [2/4] Commands     — required tools (git, tmux, nvim, starship) are installed
-#   [3/4] Optional     — modern CLI tools (eza, bat, fzf, zoxide, rg)
-#   [4/4] Syntax       — bash -n on all Bash config files
-# Exit 0 = all passed. Exit 1 = failures printed above summary.
+# Syntax-check shell files and dry-run stow
 test:
-	@echo "--- Running Validation Tests ---"
-	@bash scripts/test.sh
+	@bash -n home/.bashrc home/.local/share/omarchy-shell/portable scripts/*.sh
+	@stow -n --no-folding --dir=. --target="$(HOME)" home && echo "ok"
 
-# ── Test Verbose ──────────────────────────────────────────────────────────────
-# Same as 'make test' but prints symlink targets and tool version strings
-# for every passing test. Useful when debugging a partially-installed machine.
-test-verbose:
-	@echo "--- Running Detailed Validation Tests ---"
-	@bash scripts/test.sh --verbose
+# On an Omarchy machine: refresh the bundled copy of Omarchy's bash defaults
+sync-omarchy:
+	@rsync -a --delete /usr/share/omarchy/default/bash/ home/.local/share/omarchy-shell/default/bash/
+	@git status --short home/.local/share/omarchy-shell
 
-# ── Theme: Show Active ────────────────────────────────────────────────────────
-# Prints which theme is currently active by reading the symlink target.
-theme:
-	@if [ -L "$$HOME/.config/dotfiles/theme.sh" ]; then \
-	    target=$$(readlink "$$HOME/.config/dotfiles/theme.sh"); \
-	    echo "Active theme: $$target"; \
-	elif [ -f "$$HOME/.config/dotfiles/theme.sh" ]; then \
-	    echo "Active theme: (non-symlink) $$HOME/.config/dotfiles/theme.sh"; \
-	else \
-	    echo "No theme active. Run: make theme-mocha"; \
-	fi
-
-# ── Theme: Catppuccin Mocha (dark, default) ───────────────────────────────────
-# Directly symlinks themes/catppuccin-mocha.sh → ~/.config/dotfiles/theme.sh.
-# No stow package needed — avoids double-indirection.
-# Reload in current shell: source ~/.config/dotfiles/theme.sh
-theme-mocha:
-	@echo "--- Switching theme → Catppuccin Mocha ---"
-	@mkdir -p "$$HOME/.config/dotfiles"
-	@ln -sf "$$PWD/themes/catppuccin-mocha.sh" "$$HOME/.config/dotfiles/theme.sh"
-	@echo "[OK] Theme set to Catppuccin Mocha"
-	@echo "     Run: source ~/.config/dotfiles/theme.sh (or open a new terminal)"
-
-# ── Theme: Catppuccin Latte (light) ──────────────────────────────────────────
-# Directly symlinks themes/catppuccin-latte.sh → ~/.config/dotfiles/theme.sh.
-# WezTerm reads DOTFILES_WEZTERM_THEME from env — takes effect in new windows.
-theme-latte:
-	@echo "--- Switching theme → Catppuccin Latte ---"
-	@mkdir -p "$$HOME/.config/dotfiles"
-	@ln -sf "$$PWD/themes/catppuccin-latte.sh" "$$HOME/.config/dotfiles/theme.sh"
-	@echo "[OK] Theme set to Catppuccin Latte"
-	@echo "     Run: source ~/.config/dotfiles/theme.sh (or open a new terminal)"
-
-# ── FIPS 140-3 Install Path ───────────────────────────────────────────────────
-# Parallel install for hardened hosts. Refuses to run on anything other than
-# Oracle Linux 9.x with kernel FIPS mode enforcing. See docs/FIPS.md.
-#   make install-fips    Stow home-fips/ after gate + blocklist checks
-#   make uninstall-fips  Unstow home-fips/
-#   make test-fips       Run the blocklist grep (no install side effects)
+# FIPS 140-3 path (Oracle Linux 9.x only, see docs/FIPS.md)
 install-fips:
-	@echo "--- FIPS 140-3 install path ---"
 	@bash scripts/install-fips.sh
 
 uninstall-fips:
-	@echo "--- Unstowing FIPS tree ---"
 	@stow -D --dir="$(CURDIR)" --target="$(HOME)" home-fips
 
 test-fips:
 	@bash scripts/test-fips.sh
-
-# ── Help ──────────────────────────────────────────────────────────────────────
-help:
-	@echo ""
-	@echo "  dotfiles — Management Targets"
-	@echo "  ─────────────────────────────────────────────────"
-	@echo "  make install        Install packages + symlink configs (default)"
-	@echo "  make uninstall      Remove symlinks from home directory"
-	@echo "  make test           Run validation suite"
-	@echo "  make test-verbose   Run validation suite with detailed output"
-	@echo ""
-	@echo "  make theme          Show currently active theme"
-	@echo "  make theme-mocha    Switch to Catppuccin Mocha (dark, default)"
-	@echo "  make theme-latte    Switch to Catppuccin Latte (light)"
-	@echo ""
-	@echo "  FIPS 140-3 path (Oracle Linux 9.x only, see docs/FIPS.md):"
-	@echo "    make install-fips    Deploy hardened tree (refuses if not FIPS host)"
-	@echo "    make uninstall-fips  Remove FIPS tree symlinks"
-	@echo "    make test-fips       Run blocklist grep (no install changes)"
-	@echo ""
-	@echo "  Windows: use scripts/install.ps1 (see README.md)"
-	@echo ""

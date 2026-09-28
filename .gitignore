@@ -1,2 +1,5 @@
-.config/bat/themes/themes
-.config/tmux/scripts/scripts
+# Machine-local files that should never be committed
+.bash_local
+.gitconfig.local
+.config/tmux/local.conf
+lazy-lock.json

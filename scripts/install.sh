@@ -1,328 +1,98 @@
 #!/bin/bash
-# ==============================================================================
-# install.sh — Dotfiles Bootstrapper for macOS / Linux / RHEL
-# ==============================================================================
+# Install packages and symlink home/ into $HOME with GNU Stow.
 #
-# DESCRIPTION
-#   Single-script bootstrapper that detects your OS, installs required system
-#   packages via the native package manager, ensures GNU Stow is available,
-#   then uses Stow to symlink every tracked dotfile package into $HOME.
+#   curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash
+#   make install            # from a local clone
 #
-# USAGE
-#   One-liner (curl-pipe, remote bootstrap):
-#     curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash
-#
-#   Local clone (after `git clone`):
-#     make install          # runs this script via the repo Makefile
-#     bash scripts/install.sh
-#
-# EXECUTION ORDER
-#   1. Detect execution context  – curl-pipe vs. local clone
-#   2. Clone the repo if needed  – only when piped from curl
-#   3. Detect OS & architecture  – Darwin / Linux (Debian, Arch, RHEL)
-#   4. Install system packages   – via Homebrew / apt / pacman / dnf|yum
-#   5. Ensure GNU Stow exists    – install if missing
-#   6. Stow dotfile packages     – symlink home/ package into $HOME
-#
-# DEPENDENCIES
-#   bash  – version 4+ recommended (macOS ships bash 3; Homebrew provides bash 5)
-#   git   – required to clone the repo when piped from curl
-#   curl  – required only for the one-liner remote bootstrap
-#   sudo  – required on Linux to install packages as root
-#
-# EXIT BEHAVIOUR  (set -euo pipefail)
-#   -e           Exit immediately on any non-zero command return code.
-#   -u           Treat unset variables as errors (prevents silent empty-string expansions).
-#   -o pipefail  A pipeline fails if *any* command in it fails, not just the last.
-#   Together these three flags make the script "fail fast" so partial installs
-#   are caught early rather than producing a silently broken environment.
-#
-# SUPPORTED PLATFORMS
-#   macOS                  – packages installed via Homebrew (Brewfile)
-#   Debian / Ubuntu        – packages installed via apt  (platform/packages/ubuntu.txt)
-#   Arch Linux             – packages installed via pacman (platform/packages/arch.txt)
-#   RHEL / Fedora / CentOS – packages installed via dnf (preferred) or yum
-#                            (platform/packages/rhel.txt)
-#
-# ==============================================================================
+# Safe to re-run. Existing files that would be replaced are moved to
+# ~/.dotfiles-backup/<timestamp>/ first; `make uninstall` puts them back.
 
-# ── 1. Execution Context Detection ─────────────────────────────────────────────
-#
-# We need to know WHERE the script is — either it was cloned to disk and executed
-# directly, or it was piped straight from `curl` and has no path on disk yet.
-#
-# Why check BASH_SOURCE here?
-#   • When run via `bash scripts/install.sh`, BASH_SOURCE[0] == the file path and
-#     $0 == the file path, so they are equal → we are running from a local clone.
-#   • When piped via `curl ... | bash`, bash reads from stdin; the script is never
-#     written to disk.  BASH_SOURCE[0] is either empty ("") or unset because there
-#     is no backing file.  The `:-` default-expansion guards handle both sub-cases.
-#   • The `else` branch is reached only when BASH_SOURCE has a real path that
-#     differs from $0 — meaning the script was sourced from inside the repo —
-#     so we can safely derive the repo root via dirname traversal.
+REPO=https://github.com/deey001/dotfiles.git
 
-if [[ "${BASH_SOURCE[0]:-}" == "${0:-}" ]] || [[ "${BASH_SOURCE[0]:-}" == "" ]]; then
-    # Running from curl-pipe or a direct `bash install.sh` invocation outside the repo.
-    # Point DOTFILES_DIR at the canonical location under $HOME.
-    DOTFILES_DIR="$HOME/dotfiles"
-    if [ ! -d "$DOTFILES_DIR/.git" ]; then
-        # Repo hasn't been cloned yet — fetch it now so the rest of the script can
-        # reference package lists, the Brewfile, and stow packages that live inside it.
-        echo "--- Cloning dotfiles repository... ---"
-        # Remove any incomplete/non-git directory before cloning.
-        [ -d "$DOTFILES_DIR" ] && rm -rf "$DOTFILES_DIR"
-        git clone https://github.com/deey001/dotfiles.git "$DOTFILES_DIR"
-    else
-        # Repo already exists — pull latest. Guard against dirty tree so we
-        # never silently nuke local edits (e.g. an openclaw installer that
-        # wrote through stow symlinks into the repo).
-        echo "--- Updating dotfiles repository... ---"
-        git -C "$DOTFILES_DIR" fetch origin master
-        if [ -z "$(git -C "$DOTFILES_DIR" status --porcelain)" ]; then
-            git -C "$DOTFILES_DIR" reset --hard origin/master
-        else
-            echo "  ! Working tree has local changes — skipping reset."
-            echo "  ! Resolve manually in $DOTFILES_DIR then re-run."
-        fi
-    fi
+if [[ -f ${BASH_SOURCE[0]:-} ]]; then
+  DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 else
-    # Running via `make install` or sourced from inside the repo.
-    # Walk up one level from the scripts/ directory to reach the repo root.
-    DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+  # Piped from curl: clone (or update) ~/dotfiles, then continue from there.
+  DOTFILES_DIR="$HOME/dotfiles"
+  if [[ -d $DOTFILES_DIR/.git ]]; then
+    git -C "$DOTFILES_DIR" pull --ff-only || echo "! Could not fast-forward $DOTFILES_DIR, using it as-is"
+  else
+    git clone "$REPO" "$DOTFILES_DIR"
+  fi
 fi
 
-# ── 2. Strict Mode ─────────────────────────────────────────────────────────────
-#
-# Placed AFTER the repo-clone block above intentionally: `set -u` would turn the
-# BASH_SOURCE empty-variable check into a hard error before we've had a chance to
-# handle it gracefully with the `:-` default-expansion guards above.
 set -euo pipefail
-
-# ── 3. Environment Detection ────────────────────────────────────────────────────
-#
-# Capture both CPU architecture and kernel name so platform-specific package
-# install commands can be routed to the correct package manager below.
-# $ARCH is available for future use (e.g. arm64-specific Homebrew paths on Apple Silicon).
-
-ARCH=$(uname -m)    # e.g. x86_64, arm64, aarch64
-OS_RAW="$(uname)"   # raw kernel name before normalisation
-
-# Normalise the kernel name into a simple, stable token used throughout the script.
-# MINGW / MSYS / CYGWIN covers Git-for-Windows and Cygwin environments on Windows.
-case "$OS_RAW" in
-    Darwin)               OS="Darwin" ;;
-    Linux)                OS="Linux" ;;
-    MINGW*|MSYS*|CYGWIN*) OS="Windows" ;;
-    *)                    OS="Unknown" ;;
-esac
-
-# ── 4. Helper Functions ─────────────────────────────────────────────────────────
-
-# install_package_list <list_file> <install_cmd>
-#
-# Reads a plain-text package manifest (one package per line; lines beginning with
-# # or empty lines are ignored), then passes all packages to <install_cmd> in a
-# single invocation.
-#
-# Why batch all packages into one command?
-#   A single `apt install -y pkg1 pkg2 …` is substantially faster than N separate
-#   install calls because it acquires the apt lock only once, resolves dependencies
-#   in one pass, and downloads packages in parallel.  It also prevents "partial
-#   upgrade" states that can occur when the lock is released between calls on
-#   systems where background processes also use the package manager.
-install_package_list() {
-    local list_file="$1"
-    local install_cmd="$2"
-
-    # Bail silently if the package list doesn't exist.  This lets the repo omit
-    # platform-specific files without breaking installs on other platforms.
-    if [ ! -f "$list_file" ]; then return 1; fi
-
-    echo "--- Installing system dependencies from $(basename "$list_file") ---"
-
-    # Parse the package list: skip comment lines (^#) and blank lines, then
-    # extract only the first field (package name) — awk $1 discards any inline
-    # comments like "make  # GNU Make" without needing sed or regex.
-    local pkgs
-    pkgs=$(awk '!/^[[:space:]]*#/ && /[^[:space:]]/ {print $1}' "$list_file" | tr '\n' ' ')
-
-    # Guard against an empty package list — most package managers error out when
-    # invoked with no arguments, which would abort the script under `set -e`.
-    if [ -n "$pkgs" ]; then $install_cmd $pkgs; fi
-}
-
-# ── 5. System Package Installation ─────────────────────────────────────────────
-#
-# The OS token detected above drives the top-level Darwin / Linux split.
-# On Linux, the presence of well-known distro marker files under /etc drives the
-# inner split — these files are stable across distro versions and don't require
-# parsing /etc/os-release (which has inconsistent quoting across distros).
-
-if [ "$OS" = "Darwin" ]; then
-    echo "--- Detected macOS ---"
-
-    # Homebrew is the de-facto standard package manager on macOS.
-    # If it isn't installed, pull down and run the official installer.
-    # `command -v` is preferred over `which` because it's a shell built-in and
-    # respects the current PATH without spawning a subprocess.
-    command -v brew &>/dev/null || \
-        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-    # `brew bundle` reads the Brewfile and idempotently installs every formula,
-    # cask, and Mac App Store (mas) entry declared there — one declarative manifest
-    # for the entire macOS toolchain.
-    [ -f "$DOTFILES_DIR/Brewfile" ] && brew bundle --file="$DOTFILES_DIR/Brewfile"
-
-elif [ "$OS" = "Linux" ]; then
-
-    if [ -f /etc/debian_version ]; then
-        # ── Debian / Ubuntu ────────────────────────────────────────────────────
-        echo "--- Detected Debian/Ubuntu ---"
-
-        # Refresh the package index before installing so we get current version
-        # metadata and don't fail on packages that have been renamed or moved
-        # since the last index refresh.
-        sudo apt update
-
-        # Install all packages from the declarative list (includes neovim).
-        install_package_list "$DOTFILES_DIR/platform/packages/ubuntu.txt" "sudo apt install -y"
-
-    elif [ -f /etc/arch-release ]; then
-        # ── Arch Linux ─────────────────────────────────────────────────────────
-        echo "--- Detected Arch Linux ---"
-
-        # -Syu syncs the package database AND upgrades all installed packages before
-        # installing the new ones.  On Arch (rolling release) installing without
-        # upgrading first risks a "partial upgrade" state that can break packages.
-        install_package_list "$DOTFILES_DIR/platform/packages/arch.txt" "sudo pacman -Syu --noconfirm"
-
-    elif [ -f /etc/redhat-release ]; then
-        # ── RHEL / Fedora / CentOS ─────────────────────────────────────────────
-        echo "--- Detected RHEL/Fedora/CentOS ---"
-
-        # dnf is the modern successor to yum (Fedora 22+, RHEL 8+, CentOS Stream).
-        # Fall back to yum for older systems (CentOS 7 / RHEL 7) where dnf is absent.
-        if command -v dnf &>/dev/null; then
-            install_package_list "$DOTFILES_DIR/platform/packages/rhel.txt" "sudo dnf install -y"
-        else
-            install_package_list "$DOTFILES_DIR/platform/packages/rhel.txt" "sudo yum install -y"
-        fi
-    fi
-fi
-
-# ── 6. GNU Stow — The Symlink Engine ───────────────────────────────────────────
-#
-# GNU Stow manages dotfile symlinks by mirroring the directory tree inside each
-# stow "package" into a target directory ($HOME).  This keeps the dotfiles repo
-# clean and lets multiple machines share identical tracked files without copying.
-#
-# Why install Stow here rather than relying solely on the package lists?
-#   Stow may already be present (installed above via a package list).  This block
-#   is a safety-net install for cases where the platform list doesn't include it
-#   or for a new machine that has no list yet.  `command -v stow` short-circuits
-#   the entire block when Stow is already on PATH.
-
-command -v stow &>/dev/null || {
-    echo "Installing GNU Stow..."
-    # Each line tests for its own distro marker independently so multiple guards
-    # could fire safely — in practice only one will match.
-    [ -f /etc/debian_version ]  && sudo apt install -y stow
-    [ -f /etc/arch-release ]    && sudo pacman -S --noconfirm stow
-    [ -f /etc/redhat-release ]  && {
-        command -v dnf &>/dev/null && sudo dnf install -y stow || sudo yum install -y stow
-    }
-}
-
-# ── 7. Stow Dotfile Packages ────────────────────────────────────────────────────
-#
-# The home/ directory is a single stow package whose structure mirrors $HOME.
-# home/.bashrc → ~/.bashrc, home/.config/tmux/ → ~/.config/tmux/, etc.
-#
-# .stowrc declares --dir=. and --target=~ so flags are not needed here.
-# -R (restow) is idempotent: safe to run on every update.
-
-echo "--- Symlinking Configurations via GNU Stow ---"
-STOW_PKGS=(home)
-
 cd "$DOTFILES_DIR"
 
-# Remove any symlinks in $HOME that point into this dotfiles repo.
-#
-# Scoped intentionally to only the two locations stow ever writes to:
-#   1. $HOME depth-1 — direct dotfiles (.bashrc, .zshrc, .gitconfig, etc.)
-#   2. $HOME/.config  — XDG config subtree (starship.toml, nvim/, tmux/, etc.)
-#
-# We do NOT scan all of $HOME; on macOS that crawls ~/Library which contains
-# hundreds of SIP-protected directories and produces a wall of "Operation not
-# permitted" errors without ever finding a dotfile symlink.
-#
-# Uses find -exec sh (POSIX, no bash process substitution) so it works
-# correctly even when bash reads from a curl pipe. {} + batches files per
-# invocation and handles filenames with spaces (e.g. "Catppuccin Mocha.tmTheme").
-echo "  Cleaning up existing dotfile symlinks..."
-_cleanup_symlinks() {
-    find "$1" -maxdepth "$2" -type l -exec sh -c '
-        for f do
-            t=$(readlink "$f" 2>/dev/null) || continue
-            case "$t" in *dotfiles/*) rm -f "$f" ;; esac
-        done
-    ' sh {} +
+# Install each package on its own so one missing name doesn't abort the rest.
+install_list() {
+  local cmd=$1 list=$2 pkg
+  for pkg in $(awk '!/^[[:space:]]*#/ && NF {print $1}' "$list"); do
+    $cmd "$pkg" > /dev/null 2>&1 || echo "  skipped: $pkg"
+  done
 }
-_cleanup_symlinks "$HOME"           1   # depth-1: direct dotfiles in ~
-[ -d "$HOME/.config" ] && _cleanup_symlinks "$HOME/.config" 5   # depth-5: .config/ subtree
 
-for pkg in "${STOW_PKGS[@]}"; do
-    echo "  Stowing: $pkg"
-    stow -R --dir="$DOTFILES_DIR" "$pkg"
-done
+# LazyVim needs nvim >= 0.11.2; older distros (e.g. Ubuntu 24.04) ship 0.9.x.
+install_nvim() {
+  local min=0.11.2 cur asset dir="$HOME/.local/share/nvim-linux"
+  cur=$(nvim --version 2> /dev/null | sed -nE '1s/^NVIM v([0-9.]+).*/\1/p')
+  [[ -n $cur && $(printf '%s\n%s\n' "$min" "$cur" | sort -V | head -1) == "$min" ]] && return
+  case "$(uname -m)" in
+    x86_64) asset=nvim-linux-x86_64.tar.gz ;;
+    aarch64) asset=nvim-linux-arm64.tar.gz ;;
+    *) echo "  nvim ${cur:-missing} is too old; install >= $min manually"; return ;;
+  esac
+  echo "--- Installing Neovim to $dir ---"
+  rm -rf "$dir" && mkdir -p "$dir"
+  curl -fsSL "https://github.com/neovim/neovim/releases/latest/download/$asset" | tar -xz -C "$dir" --strip-components=1
+  ln -sf "$dir/bin/nvim" "$HOME/.local/bin/nvim"
+}
 
-# ── Deploy default theme ───────────────────────────────────────────────────
-# Directly symlink the theme file — no stow package needed.
-# .common_shell sources ~/.config/dotfiles/theme.sh on every shell start.
-# To switch: make theme-latte  |  make theme-mocha
-echo "  Linking: theme-catppuccin-mocha (default)"
-mkdir -p "$HOME/.config/dotfiles"
-ln -sf "$DOTFILES_DIR/themes/catppuccin-mocha.sh" "$HOME/.config/dotfiles/theme.sh"
+echo "--- Packages ---"
+mkdir -p "$HOME/.local/bin"
+case "$(uname)" in
+  Darwin)
+    command -v brew &> /dev/null ||
+      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    brew bundle --file="$DOTFILES_DIR/Brewfile"
+    ;;
+  Linux)
+    if [[ -f /etc/arch-release ]]; then
+      install_list "sudo pacman -S --needed --noconfirm" platform/packages/arch.txt
+    elif [[ -f /etc/debian_version ]]; then
+      sudo apt-get update -qq
+      install_list "sudo apt-get install -y" platform/packages/ubuntu.txt
+    elif [[ -f /etc/redhat-release ]]; then
+      install_list "sudo dnf install -y" platform/packages/rhel.txt
+    fi
+    install_nvim
+    ;;
+esac
 
-# ── Rebuild bat theme cache ────────────────────────────────────────────────
-# bat reads custom themes from ~/.config/bat/themes/ but only after `cache --build`.
-# Without this step BAT_THEME=Catppuccin Mocha falls back with:
-#   [bat warning]: Unknown theme 'Catppuccin Mocha', using default.
-# Detect both the upstream binary name (bat) and Debian's batcat. Silent on
-# distros where neither is installed (bat may come from a PPA later).
-if command -v bat >/dev/null 2>&1; then
-    echo "  Rebuilding bat theme cache..."
-    bat cache --build >/dev/null
-elif command -v batcat >/dev/null 2>&1; then
-    echo "  Rebuilding batcat theme cache..."
-    batcat cache --build >/dev/null
+# Debian/Ubuntu ship fd and bat as fdfind and batcat.
+command -v fd &> /dev/null || ! command -v fdfind &> /dev/null || ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd"
+command -v bat &> /dev/null || ! command -v batcat &> /dev/null || ln -sf "$(command -v batcat)" "$HOME/.local/bin/bat"
+
+if ! command -v starship &> /dev/null; then
+  echo "--- Installing starship to ~/.local/bin ---"
+  curl -fsSL https://starship.rs/install.sh | sh -s -- -y -b "$HOME/.local/bin" > /dev/null
 fi
 
-# ── 8. Install ble.sh (bash only) ──────────────────────────────────────────────
-#
-# ble.sh adds syntax highlighting, autosuggestions, and improved line editing
-# to Bash. It must be built from source — no distro package exists.
-#
-# We only install it when the user's login shell is bash ($SHELL ends in /bash).
-# If the default shell is zsh or fish, ble.sh is not needed.
-#
-# install-blesh.sh is idempotent: re-running it updates an existing install.
+echo "--- Linking dotfiles ---"
+# Drop dangling links left behind by files removed from the repo.
+find "$HOME" -maxdepth 1 -type l -lname "*dotfiles/*" ! -exec test -e {} \; -delete
+find "$HOME/.config" "$HOME/.local/share" -maxdepth 5 -type l -lname "*dotfiles/*" ! -exec test -e {} \; -delete 2> /dev/null || true
 
-if echo "$SHELL" | grep -q "/bash$"; then
-    echo "--- Detected bash as default shell --- Installing ble.sh ---"
-    bash "$DOTFILES_DIR/scripts/install-blesh.sh"
-else
-    echo "--- Default shell is not bash (${SHELL}) --- Skipping ble.sh ---"
-fi
+# Move aside anything stow would otherwise refuse to overwrite.
+backup="$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)"
+while IFS= read -r rel; do
+  target="$HOME/$rel"
+  if [[ -e $target || -L $target ]] && [[ $(readlink -f "$target") != "$DOTFILES_DIR/home/$rel" ]]; then
+    mkdir -p "$backup/$(dirname "$rel")"
+    mv "$target" "$backup/$rel"
+    echo "  backed up ~/$rel"
+  fi
+done < <(cd home && find . -type f -o -type l | sed 's|^\./||')
 
-# ── 9. Ensure Neovim meets LazyVim's minimum version ──────────────────────────
-# Distro-shipped nvim is usually too old (Ubuntu 24.04 → 0.9.5; LazyVim needs
-# >= 0.11.2). install-nvim.sh installs an upstream tarball into ~/.local on
-# Linux when the system nvim is missing or below the minimum. macOS uses brew.
-if [ "$OS" = "Linux" ]; then
-    bash "$DOTFILES_DIR/scripts/install-nvim.sh"
-fi
-
-echo "======================================================================"
-echo "INSTALLATION PROCESS FINISHED!"
-echo "======================================================================"
+stow -R --no-folding --dir="$DOTFILES_DIR" --target="$HOME" home
+echo "Done. Open a new shell to load the config."

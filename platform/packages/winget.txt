@@ -1,0 +1,18 @@
+# Windows packages installed with winget (one ID per line, # comments).
+Git.Git
+Microsoft.PowerShell
+Microsoft.WindowsTerminal
+PuTTY.PuTTY                    # SSH client with session logging
+Neovim.Neovim
+Starship.Starship
+junegunn.fzf
+ajeetdsouza.zoxide
+eza-community.eza
+sharkdp.bat
+sharkdp.fd
+BurntSushi.ripgrep.MSVC
+dandavison.delta
+JesseDuffield.lazygit
+jqlang.jq
+zig.zig                        # C compiler for nvim-treesitter
+DEVCOM.JetBrainsMonoNerdFont

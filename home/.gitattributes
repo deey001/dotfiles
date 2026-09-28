@@ -28,7 +28,6 @@
 # Explicitly list dotfiles that lack extensions — Git can't infer their type.
 .bashrc text eol=lf
 .profile text eol=lf
-.bash_aliases text eol=lf
 .bash_functions text eol=lf
 .bash_exports text eol=lf
 

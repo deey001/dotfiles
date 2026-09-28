@@ -68,7 +68,7 @@ require("lazy").setup({
   -- ---- Install Options ----
   -- When lazy.nvim installs plugins for the first time, apply the catppuccin
   -- colorscheme so the UI looks right even before all plugins finish loading.
-  install = { colorscheme = { "catppuccin" } },
+  install = { colorscheme = { "catppuccin", "tokyonight", "habamax" } },
 
   -- ---- Update Checker ----
   checker = {

@@ -1,0 +1,32 @@
+# Fix-ups applied after Omarchy's default/bash/rc on machines without Omarchy.
+# Kept separate so default/ stays a verbatim copy of Omarchy's files.
+
+# Omarchy's launchers don't exist here
+[[ $EDITOR == omarchy-* ]] && export EDITOR=nvim SUDO_EDITOR=nvim
+[[ $BROWSER == omarchy-* ]] && unset BROWSER
+
+# macOS already has open(1)
+[[ $OSTYPE == darwin* ]] && unset -f open
+
+# Completion on macOS (Homebrew) — Omarchy only looks in /usr/share
+if [[ -z ${BASH_COMPLETION_VERSINFO:-} && -r ${HOMEBREW_PREFIX:-/opt/homebrew}/etc/profile.d/bash_completion.sh ]]; then
+  source "${HOMEBREW_PREFIX:-/opt/homebrew}/etc/profile.d/bash_completion.sh"
+fi
+
+# fzf keybindings — Omarchy only looks in Arch's /usr/share/fzf
+if command -v fzf &> /dev/null && ! declare -F __fzf_history__ &> /dev/null; then
+  if fzf_init=$(fzf --bash 2> /dev/null); then
+    eval "$fzf_init"
+  else # fzf < 0.48 (Debian/Ubuntu)
+    for f in /usr/share/doc/fzf/examples/{completion,key-bindings}.bash; do
+      [[ -r $f ]] && source "$f"
+    done
+  fi
+  unset f fzf_init
+fi
+
+# Terminals like ghostty/kitty/foot send a TERM that servers often lack terminfo
+# for, which breaks tmux, nvim and less. Fall back to a TERM every host knows.
+if command -v infocmp &> /dev/null && ! infocmp "$TERM" &> /dev/null; then
+  export TERM=xterm-256color
+fi

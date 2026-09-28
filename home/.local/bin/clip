@@ -1,0 +1,6 @@
+#!/bin/sh
+# Copy to the local machine's clipboard via OSC 52. Works over SSH and in tmux.
+#   clip "some text"      echo hi | clip      clip < file.txt
+if [ $# -gt 0 ]; then printf '%s' "$*"; else cat; fi |
+  base64 | tr -d '\n' |
+  { read -r data; printf '\033]52;c;%s\a' "$data" > /dev/tty; }

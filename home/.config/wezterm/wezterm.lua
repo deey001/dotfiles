@@ -28,7 +28,7 @@
 -- RELATED FILES:
 --   ~/.config/starship.toml   — prompt theme (also Catppuccin Mocha)
 --   ~/.config/nvim/           — editor theme (also Catppuccin Mocha)
---   windows/settings.json     — Windows Terminal uses the same color values
+--   platform/windows/terminal.json — Windows Terminal uses the same color values
 -- ==============================================================================
 
 local wezterm = require 'wezterm'
@@ -42,15 +42,9 @@ local config = wezterm.config_builder()
 -- Appearance
 -- ==============================================================================
 
--- Catppuccin Mocha is bundled into WezTerm — no external scheme file needed.
--- The active theme is exported as DOTFILES_WEZTERM_THEME by the stowed theme
--- package (stow/theme-catppuccin-mocha/ or stow/theme-catppuccin-latte/).
--- Switch themes: `make theme-latte` / `make theme-mocha`, then restart WezTerm.
--- If the env var is unset (fresh install, no theme stowed yet), fall back to
--- Catppuccin Mocha so the terminal is never unstyled.
--- To see all available built-in schemes: wezterm ls-fonts --list-color-schemes
-local active_theme = os.getenv("DOTFILES_WEZTERM_THEME") or "Catppuccin Mocha"
-config.color_scheme = active_theme
+-- Catppuccin Mocha is bundled into WezTerm. The terminal palette is the single
+-- theme source: bat, fzf, tmux and starship all use ANSI colors and follow it.
+config.color_scheme = "Catppuccin Mocha"
 
 -- Slight transparency (5%) so desktop wallpaper bleeds through on macOS/Linux.
 -- Set to 1.0 for fully opaque (useful on low-powered machines or Windows).
