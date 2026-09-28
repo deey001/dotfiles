@@ -1,7 +1,9 @@
-# Identity and machine-specific settings (credential helper, signing key, work
-# email) live in ~/.gitconfig.local, which is not tracked:
-#   git config -f ~/.gitconfig.local user.name  "Your Name"
-#   git config -f ~/.gitconfig.local user.email "you@example.com"
+[user]
+	name = deey001
+	email = dvillazon@gmail.com
+
+# Machine-specific settings (credential helper, signing key, a work email that
+# overrides the one above) go in ~/.gitconfig.local, which is not tracked.
 [include]
 	path = ~/.gitconfig.local
 

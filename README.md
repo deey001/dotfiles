@@ -42,7 +42,7 @@ home/                               stowed into $HOME
   .bash_profile
   .local/share/omarchy-shell/       copy of Omarchy's default/bash + portable fix-ups
   .local/bin/clip                   copy to the local clipboard via OSC 52
-  .gitconfig                        identity comes from ~/.gitconfig.local
+  .gitconfig                        git settings + identity (override in ~/.gitconfig.local)
   .config/nvim/                     LazyVim + a few overrides
   .config/tmux/                     Omarchy keys + Catppuccin status bar, no plugins
   .config/starship.toml             Omarchy-style prompt
@@ -105,10 +105,5 @@ These files are never committed:
 | File | Use |
 |---|---|
 | `~/.bash_local` / `~\.pwsh_local.ps1` | tokens, extra `PATH` entries (Go, npm, etc.) |
-| `~/.gitconfig.local` | `user.name`, `user.email`, credential helper, signing key |
+| `~/.gitconfig.local` | credential helper, signing key, a different `user.email` for work |
 | `~/.config/tmux/local.conf` | tmux overrides |
-
-```bash
-git config -f ~/.gitconfig.local user.name  "Your Name"
-git config -f ~/.gitconfig.local user.email "you@example.com"
-```
