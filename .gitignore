@@ -1,5 +1,21 @@
 # Machine-local files that should never be committed
 .bash_local
+.pwsh_local.ps1
 .gitconfig.local
 .config/tmux/local.conf
 lazy-lock.json
+
+# Env / secrets that may land in a checkout by mistake
+.env
+.env.*
+*.secret
+**/credentials
+
+# Private keys and credential stores
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+id_ecdsa*
+*.ppk
+.git-credentials

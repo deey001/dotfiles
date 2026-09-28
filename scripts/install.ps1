@@ -1,12 +1,21 @@
 <#
 Install tools with winget and link configs on Windows.
 
-  irm https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.ps1 | iex
+Preferred (reviewable, pinned locally):
+  git clone https://github.com/deey001/dotfiles.git $HOME\dotfiles
+  cd $HOME\dotfiles; .\scripts\install.ps1
+
+Optional one-liner — pin a commit SHA, review the script, then pipe:
+  irm "https://raw.githubusercontent.com/deey001/dotfiles/8879ae54aa55021cf909a9fbe9b834d93cdc5fab/scripts/install.ps1" | iex
+Avoid .../master/... — that ref moves. Supply-chain risk if you skip review.
+
   .\scripts\install.ps1            # from a local clone
 
 Run from an elevated PowerShell (or turn on Developer Mode) so symlinks can be
 created. Safe to re-run. Existing files that would be replaced are moved to
 ~\.dotfiles-backup\<timestamp>\ first; uninstall.ps1 puts them back.
+
+Secrets belong in ~\.pwsh_local.ps1 and ~\.gitconfig.local (untracked) — see .gitignore.
 #>
 
 $Repo = 'https://github.com/deey001/dotfiles.git'
