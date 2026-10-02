@@ -18,7 +18,7 @@ Personal dotfiles for deey001, used mainly on **headless Linux servers reached o
 - **PuTTY is required** because the user relies on its session logging. `putty.ps1` applies the font, Catppuccin colours, UTF-8, and xterm-256color to Default Settings **and every saved session**. It turns logging on only where it's off, and backs up the sessions `.reg` first.
 - **Git identity** (`deey001` / `dvillazon@gmail.com`) lives in `home/.gitconfig`, with the user's permission. `~/.gitconfig.local` is included afterwards for per-machine overrides.
 - **Install/uninstall parity:** both platforms install packages, then back up to `~/.dotfiles-backup/<timestamp>/`, then link. Uninstall removes only the links and restores the first backup.
-- **FIPS path** (`home-fips/`, `scripts/install-fips.sh`, `docs/FIPS.md`) is a separate, audited Oracle Linux 9 track. Leave it alone unless asked.
+- **One install tree.** `home/` plus `scripts/install.sh` is the only Linux/macOS path.
 
 ## Testing without touching the real $HOME
 
@@ -32,7 +32,6 @@ Personal dotfiles for deey001, used mainly on **headless Linux servers reached o
 - Windows Terminal fragment `updates` for font/colorScheme on the built-in PowerShell profiles is believed to work, but hasn't been confirmed.
 - Omarchy's `completions` file uses `complete -I` (bash 5+), which errors on bash 4.4 (RHEL 8).
 - If PuTTY had no sessions key before the first install, there's nothing to restore on uninstall.
-- `docs/FIPS.md` still lists ble.sh in its allowlist. The main tree no longer uses ble.sh.
 - A real SSH round-trip test of OSC 52 (server tmux/nvim to desktop clipboard) hasn't been done.
 
 ## Conventions

@@ -235,5 +235,3 @@ platform/
 scripts/                              install / uninstall for each platform
 Brewfile                              macOS packages
 ```
-
-A separate hardened install path for FIPS 140-3 hosts running Oracle Linux 9 (`scripts/install-fips.sh`) is described in [docs/FIPS.md](docs/FIPS.md).
