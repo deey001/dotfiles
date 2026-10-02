@@ -4,7 +4,7 @@ on its first run. Packages and the repo itself are left alone.
 #>
 
 $Dotfiles = Split-Path (Split-Path $PSCommandPath)
-. "$Dotfiles\platform\windows\links.ps1"
+. "$Dotfiles\install\windows\links.ps1"
 
 foreach ($target in $Links.Keys) {
     if (Test-Linked $target (Join-Path $Dotfiles $Links[$target])) {

@@ -8,23 +8,23 @@ Personal dotfiles for deey001, used mainly on **headless Linux servers reached o
 
 ## Decisions already made (don't re-litigate)
 
-- **Shell = Omarchy's config, verbatim.** `home/.bashrc` is Omarchy's stock `.bashrc` plus a fallback that points `OMARCHY_PATH` at `~/.local/share/omarchy-shell`. `home/.local/share/omarchy-shell/default/bash/` is an **unmodified** copy of `/usr/share/omarchy/default/bash`. Never edit it by hand. Put portability fixes in `home/.local/share/omarchy-shell/portable`, and refresh the copy with `scripts/install.sh --sync-omarchy` on an Omarchy machine.
+- **Shell = Omarchy's config, verbatim.** `default/bashrc` is Omarchy's stock `.bashrc` plus a fallback that points `OMARCHY_PATH` at `~/.local/share/omarchy-shell`. `default/bash/` is an **unmodified** copy of `/usr/share/omarchy/default/bash`. Never edit it by hand. Put portability fixes in `default/portable`, and refresh the copy with `install/install.sh --sync-omarchy` on an Omarchy machine.
 - **No personal aliases file.** The user chose Omarchy's aliases. Their own additions go under the "Add your own" line in `.bashrc` or in `~/.bash_local`.
 - **bash only.** zsh, ble.sh, carapace, fastfetch, the theme switcher, TPM, and the tmux plugins were all removed on purpose.
-- **GNU Stow stays** for Linux/macOS linking. **No Makefile.** Call the scripts directly. **No wiki.** It's disabled on GitHub, and the README is the only documentation.
-- **tmux:** Omarchy's key bindings, with the user's **Catppuccin status bar and Nerd Font icons kept**: session pill, path, date, LAN IP, and ISP:WAN IP through `home/.config/tmux/scripts/wan_info.sh`. It uses fixed hex colours on purpose. Prefix is `C-Space`, with `C-a` as a second prefix.
-- **Clipboard:** OSC 52 everywhere. tmux `set-clipboard on`, Neovim uses OSC 52 over SSH (`lua/config/options.lua`), and `home/.local/bin/clip` copies from the shell.
-- **Windows:** `scripts/install.ps1` has no menu. It installs `platform/packages/winget.txt`, links the files listed in `platform/windows/links.ps1`, configures Windows Terminal through a *fragment* (`terminal.json`, never edits `settings.json`), and runs `platform/windows/putty.ps1`.
+- **Layout matches Omarchy.** `config/` lands in `~/.config`, `bin/` in `~/.local/bin`, `default/` is the shell (`default/bash` is the unmodified copy). `install/` is the installer and is not linked. **GNU Stow** links `config/` and `bin/`. **No Makefile.** **No wiki.** The README is the only documentation.
+- **tmux:** Omarchy's key bindings, with the user's **Catppuccin status bar and Nerd Font icons kept**: session pill, path, date, LAN IP, and ISP:WAN IP through `config/tmux/scripts/wan_info.sh`. It uses fixed hex colours on purpose. Prefix is `C-Space`, with `C-a` as a second prefix.
+- **Clipboard:** OSC 52 everywhere. tmux `set-clipboard on`, Neovim uses OSC 52 over SSH (`lua/config/options.lua`), and `bin/clip` copies from the shell.
+- **Windows:** `install/install.ps1` has no menu. It installs `install/packages/winget.txt`, links the files listed in `install/windows/links.ps1`, configures Windows Terminal through a *fragment* (`terminal.json`, never edits `settings.json`), and runs `install/windows/putty.ps1`.
 - **PuTTY is required** because the user relies on its session logging. `putty.ps1` applies the font, Catppuccin colours, UTF-8, and xterm-256color to Default Settings **and every saved session**. It turns logging on only where it's off, and backs up the sessions `.reg` first.
-- **Git identity** (`deey001` / `dvillazon@gmail.com`) lives in `home/.gitconfig`, with the user's permission. `~/.gitconfig.local` is included afterwards for per-machine overrides.
+- **Git identity** (`deey001` / `dvillazon@gmail.com`) lives in `default/gitconfig`, with the user's permission. `~/.gitconfig.local` is included afterwards for per-machine overrides.
 - **Install/uninstall parity:** both platforms install packages, then back up to `~/.dotfiles-backup/<timestamp>/`, then link. Uninstall removes only the links and restores the first backup.
-- **One install tree.** `home/` plus `scripts/install.sh` is the only Linux/macOS path.
+- **One install tree.** `install/install.sh` is the only Linux/macOS path.
 
 ## Testing without touching the real $HOME
 
-- Linux: `HOME=/tmp/somewhere scripts/install.sh --test` runs a syntax check and a stow dry run. To test the link step alone, copy the section from `echo "--- Linking` to the end of `install.sh` and run it with a fake `HOME`.
+- Linux: `HOME=/tmp/somewhere bash install/install.sh --test` runs a syntax check and a stow dry run. To test the link step alone, copy the section from `echo "--- Linking` to the end of `install/install.sh` and run it with a fake `HOME`.
 - Non-Omarchy shell path on an Omarchy box: hide Omarchy with `unshare -rm bash -c 'mount -t tmpfs none /usr/share/omarchy && env -i HOME=... bash -ic ...'`.
-- PowerShell: parse the scripts with `[System.Management.Automation.Language.Parser]::ParseFile`. A portable Linux `pwsh` tarball works for this, and for load-testing `platform/windows/profile.ps1`.
+- PowerShell: parse the scripts with `[System.Management.Automation.Language.Parser]::ParseFile`. A portable Linux `pwsh` tarball works for this, and for load-testing `install/windows/profile.ps1`.
 
 ## Open items / not yet verified
 

@@ -2,14 +2,14 @@
 $Docs = [Environment]::GetFolderPath('MyDocuments')
 
 $Links = [ordered]@{
-    "$HOME\.gitconfig"                                     = 'home\.gitconfig'
-    "$HOME\.config\git\ignore"                             = 'home\.config\git\ignore'
-    "$HOME\.config\starship.toml"                          = 'home\.config\starship.toml'
-    "$HOME\.config\wezterm"                                = 'home\.config\wezterm'
-    "$env:LOCALAPPDATA\nvim"                               = 'home\.config\nvim'
-    "$Docs\PowerShell\Microsoft.PowerShell_profile.ps1"        = 'platform\windows\profile.ps1'
-    "$Docs\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" = 'platform\windows\profile.ps1'
-    "$env:LOCALAPPDATA\Microsoft\Windows Terminal\Fragments\dotfiles\dotfiles.json" = 'platform\windows\terminal.json'
+    "$HOME\.gitconfig"                                     = 'default\gitconfig'
+    "$HOME\.config\git\ignore"                             = 'config\git\ignore'
+    "$HOME\.config\starship.toml"                          = 'config\starship.toml'
+    "$HOME\.config\wezterm"                                = 'config\wezterm'
+    "$env:LOCALAPPDATA\nvim"                               = 'config\nvim'
+    "$Docs\PowerShell\Microsoft.PowerShell_profile.ps1"        = 'install\windows\profile.ps1'
+    "$Docs\WindowsPowerShell\Microsoft.PowerShell_profile.ps1" = 'install\windows\profile.ps1'
+    "$env:LOCALAPPDATA\Microsoft\Windows Terminal\Fragments\dotfiles\dotfiles.json" = 'install\windows\terminal.json'
 }
 
 # Path inside a backup folder for a given link target, e.g. ~\.gitconfig -> <backup>\.gitconfig

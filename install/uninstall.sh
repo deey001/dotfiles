@@ -4,7 +4,22 @@
 set -euo pipefail
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 
-stow -D --dir="$DOTFILES_DIR" --target="$HOME" home
+stow -D --no-folding --dir="$DOTFILES_DIR" --target="$HOME/.config" config
+stow -D --no-folding --dir="$DOTFILES_DIR" --target="$HOME/.local/bin" bin
+
+remove_link() {
+  local dest=$1 src=$2
+  [[ -L $dest ]] || return 0
+  [[ $(readlink -f "$dest") == $(readlink -f "$src") ]] || return 0
+  rm "$dest"
+  echo "  removed ${dest/#$HOME\//~/}"
+}
+remove_link "$HOME/.bashrc" "$DOTFILES_DIR/default/bashrc"
+remove_link "$HOME/.bash_profile" "$DOTFILES_DIR/default/bash_profile"
+remove_link "$HOME/.gitconfig" "$DOTFILES_DIR/default/gitconfig"
+remove_link "$HOME/.gitattributes" "$DOTFILES_DIR/default/gitattributes"
+remove_link "$HOME/.local/share/omarchy-shell/portable" "$DOTFILES_DIR/default/portable"
+remove_link "$HOME/.local/share/omarchy-shell/default/bash" "$DOTFILES_DIR/default/bash"
 echo "Symlinks removed."
 
 # The oldest backup holds the files that existed before the dotfiles were installed.

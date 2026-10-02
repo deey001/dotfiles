@@ -1,20 +1,15 @@
 #!/bin/bash
-# Install packages and symlink home/ into $HOME with GNU Stow.
+# Install packages, then link this repo into $HOME.
 #
-# Preferred (reviewable, pinned locally):
 #   git clone https://github.com/deey001/dotfiles.git ~/dotfiles
-#   cd ~/dotfiles && bash scripts/install.sh
+#   cd ~/dotfiles && bash install/install.sh
 #
-# Optional one-liner — pin a commit SHA, review the script, then pipe:
-#   curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/8879ae54aa55021cf909a9fbe9b834d93cdc5fab/scripts/install.sh | bash
-# Avoid .../master/... — that ref moves. Supply-chain risk if you skip review.
+#   bash install/install.sh --test           # syntax check + stow dry run, changes nothing
+#   bash install/install.sh --sync-omarchy   # refresh default/bash from an Omarchy machine
 #
-#   ~/dotfiles/scripts/install.sh                  # from a local clone
-#   ~/dotfiles/scripts/install.sh --test           # syntax check + stow dry run, changes nothing
-#   ~/dotfiles/scripts/install.sh --sync-omarchy   # refresh the bundled Omarchy shell defaults (on Omarchy)
-#
-# Safe to re-run. Existing files that would be replaced are moved to
-# ~/.dotfiles-backup/<timestamp>/ first; scripts/uninstall.sh puts them back.
+# config/ and bin/ are stowed. default/ is linked file by file because those
+# paths do not share one parent in $HOME. Safe to re-run. Anything that would
+# be replaced is moved to ~/.dotfiles-backup/<timestamp>/ first.
 # Secrets belong in untracked locals (.bash_local, .gitconfig.local) — see .gitignore.
 
 REPO=https://github.com/deey001/dotfiles.git
@@ -37,13 +32,15 @@ cd "$DOTFILES_DIR"
 case "${1:-}" in
   "") ;;
   --test)
-    bash -n home/.bashrc home/.local/share/omarchy-shell/portable scripts/*.sh
-    stow -n --no-folding --dir="$DOTFILES_DIR" --target="$HOME" home
+    bash -n default/bashrc default/portable install/*.sh
+    mkdir -p "$HOME/.config" "$HOME/.local/bin"
+    stow -n --no-folding --dir="$DOTFILES_DIR" --target="$HOME/.config" config
+    stow -n --no-folding --dir="$DOTFILES_DIR" --target="$HOME/.local/bin" bin
     echo "ok"
     exit
     ;;
   --sync-omarchy)
-    src=/usr/share/omarchy/default/bash dest=home/.local/share/omarchy-shell/default/bash
+    src=/usr/share/omarchy/default/bash dest=default/bash
     [[ -d $src ]] || { echo "Omarchy not found at $src" >&2; exit 1; }
     rm -rf "$dest" && cp -r "$src" "$dest"
     git status --short "$dest"
@@ -89,12 +86,12 @@ case "$(uname)" in
     ;;
   Linux)
     if [[ -f /etc/arch-release ]]; then
-      install_list "sudo pacman -S --needed --noconfirm" platform/packages/arch.txt
+      install_list "sudo pacman -S --needed --noconfirm" install/packages/arch.txt
     elif [[ -f /etc/debian_version ]]; then
       sudo apt-get update -qq
-      install_list "sudo apt-get install -y" platform/packages/ubuntu.txt
+      install_list "sudo apt-get install -y" install/packages/ubuntu.txt
     elif [[ -f /etc/redhat-release ]]; then
-      install_list "sudo dnf install -y" platform/packages/rhel.txt
+      install_list "sudo dnf install -y" install/packages/rhel.txt
     fi
     install_nvim
     ;;
@@ -112,18 +109,41 @@ fi
 echo "--- Linking dotfiles ---"
 # Drop dangling links left behind by files removed from the repo.
 find "$HOME" -maxdepth 1 -type l -lname "*dotfiles/*" ! -exec test -e {} \; -delete
-find "$HOME/.config" "$HOME/.local/share" -maxdepth 5 -type l -lname "*dotfiles/*" ! -exec test -e {} \; -delete 2> /dev/null || true
+find "$HOME/.config" "$HOME/.local" -maxdepth 6 -type l -lname "*dotfiles/*" ! -exec test -e {} \; -delete 2> /dev/null || true
 
-# Move aside anything stow would otherwise refuse to overwrite.
 backup="$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)"
-while IFS= read -r rel; do
-  target="$HOME/$rel"
-  if [[ -e $target || -L $target ]] && [[ $(readlink -f "$target") != "$DOTFILES_DIR/home/$rel" ]]; then
-    mkdir -p "$backup/$(dirname "$rel")"
-    mv "$target" "$backup/$rel"
-    echo "  backed up ~/$rel"
-  fi
-done < <(cd home && find . -type f -o -type l | sed 's|^\./||')
+# Move aside a file or directory that is not already this source.
+protect() {
+  local src=$1 dest=$2
+  [[ -e $dest || -L $dest ]] || return 0
+  [[ $(readlink -f "$dest") == $(readlink -f "$src") ]] && return 0
+  local rel=${dest#"$HOME"/}
+  mkdir -p "$backup/$(dirname "$rel")"
+  mv "$dest" "$backup/$rel"
+  echo "  backed up ~/$rel"
+}
 
-stow -R --no-folding --dir="$DOTFILES_DIR" --target="$HOME" home
+while IFS= read -r rel; do
+  protect "$DOTFILES_DIR/config/$rel" "$HOME/.config/$rel"
+done < <(cd config && find . \( -type f -o -type l \) | sed 's|^\./||')
+while IFS= read -r rel; do
+  protect "$DOTFILES_DIR/bin/$rel" "$HOME/.local/bin/$rel"
+done < <(cd bin && find . \( -type f -o -type l \) | sed 's|^\./||')
+
+mkdir -p "$HOME/.config" "$HOME/.local/bin"
+stow -R --no-folding --dir="$DOTFILES_DIR" --target="$HOME/.config" config
+stow -R --no-folding --dir="$DOTFILES_DIR" --target="$HOME/.local/bin" bin
+
+link_into_home() {
+  local src=$1 dest=$2
+  protect "$src" "$dest"
+  mkdir -p "$(dirname "$dest")"
+  ln -sfn "$src" "$dest"
+}
+link_into_home "$DOTFILES_DIR/default/bashrc" "$HOME/.bashrc"
+link_into_home "$DOTFILES_DIR/default/bash_profile" "$HOME/.bash_profile"
+link_into_home "$DOTFILES_DIR/default/gitconfig" "$HOME/.gitconfig"
+link_into_home "$DOTFILES_DIR/default/gitattributes" "$HOME/.gitattributes"
+link_into_home "$DOTFILES_DIR/default/portable" "$HOME/.local/share/omarchy-shell/portable"
+link_into_home "$DOTFILES_DIR/default/bash" "$HOME/.local/share/omarchy-shell/default/bash"
 echo "Done. Open a new shell to load the config."

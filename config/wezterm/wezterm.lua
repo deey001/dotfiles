@@ -17,7 +17,7 @@
 --
 -- FONT:
 --   JetBrainsMono Nerd Font must be installed. On Linux/macOS it is installed
---   by Nerd Fonts' install script. On Windows, scripts/install.ps1 option 1
+--   by Nerd Fonts' install script. On Windows, install/install.ps1
 --   downloads and installs it from github.com/ryanoasis/nerd-fonts.
 --
 -- THEME:
@@ -28,7 +28,7 @@
 -- RELATED FILES:
 --   ~/.config/starship.toml   — prompt theme (also Catppuccin Mocha)
 --   ~/.config/nvim/           — editor theme (also Catppuccin Mocha)
---   platform/windows/terminal.json — Windows Terminal uses the same color values
+--   install/windows/terminal.json — Windows Terminal uses the same color values
 -- ==============================================================================
 
 local wezterm = require 'wezterm'

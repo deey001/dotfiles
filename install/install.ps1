@@ -3,13 +3,9 @@ Install tools with winget and link configs on Windows.
 
 Preferred (reviewable, pinned locally):
   git clone https://github.com/deey001/dotfiles.git $HOME\dotfiles
-  cd $HOME\dotfiles; .\scripts\install.ps1
+  cd $HOME\dotfiles; .\install\install.ps1
 
-Optional one-liner — pin a commit SHA, review the script, then pipe:
-  irm "https://raw.githubusercontent.com/deey001/dotfiles/8879ae54aa55021cf909a9fbe9b834d93cdc5fab/scripts/install.ps1" | iex
-Avoid .../master/... — that ref moves. Supply-chain risk if you skip review.
-
-  .\scripts\install.ps1            # from a local clone
+  .\install\install.ps1            # from a local clone
 
 Run from an elevated PowerShell (or turn on Developer Mode) so symlinks can be
 created. Safe to re-run. Existing files that would be replaced are moved to
@@ -50,7 +46,7 @@ if ($PSCommandPath) {
 }
 
 Write-Host '--- Packages ---'
-Get-Content "$Dotfiles\platform\packages\winget.txt" |
+Get-Content "$Dotfiles\install\packages\winget.txt" |
     Where-Object { $_ -match '^\s*[^#\s]' } |
     ForEach-Object { Install-WingetPackage ($_.Trim() -split '\s+')[0] }
 Update-Path
@@ -72,7 +68,7 @@ foreach ($shell in 'pwsh', 'powershell') {
 try { Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force } catch { Write-Host "  could not set execution policy: $_" -ForegroundColor Yellow }
 
 Write-Host '--- Linking dotfiles ---'
-. "$Dotfiles\platform\windows\links.ps1"
+. "$Dotfiles\install\windows\links.ps1"
 
 # Drop links into the repo that the current layout no longer uses (older
 # versions linked ~\.bashrc, ~\.config\nvim, ~\starship.toml and others).
@@ -97,7 +93,7 @@ foreach ($target in $Links.Keys) {
 }
 
 Write-Host '--- PuTTY ---'
-. "$Dotfiles\platform\windows\putty.ps1"
+. "$Dotfiles\install\windows\putty.ps1"
 # Save PuTTY's sessions once, before the first change, so uninstall.ps1 can put them back.
 $saved = Get-ChildItem "$HOME\.dotfiles-backup" -Recurse -Filter putty-sessions.reg -ErrorAction SilentlyContinue
 if (-not $saved -and (Test-Path $PuttySessions)) {
@@ -109,4 +105,4 @@ Write-Host '  font, colours, UTF-8, xterm-256color, logging (where off) for:'
 Set-PuttyDefaults
 
 Write-Host 'Done. Restart Windows Terminal to pick up the font, colors and profile.'
-Write-Host 'For servers: curl -fsSL https://raw.githubusercontent.com/deey001/dotfiles/master/scripts/install.sh | bash'
+Write-Host 'For servers: git clone https://github.com/deey001/dotfiles.git ~/dotfiles; bash ~/dotfiles/install/install.sh'
