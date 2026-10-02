@@ -2,7 +2,6 @@
 # Neovim and starship are installed separately by install.sh when too old/missing.
 build-essential
 git
-stow
 curl
 unzip
 tmux

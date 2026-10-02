@@ -39,7 +39,7 @@ install/                              not linked
 Brewfile                              macOS packages, not linked
 ```
 
-`config/` and `bin/` are linked with GNU Stow. `default/` is linked file by file, because those paths do not share one parent in `$HOME`.
+Every file is a symlink. `install/` is not linked.
 
 ## Install
 
@@ -66,7 +66,7 @@ Both install packages, then link. A file they would replace is moved to `~/.dotf
 ```bash
 bash install/install.sh                 # install or update
 bash install/uninstall.sh               # remove links, restore the first backup
-bash install/install.sh --test          # syntax check + stow dry run, changes nothing
+bash install/install.sh --test          # syntax check, changes nothing
 bash install/install.sh --sync-omarchy  # refresh default/bash (run on Omarchy)
 ```
 

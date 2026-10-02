@@ -11,7 +11,7 @@ Personal dotfiles for deey001, used mainly on **headless Linux servers reached o
 - **Shell = Omarchy's config, verbatim.** `default/bashrc` is Omarchy's stock `.bashrc` plus a fallback that points `OMARCHY_PATH` at `~/.local/share/omarchy-shell`. `default/bash/` is an **unmodified** copy of `/usr/share/omarchy/default/bash`. Never edit it by hand. Put portability fixes in `default/portable`, and refresh the copy with `install/install.sh --sync-omarchy` on an Omarchy machine.
 - **No personal aliases file.** The user chose Omarchy's aliases. Their own additions go under the "Add your own" line in `.bashrc` or in `~/.bash_local`.
 - **bash only.** zsh, ble.sh, carapace, fastfetch, the theme switcher, TPM, and the tmux plugins were all removed on purpose.
-- **Layout matches Omarchy.** `config/` lands in `~/.config`, `bin/` in `~/.local/bin`, `default/` is the shell (`default/bash` is the unmodified copy). `install/` is the installer and is not linked. **GNU Stow** links `config/` and `bin/`. **No Makefile.** **No wiki.** The README is the only documentation.
+- **Layout matches Omarchy.** `config/` lands in `~/.config`, `bin/` in `~/.local/bin`, `default/` is the shell (`default/bash` is the unmodified copy). `install/` is the installer and is not linked. Links are plain symlinks. **No Stow** (Oracle Linux 10 does not ship it). **No Makefile.** **No wiki.** The README is the only documentation.
 - **tmux:** Omarchy's key bindings, with the user's **Catppuccin status bar and Nerd Font icons kept**: session pill, path, date, LAN IP, and ISP:WAN IP through `config/tmux/scripts/wan_info.sh`. It uses fixed hex colours on purpose. Prefix is `C-Space`, with `C-a` as a second prefix.
 - **Clipboard:** OSC 52 everywhere. tmux `set-clipboard on`, Neovim uses OSC 52 over SSH (`lua/config/options.lua`), and `bin/clip` copies from the shell.
 - **Windows:** `install/install.ps1` has no menu. It installs `install/packages/winget.txt`, links the files listed in `install/windows/links.ps1`, configures Windows Terminal through a *fragment* (`terminal.json`, never edits `settings.json`), and runs `install/windows/putty.ps1`.
@@ -22,7 +22,7 @@ Personal dotfiles for deey001, used mainly on **headless Linux servers reached o
 
 ## Testing without touching the real $HOME
 
-- Linux: `HOME=/tmp/somewhere bash install/install.sh --test` runs a syntax check and a stow dry run. To test the link step alone, copy the section from `echo "--- Linking` to the end of `install/install.sh` and run it with a fake `HOME`.
+- Linux: `HOME=/tmp/somewhere bash install/install.sh --test` runs a syntax check and does not link. To test the link step alone, copy the section from `echo "--- Linking` to the end of `install/install.sh` and run it with a fake `HOME`.
 - Non-Omarchy shell path on an Omarchy box: hide Omarchy with `unshare -rm bash -c 'mount -t tmpfs none /usr/share/omarchy && env -i HOME=... bash -ic ...'`.
 - PowerShell: parse the scripts with `[System.Management.Automation.Language.Parser]::ParseFile`. A portable Linux `pwsh` tarball works for this, and for load-testing `install/windows/profile.ps1`.
 

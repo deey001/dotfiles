@@ -4,9 +4,6 @@
 set -euo pipefail
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 
-stow -D --no-folding --dir="$DOTFILES_DIR" --target="$HOME/.config" config
-stow -D --no-folding --dir="$DOTFILES_DIR" --target="$HOME/.local/bin" bin
-
 remove_link() {
   local dest=$1 src=$2
   [[ -L $dest ]] || return 0
@@ -14,6 +11,14 @@ remove_link() {
   rm "$dest"
   echo "  removed ${dest/#$HOME\//~/}"
 }
+remove_tree() {
+  local src_root=$1 dest_root=$2 rel
+  while IFS= read -r rel; do
+    remove_link "$dest_root/$rel" "$src_root/$rel"
+  done < <(cd "$src_root" && find . \( -type f -o -type l \) | sed 's|^\./||')
+}
+remove_tree "$DOTFILES_DIR/config" "$HOME/.config"
+remove_tree "$DOTFILES_DIR/bin" "$HOME/.local/bin"
 remove_link "$HOME/.bashrc" "$DOTFILES_DIR/default/bashrc"
 remove_link "$HOME/.bash_profile" "$DOTFILES_DIR/default/bash_profile"
 remove_link "$HOME/.gitconfig" "$DOTFILES_DIR/default/gitconfig"

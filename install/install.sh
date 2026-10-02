@@ -4,12 +4,12 @@
 #   git clone https://github.com/deey001/dotfiles.git ~/dotfiles
 #   cd ~/dotfiles && bash install/install.sh
 #
-#   bash install/install.sh --test           # syntax check + stow dry run, changes nothing
+#   bash install/install.sh --test           # syntax check, changes nothing
 #   bash install/install.sh --sync-omarchy   # refresh default/bash from an Omarchy machine
 #
-# config/ and bin/ are stowed. default/ is linked file by file because those
-# paths do not share one parent in $HOME. Safe to re-run. Anything that would
-# be replaced is moved to ~/.dotfiles-backup/<timestamp>/ first.
+# Files are symlinked with ln. Stow is not used: Oracle Linux 10 does not
+# ship it. Safe to re-run. Anything that would be replaced is moved to
+# ~/.dotfiles-backup/<timestamp>/ first.
 # Secrets belong in untracked locals (.bash_local, .gitconfig.local) — see .gitignore.
 
 REPO=https://github.com/deey001/dotfiles.git
@@ -33,9 +33,7 @@ case "${1:-}" in
   "") ;;
   --test)
     bash -n default/bashrc default/portable install/*.sh
-    mkdir -p "$HOME/.config" "$HOME/.local/bin"
-    stow -n --no-folding --dir="$DOTFILES_DIR" --target="$HOME/.config" config
-    stow -n --no-folding --dir="$DOTFILES_DIR" --target="$HOME/.local/bin" bin
+    [[ -f bin/clip && -d config && -d default/bash ]]
     echo "ok"
     exit
     ;;
@@ -63,7 +61,7 @@ install_list() {
 # LazyVim needs nvim >= 0.11.2; older distros (e.g. Ubuntu 24.04) ship 0.9.x.
 install_nvim() {
   local min=0.11.2 cur asset dir="$HOME/.local/share/nvim-linux"
-  cur=$(nvim --version 2> /dev/null | sed -nE '1s/^NVIM v([0-9.]+).*/\1/p')
+  cur=$(nvim --version 2> /dev/null | sed -nE '1s/^NVIM v([0-9.]+).*/\1/p' || true)
   [[ -n $cur && $(printf '%s\n%s\n' "$min" "$cur" | sort -V | head -1) == "$min" ]] && return
   case "$(uname -m)" in
     x86_64) asset=nvim-linux-x86_64.tar.gz ;;
@@ -130,16 +128,20 @@ while IFS= read -r rel; do
   protect "$DOTFILES_DIR/bin/$rel" "$HOME/.local/bin/$rel"
 done < <(cd bin && find . \( -type f -o -type l \) | sed 's|^\./||')
 
-mkdir -p "$HOME/.config" "$HOME/.local/bin"
-stow -R --no-folding --dir="$DOTFILES_DIR" --target="$HOME/.config" config
-stow -R --no-folding --dir="$DOTFILES_DIR" --target="$HOME/.local/bin" bin
-
 link_into_home() {
   local src=$1 dest=$2
   protect "$src" "$dest"
   mkdir -p "$(dirname "$dest")"
   ln -sfn "$src" "$dest"
 }
+link_tree() {
+  local src_root=$1 dest_root=$2 rel
+  while IFS= read -r rel; do
+    link_into_home "$src_root/$rel" "$dest_root/$rel"
+  done < <(cd "$src_root" && find . \( -type f -o -type l \) | sed 's|^\./||')
+}
+link_tree "$DOTFILES_DIR/config" "$HOME/.config"
+link_tree "$DOTFILES_DIR/bin" "$HOME/.local/bin"
 link_into_home "$DOTFILES_DIR/default/bashrc" "$HOME/.bashrc"
 link_into_home "$DOTFILES_DIR/default/bash_profile" "$HOME/.bash_profile"
 link_into_home "$DOTFILES_DIR/default/gitconfig" "$HOME/.gitconfig"

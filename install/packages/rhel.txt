@@ -2,7 +2,6 @@
 gcc
 make
 git
-stow
 curl
 unzip
 tmux

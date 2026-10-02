@@ -1,7 +1,6 @@
 # Arch packages (one per line, # comments). Omarchy already ships most of these.
 base-devel
 git
-stow
 curl
 unzip
 neovim
