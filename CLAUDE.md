@@ -9,7 +9,7 @@ Personal dotfiles for deey001, used mainly on **headless Linux servers reached o
 ## Decisions already made (don't re-litigate)
 
 - **Shell = Omarchy's config, verbatim.** `default/bashrc` is Omarchy's stock `.bashrc` plus a fallback that points `OMARCHY_PATH` at `~/.local/share/omarchy-shell`. `default/bash/` is an **unmodified** copy of `/usr/share/omarchy/default/bash`. Never edit it by hand. Put portability fixes in `default/portable`, and refresh the copy with `install/install.sh --sync-omarchy` on an Omarchy machine.
-- **No personal aliases file.** The user chose Omarchy's aliases. Their own additions go under the "Add your own" line in `.bashrc` or in `~/.bash_local`.
+- **No personal aliases file.** The user chose Omarchy's aliases. Their own additions go under the "Add your own" line in `.bashrc` or in `~/.bash_local`. Off Omarchy, `default/portable` removes an alias or function when its command is not installed. Do not replace it with a different program (`cat` must not become `bat`). `default/bash` stays verbatim.
 - **bash only.** zsh, ble.sh, carapace, fastfetch, the theme switcher, TPM, and the tmux plugins were all removed on purpose.
 - **Layout matches Omarchy.** `config/` lands in `~/.config`, `bin/` in `~/.local/bin`, `default/` is the shell (`default/bash` is the unmodified copy). `install/` is the installer and is not linked. Links are plain symlinks. **No Stow** (Oracle Linux 10 does not ship it). **No Makefile.** **No wiki.** The README is the only documentation.
 - **tmux:** Omarchy's key bindings, with the user's **Catppuccin status bar and Nerd Font icons kept**: session pill, path, date, LAN IP, and ISP:WAN IP through `config/tmux/scripts/wan_info.sh`. It uses fixed hex colours on purpose. Prefix is `C-Space`, with `C-a` as a second prefix.
@@ -19,6 +19,7 @@ Personal dotfiles for deey001, used mainly on **headless Linux servers reached o
 - **Git identity** (`deey001` / `dvillazon@gmail.com`) lives in `default/gitconfig`, with the user's permission. `~/.gitconfig.local` is included afterwards for per-machine overrides.
 - **Install/uninstall parity:** both platforms install packages, then back up to `~/.dotfiles-backup/<timestamp>/`, then link. Uninstall removes only the links and restores the first backup.
 - **One install tree.** `install/install.sh` is the only Linux/macOS path.
+- **Official repos only.** If the distro's official repositories do not have a package, that distro does not get it. Never add the AUR, a PPA, EPEL, COPR, or RPM Fusion. Ubuntu's allowed components are `main` and `universe` only. The only upstream exceptions are the Starship install script and the Neovim tarball. macOS uses Homebrew. Windows uses winget.
 
 ## Testing without touching the real $HOME
 

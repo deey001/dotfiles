@@ -1,5 +1,6 @@
-# Debian/Ubuntu packages. Missing names are skipped (e.g. eza on older releases).
-# Neovim and starship are installed separately by install.sh when too old/missing.
+# Debian and Ubuntu packages from the distro archive only. Never a PPA.
+# Ubuntu: main and universe. Do not enable restricted, multiverse, or a third-party archive.
+# A missing name is skipped. Neovim and starship are installed separately by install.sh.
 build-essential
 git
 curl

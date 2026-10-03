@@ -74,6 +74,9 @@ install_nvim() {
   ln -sf "$dir/bin/nvim" "$HOME/.local/bin/nvim"
 }
 
+# Official distro repositories only. A missing name is skipped.
+# Never add the AUR, a PPA, EPEL, COPR, or RPM Fusion.
+# Starship and Neovim, installed below, are the only upstream exceptions.
 echo "--- Packages ---"
 mkdir -p "$HOME/.local/bin"
 case "$(uname)" in

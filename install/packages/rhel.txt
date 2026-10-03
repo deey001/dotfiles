@@ -1,4 +1,5 @@
-# RHEL/Fedora/Oracle Linux packages. Missing names are skipped (EPEL provides more).
+# RHEL, Fedora, and Oracle Linux packages from the distro's default repos only.
+# A missing name is skipped. Never enable EPEL, COPR, or RPM Fusion for this list.
 gcc
 make
 git

@@ -3,8 +3,8 @@
 # Machine-specific additions go in ~\.pwsh_local.ps1 (untracked).
 
 # Environment
-$env:EDITOR = 'nvim'
-$env:BAT_THEME = 'ansi'
+if (Get-Command nvim -ErrorAction SilentlyContinue) { $env:EDITOR = 'nvim' }
+if (Get-Command bat -ErrorAction SilentlyContinue) { $env:BAT_THEME = 'ansi' }
 if ($env:PATH -notlike "*$HOME\.local\bin*") { $env:PATH = "$HOME\.local\bin;$env:PATH" }
 
 # Line editing (like Omarchy's inputrc)
@@ -25,7 +25,7 @@ if (Get-Module -ListAvailable PSFzf) {
 }
 
 # Built-in aliases win over functions, so clear the ones Omarchy's names reuse.
-foreach ($a in 'ls', 'cd', 'gcm') { Remove-Item "Alias:$a" -Force -ErrorAction SilentlyContinue }
+foreach ($a in 'ls', 'cd') { Remove-Item "Alias:$a" -Force -ErrorAction SilentlyContinue }
 
 # File system
 if (Get-Command eza -ErrorAction SilentlyContinue) {
@@ -37,16 +37,23 @@ if (Get-Command eza -ErrorAction SilentlyContinue) {
     Set-Alias ls Get-ChildItem
 }
 
-function ff { fzf --preview 'bat --style=numbers --color=always {}' @args }
-function eff { & $env:EDITOR (ff) }
-
-function zd {
-    if ($args.Count -eq 0) { Set-Location ~ }
-    elseif (Test-Path -LiteralPath $args[0] -PathType Container) { Set-Location -LiteralPath $args[0] }
-    elseif (Get-Command z -ErrorAction SilentlyContinue) { $before = $PWD.Path; z @args; if ($PWD.Path -ne $before) { $PWD.Path } }
-    else { Write-Host 'Error: Directory not found' }
+# ff calls both fzf and bat. Define it only when both are installed.
+if ((Get-Command fzf -ErrorAction SilentlyContinue) -and (Get-Command bat -ErrorAction SilentlyContinue)) {
+    function ff { fzf --preview 'bat --style=numbers --color=always {}' @args }
+    function eff { & $env:EDITOR (ff) }
 }
-Set-Alias cd zd
+
+if (Get-Command zoxide -ErrorAction SilentlyContinue) {
+    function zd {
+        if ($args.Count -eq 0) { Set-Location ~ }
+        elseif (Test-Path -LiteralPath $args[0] -PathType Container) { Set-Location -LiteralPath $args[0] }
+        elseif (Get-Command z -ErrorAction SilentlyContinue) { $before = $PWD.Path; z @args; if ($PWD.Path -ne $before) { $PWD.Path } }
+        else { Write-Host 'Error: Directory not found' }
+    }
+    Set-Alias cd zd
+} else {
+    Set-Alias cd Set-Location
+}
 
 function open { Invoke-Item @args }
 
@@ -55,15 +62,18 @@ function .. { Set-Location .. }
 function ... { Set-Location ..\.. }
 function .... { Set-Location ..\..\.. }
 
-# Tools
-function d { docker @args }
-function n { if ($args.Count -eq 0) { nvim . } else { nvim @args } }
+# Tools. A name exists only when its command is installed.
+if (Get-Command docker -ErrorAction SilentlyContinue) { function d { docker @args } }
+if (Get-Command nvim -ErrorAction SilentlyContinue) { function n { if ($args.Count -eq 0) { nvim . } else { nvim @args } } }
 
 # Git
-function g { git @args }
-function gcm { git commit -m @args }
-function gcam { git commit -a -m @args }
-function gcad { git commit -a --amend @args }
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    Remove-Item Alias:gcm -Force -ErrorAction SilentlyContinue
+    function g { git @args }
+    function gcm { git commit -m @args }
+    function gcam { git commit -a -m @args }
+    function gcad { git commit -a --amend @args }
+}
 
 # Compression
 function compress($Path) { $p = $Path.TrimEnd('\', '/'); tar -czf "$p.tar.gz" $p }

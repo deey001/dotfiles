@@ -1,4 +1,5 @@
-# Arch packages (one per line, # comments). Omarchy already ships most of these.
+# Official Arch repos only (pacman: core, extra, multilib). Never the AUR, yay, or paru.
+# Omarchy already ships most of these. A missing name is skipped.
 base-devel
 git
 curl

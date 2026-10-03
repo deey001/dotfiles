@@ -48,3 +48,49 @@ fi
 if command -v infocmp &> /dev/null && ! infocmp "$TERM" &> /dev/null; then
   export TERM=xterm-256color
 fi
+
+# Omarchy defines these names in default/bash. That tree stays verbatim.
+# Off Omarchy, drop a name when this machine has no such command.
+# Do not point the name at a different program.
+_drop_alias() {
+  command -v "$2" &> /dev/null || unalias "$1" 2> /dev/null || true
+}
+_drop_alias a omarchy-agent
+_drop_alias c opencode
+_drop_alias cx claude
+_drop_alias cy codex
+_drop_alias d docker
+_drop_alias r rails
+_drop_alias t tmux
+_drop_alias h herdr
+_drop_alias mup mise
+_drop_alias g git
+_drop_alias gcm git
+_drop_alias gcam git
+_drop_alias gcad git
+unset -f _drop_alias
+
+if ! command -v fzf &> /dev/null || ! command -v bat &> /dev/null; then
+  unalias ff 2> /dev/null || true
+  unalias eff 2> /dev/null || true
+  unset -f sff 2> /dev/null || true
+fi
+
+if ! command -v tmux &> /dev/null || ! command -v opencode &> /dev/null; then
+  unalias ic 2> /dev/null || true
+  unalias icx 2> /dev/null || true
+fi
+if ! command -v tmux &> /dev/null || ! command -v claude &> /dev/null; then
+  unalias ix 2> /dev/null || true
+  unalias icx 2> /dev/null || true
+fi
+
+command -v mise &> /dev/null || unset -f ga 2> /dev/null || true
+command -v gum &> /dev/null || unset -f gd 2> /dev/null || true
+command -v nvim &> /dev/null || unset -f n 2> /dev/null || true
+command -v xdg-open &> /dev/null || unset -f open 2> /dev/null || true
+
+# envs points man at bat. Without bat, man keeps its own pager.
+if ! command -v bat &> /dev/null; then
+  unset MANPAGER MANROFFOPT
+fi

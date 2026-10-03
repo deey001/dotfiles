@@ -9,7 +9,9 @@
 
 [core]
 	editor = nvim
-	pager = delta
+	# delta when this distro installed it. Otherwise the system pager.
+	# Quoted because an unquoted semicolon starts a gitconfig comment.
+	pager = "sh -c 'if command -v delta >/dev/null 2>&1; then exec delta; else exec less -FRX; fi'"
 	autocrlf = input
 [init]
 	defaultBranch = main
@@ -32,7 +34,7 @@
 	navigate = true
 	line-numbers = true
 [interactive]
-	diffFilter = delta --color-only
+	diffFilter = "sh -c 'if command -v delta >/dev/null 2>&1; then exec delta --color-only; else exec cat; fi'"
 
 [alias]
 	st = status

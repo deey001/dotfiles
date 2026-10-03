@@ -72,7 +72,11 @@ bash install/install.sh --sync-omarchy  # refresh default/bash (run on Omarchy)
 
 On Windows, `.\install\install.ps1` updates and `.\install\uninstall.ps1` undoes the links.
 
-Package lists are `install/packages/` and `Brewfile`. Each package is installed on its own, so a missing name is skipped.
+Package lists are `install/packages/` and `Brewfile`. Each package is installed from that platform's official repositories, one at a time. A name those repositories do not have is skipped. The installer never adds a third-party repository. That includes the AUR, a PPA, EPEL, COPR, and RPM Fusion.
+
+Ubuntu packages may come from `main` or `universe`. The installer does not enable a component and does not add a PPA. Debian, Arch, Fedora, RHEL, and Oracle Linux use the official archives already configured on the machine. Arch uses `pacman` only.
+
+Two tools are installed from upstream when the distro copy is missing or too old: Starship, and Neovim when the installed build is older than 0.11.2. No other tool is installed that way. macOS uses Homebrew. Windows uses winget.
 
 Do not pipe `master` into a shell. If you still want a one-liner, pin a commit, read the script, then run it.
 
@@ -86,6 +90,8 @@ Secrets stay in untracked locals. See [Machine-local settings](#machine-local-se
 | Editor | Neovim (upstream build if the distro's is older than 0.11.2) | Neovim, zig (C compiler for treesitter) |
 | CLI tools | tmux, fzf, zoxide, eza, bat, fd, ripgrep, delta, lazygit, btop, jq | fzf, zoxide, eza, bat, fd, ripgrep, delta, lazygit, jq |
 | Terminal | whatever you connect from | Windows Terminal, PuTTY, JetBrainsMono Nerd Font |
+
+A CLI tool in that list is installed only when the platform's default repositories contain it. Oracle Linux, for example, does not ship `fzf`, `bat`, `eza`, or `delta`, so those packages are skipped there. Fedora and Arch install the same names when their repositories have them.
 
 ## Shell
 
@@ -104,6 +110,8 @@ On Windows, `install/windows/profile.ps1` gives PowerShell the same aliases and 
 
 ### Aliases and functions (from Omarchy)
 
+These are Omarchy's names. On Omarchy they are always defined. Everywhere else, a name is defined only when its command is installed. `ls` stays `ls` without `eza`. `cd` stays `cd` without `zoxide`. `man` does not call `bat`. Git does not call `delta`.
+
 | Command | Does |
 |---|---|
 | `ls`, `lsa`, `lt`, `lta` | eza long list, with hidden files, tree, tree with hidden |
@@ -119,7 +127,7 @@ On Windows, `install/windows/profile.ps1` gives PowerShell the same aliases and 
 | `..`, `...`, `....` | go up 1, 2, or 3 folders |
 | `clip` | copy to the local clipboard |
 
-**Keys:** Tab and Shift+Tab cycle completions. Up/Down search history for what you typed. Ctrl+R searches history with fzf. Ctrl+T finds files with fzf.
+**Keys:** Tab and Shift+Tab cycle completions. Up/Down search history for what you typed. Ctrl+R searches history with fzf, and Ctrl+T finds files with fzf, when `fzf` is installed.
 
 ## Copy / paste over SSH
 
